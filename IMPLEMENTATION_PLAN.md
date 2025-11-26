@@ -143,8 +143,10 @@ scholarship-hub/
 - user_profiles (user_id, first_name, last_name, academic_level, major, gpa, ...)
 - user_roles (user_id, role: 'student' | 'recommender' | 'collaborator')
 
--- Scholarships
-- scholarships (id, title, description, organization, deadline, min_award, max_award, ...)
+-- Scholarships (MVP: user-specific, each user maintains their own list)
+- scholarships (id, user_id, title, description, organization, deadline, min_award, max_award, ...)
+  -- NOTE: For MVP, scholarships are user-owned (user_id field)
+  -- Future: Can transition to shared/global scholarships for discovery features
 - scholarship_subject_areas (scholarship_id, subject_area_id)
 - subject_areas (id, name)
 - scholarship_geographic_restrictions (scholarship_id, region_name)
@@ -172,9 +174,9 @@ scholarship-hub/
   -- Type-specific data for guidance/counseling
 - collaboration_history (id, collaboration_id, action, details, ...)
 
--- Search & Discovery
-- saved_search_criteria (id, user_id, name, criteria_json, ...)
-- user_seen_scholarships (user_id, scholarship_id, interaction_type, ...)
+-- Optional: Saved Filters (for filtering user's own scholarships)
+- saved_filters (id, user_id, name, filter_criteria_json, ...)
+  -- Note: Deferred to post-MVP if needed
 ```
 
 ---
@@ -570,8 +572,11 @@ scholarship-hub/
   );
 
   -- scholarships table
+  -- NOTE: For MVP, scholarships are user-specific (each user maintains their own list)
+  -- Future: Can make scholarships shared/global when implementing discovery features
   CREATE TABLE public.scholarships (
     id BIGSERIAL PRIMARY KEY,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL, -- Owner of this scholarship entry
     title TEXT NOT NULL,
     description TEXT,
     organization TEXT,
@@ -589,7 +594,7 @@ scholarship-hub/
     country TEXT,
     apply_url TEXT,
     source_url TEXT,
-    source TEXT, -- e.g., 'Fastweb', 'CollegeBoard'
+    source TEXT, -- For future: 'user_entered' (default for MVP), 'curated', 'scraped', 'web_search'
     active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -614,10 +619,41 @@ scholarship-hub/
   CREATE INDEX idx_scholarships_active ON public.scholarships(active);
   CREATE INDEX idx_scholarships_organization ON public.scholarships(organization);
 
-  -- RLS (everyone can read scholarships)
+  -- RLS policies for user-specific scholarships
   ALTER TABLE public.scholarships ENABLE ROW LEVEL SECURITY;
-  CREATE POLICY "Anyone can view active scholarships" ON public.scholarships
-    FOR SELECT USING (active = TRUE);
+  ALTER TABLE public.scholarship_subject_areas ENABLE ROW LEVEL SECURITY;
+  ALTER TABLE public.scholarship_geographic_restrictions ENABLE ROW LEVEL SECURITY;
+
+  -- Users can only view their own scholarships
+  CREATE POLICY "Users can view own scholarships" ON public.scholarships
+    FOR SELECT USING (user_id = auth.uid());
+
+  -- Users can insert their own scholarships
+  CREATE POLICY "Users can insert own scholarships" ON public.scholarships
+    FOR INSERT WITH CHECK (user_id = auth.uid());
+
+  -- Users can update their own scholarships
+  CREATE POLICY "Users can update own scholarships" ON public.scholarships
+    FOR UPDATE USING (user_id = auth.uid());
+
+  -- Users can delete their own scholarships
+  CREATE POLICY "Users can delete own scholarships" ON public.scholarships
+    FOR DELETE USING (user_id = auth.uid());
+
+  -- Related tables follow same pattern
+  CREATE POLICY "Users can manage own scholarship subject areas" ON public.scholarship_subject_areas
+    FOR ALL USING (
+      scholarship_id IN (
+        SELECT id FROM public.scholarships WHERE user_id = auth.uid()
+      )
+    );
+
+  CREATE POLICY "Users can manage own scholarship restrictions" ON public.scholarship_geographic_restrictions
+    FOR ALL USING (
+      scholarship_id IN (
+        SELECT id FROM public.scholarships WHERE user_id = auth.uid()
+      )
+    );
   ```
 - [ ] Run migration
 - [ ] Insert some test subject areas and scholarships
@@ -960,46 +996,32 @@ scholarship-hub/
   - Add a counselor and create guidance collaboration with scheduled session
   - Test action tracking by updating `awaiting_action_from` field
 
-### TODO 1.7: Create Migration 006 - Search & Discovery
-- [ ] Create `006_search_discovery.sql`:
+### TODO 1.7: Create Migration 006 - Saved Filters (Optional)
+- [ ] Create `006_saved_filters.sql`:
   ```sql
-  -- Saved search criteria
-  CREATE TABLE public.saved_search_criteria (
+  -- Optional: Saved filter criteria for user's scholarship list
+  -- Can defer this to post-MVP if needed
+  CREATE TABLE public.saved_filters (
     id BIGSERIAL PRIMARY KEY,
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
     name TEXT NOT NULL,
-    criteria JSONB NOT NULL, -- stores SearchCriteria object
+    filter_criteria JSONB NOT NULL, -- stores FilterCriteria object (keyword, award range, etc.)
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
   );
 
-  -- Track which scholarships user has seen
-  CREATE TABLE public.user_seen_scholarships (
-    id BIGSERIAL PRIMARY KEY,
-    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-    scholarship_id BIGINT REFERENCES public.scholarships(id) ON DELETE CASCADE NOT NULL,
-    first_seen_at TIMESTAMPTZ DEFAULT NOW(),
-    last_seen_at TIMESTAMPTZ DEFAULT NOW(),
-    interaction_type TEXT, -- 'viewed', 'applied', 'dismissed'
-    UNIQUE(user_id, scholarship_id)
-  );
-
-  CREATE INDEX idx_user_seen_user ON public.user_seen_scholarships(user_id);
-  CREATE INDEX idx_user_seen_scholarship ON public.user_seen_scholarships(scholarship_id);
+  CREATE INDEX idx_saved_filters_user ON public.saved_filters(user_id);
 
   -- Enable Row Level Security
-  ALTER TABLE public.saved_search_criteria ENABLE ROW LEVEL SECURITY;
-  ALTER TABLE public.user_seen_scholarships ENABLE ROW LEVEL SECURITY;
+  ALTER TABLE public.saved_filters ENABLE ROW LEVEL SECURITY;
 
-  -- RLS Policies: Users can only access their own saved searches
-  CREATE POLICY "Users can manage own saved searches" ON public.saved_search_criteria
-    FOR ALL USING (user_id = auth.uid());
-
-  -- RLS Policies: Users can only access their own seen scholarships
-  CREATE POLICY "Users can manage own seen scholarships" ON public.user_seen_scholarships
+  -- RLS Policies: Users can only access their own saved filters
+  CREATE POLICY "Users can manage own saved filters" ON public.saved_filters
     FOR ALL USING (user_id = auth.uid());
   ```
-- [ ] Run migration
+- [ ] Run migration (or skip if deferring saved filters feature)
+
+**Note**: `user_seen_scholarships` table has been removed from MVP since scholarships are user-specific. It will be needed when implementing discovery features (see `SCHOLARSHIP_DISCOVERY_PHASE.md`).
 
 ### TODO 1.8: Set Up Migration Workflow
 - [ ] Document all migrations in `docs/database-schema.md`
@@ -1378,67 +1400,98 @@ scholarship-hub/
 
 ---
 
-## PHASE 6: Scholarship Search API & UI
-**Goal**: Build smart scholarship search with "seen" tracking
+## PHASE 6: Scholarship Management & Filtering
+**Goal**: Allow users to manually add scholarships and search/filter their own list
 
-### TODO 6.1: Backend - Implement Search Service
-- [ ] Create `src/services/scholarships.search.service.ts`
-- [ ] Implement search logic:
+### TODO 6.1: Backend - Scholarship CRUD
+- [ ] Create routes/controllers/services for:
+  - `POST /api/scholarships` - Add a new scholarship (manually entered by user)
+  - `GET /api/scholarships` - List all scholarships for the user
+  - `GET /api/scholarships/:id` - Get specific scholarship
+  - `PATCH /api/scholarships/:id` - Update scholarship details
+  - `DELETE /api/scholarships/:id` - Delete scholarship
+- [ ] Note: For MVP, scholarships are user-specific (each user maintains their own list)
+- [ ] Each scholarship should include:
+  - Basic info: title, organization, url
+  - Financial: min_award, max_award
+  - Deadline: deadline date
+  - Eligibility: academic_level, major, min_gpa, etc.
+  - Optional: description, requirements, notes
+
+### TODO 6.2: Backend - Search/Filter Service
+- [ ] Create `src/services/scholarships.filter.service.ts`
+- [ ] Implement filtering for user's scholarships:
   ```typescript
-  interface SearchCriteria {
-    keyword?: string;
-    academic_level?: string;
+  interface FilterCriteria {
+    keyword?: string; // Search in title, organization, description
+    minAward?: number;
+    maxAward?: number;
+    deadlineAfter?: string;
+    deadlineBefore?: string;
+    academicLevel?: string;
     major?: string;
-    min_gpa?: number;
-    min_award?: number;
-    max_award?: number;
-    gender?: string;
-    deadline_after?: string;
-    deadline_before?: string;
-    exclude_seen?: boolean; // default true
+    sortBy?: 'deadline' | 'award' | 'title' | 'created';
+    sortOrder?: 'asc' | 'desc';
   }
   ```
-- [ ] Use PostgreSQL:
-  - Full-text search with `to_tsvector` on title/description
-  - Filter by criteria
-  - Join `user_seen_scholarships` to exclude already seen
-- [ ] Return paginated results
+- [ ] Use PostgreSQL full-text search with `to_tsvector` on title/organization/description
+- [ ] Return filtered and sorted results
 
-### TODO 6.2: Backend - Search Endpoint
-- [ ] Create `POST /api/scholarships/search`
-- [ ] Accept `SearchCriteria` in request body
-- [ ] Return matching scholarships
-- [ ] Test with various criteria
+### TODO 6.3: Backend - Filter Endpoint
+- [ ] Create `GET /api/scholarships?keyword=...&minAward=...` (query params for filtering)
+- [ ] Or `POST /api/scholarships/filter` with `FilterCriteria` in body
+- [ ] Return user's scholarships matching criteria
+- [ ] Support pagination
 
-### TODO 6.3: Backend - Track Seen Scholarships
-- [ ] Create `POST /api/scholarships/:id/mark-seen`
-- [ ] Insert/update in `user_seen_scholarships` table
-- [ ] Interaction types: 'viewed', 'applied', 'dismissed'
+### TODO 6.4: Frontend - Add Scholarship Page
+- [ ] Create `src/pages/AddScholarship.tsx`
+- [ ] Build form for manual scholarship entry:
+  - **Quick Entry**: Name, organization, deadline, award amount, URL
+  - "Add Details Later" vs "Full Details" toggle
+  - **Full Entry**: All eligibility criteria, requirements, description
+- [ ] Submit to `POST /api/scholarships`
+- [ ] Redirect to scholarships list or "Create Application" flow
+- [ ] Make the form fast and easy to use
 
-### TODO 6.4: Frontend - Search Page
-- [ ] Create `src/pages/ScholarshipSearch.tsx`
-- [ ] Build search form with all criteria fields
-- [ ] Submit to `/api/scholarships/search`
-- [ ] Display results in cards/list
-- [ ] Each result shows: title, org, deadline, award range, description
+### TODO 6.5: Frontend - Scholarships List Page
+- [ ] Create `src/pages/Scholarships.tsx`
+- [ ] Display user's scholarships in cards/table
+- [ ] Each entry shows: title, organization, deadline, award amount
+- [ ] Actions for each scholarship:
+  - "Create Application" → go to new application flow
+  - "Edit" → edit scholarship details
+  - "Delete" → remove scholarship
+- [ ] Show scholarships with upcoming deadlines prominently
 
-### TODO 6.5: Frontend - Search Result Actions
-- [ ] "Apply" button → create application
-- [ ] "Save for later" → mark as 'viewed'
-- [ ] "Dismiss" → mark as 'dismissed'
-- [ ] Update UI after each action
+### TODO 6.6: Frontend - Search/Filter UI
+- [ ] Add search bar at top of scholarships list
+- [ ] Add filter controls:
+  - Keyword search (searches title, org, description)
+  - Award range (min/max sliders or inputs)
+  - Deadline range (date pickers)
+  - Academic level dropdown
+  - Major dropdown
+- [ ] Add sort options:
+  - By deadline (soonest first)
+  - By award amount (highest first)
+  - By title (A-Z)
+  - By date added (newest first)
+- [ ] Apply filters client-side if list is small, or call backend filter endpoint
+- [ ] Update URL query params to make filters shareable/bookmarkable
 
-### TODO 6.6: Saved Searches
+### TODO 6.7: Optional - Saved Filters (Can Defer)
 - [ ] Backend:
-  - `POST /api/saved-searches` - Save search criteria
-  - `GET /api/saved-searches` - List user's saved searches
-  - `DELETE /api/saved-searches/:id` - Delete saved search
+  - `POST /api/saved-filters` - Save filter criteria
+  - `GET /api/saved-filters` - List user's saved filters
+  - `DELETE /api/saved-filters/:id` - Delete saved filter
 - [ ] Frontend:
-  - "Save this search" button on search page
-  - List saved searches on dashboard
-  - Click to re-run search
+  - "Save Filter" button on scholarships page
+  - Sidebar or dropdown showing saved filters
+  - Click to apply saved filter
 
-**Milestone**: Full scholarship search with smart filtering and seen tracking
+**Milestone**: Users can easily add, manage, search, and filter their scholarship list
+
+**Note**: External scholarship discovery (browse, web search, scraper) has been deferred. See `SCHOLARSHIP_DISCOVERY_PHASE.md` for future enhancement options.
 
 ---
 
