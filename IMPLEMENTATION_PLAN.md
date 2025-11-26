@@ -513,11 +513,11 @@ scholarship-hub/
 ### TODO 1.1: Plan Database Schema
 - [✅  ] Review ChatGPT's schema suggestions
 - [ ✅] Map your existing types to PostgreSQL tables
-- [✅ ] Decide on naming conventions (snake_case for DB, camelCase for TypeScript)
+- [✅] Decide on naming conventions (snake_case for DB, camelCase for TypeScript)
 - [ ] Document schema in `docs/database-schema.md`
 
 ### TODO 1.2: Create Migration 001 - Core User Tables
-- [ ] In Supabase SQL Editor, create migration script `001_core_users.sql`:
+- [✅] In Supabase SQL Editor, create migration script `001_core_users.sql`:
   ```sql
   -- users table (extends Supabase auth.users)
   CREATE TABLE public.user_profiles (
@@ -572,172 +572,11 @@ scholarship-hub/
 - [ ] Run migration in Supabase SQL Editor
 - [ ] Verify tables created in Table Editor
 
-### TODO 1.3: Create Migration 002 - Scholarships
-- [ ] Create `002_scholarships.sql`:
-  ```sql
-  -- subject_areas lookup table
-  CREATE TABLE public.subject_areas (
-    id BIGSERIAL PRIMARY KEY,
-    name TEXT UNIQUE NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-  );
-
-  -- scholarships table
-  -- NOTE: For MVP, scholarships are user-specific (each user maintains their own list)
-  -- Future: Can make scholarships shared/global when implementing discovery features
-  CREATE TABLE public.scholarships (
-    id BIGSERIAL PRIMARY KEY,
-    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL, -- Owner of this scholarship entry
-    title TEXT NOT NULL,
-    description TEXT,
-    organization TEXT,
-    org_website TEXT,
-    target_type TEXT, -- 'need' | 'merit' | 'both'
-    min_award INTEGER,
-    max_award INTEGER,
-    min_gpa DECIMAL(3,2),
-    deadline DATE,
-    eligibility TEXT,
-    gender TEXT,
-    essay_required BOOLEAN DEFAULT FALSE,
-    recommendation_required BOOLEAN DEFAULT FALSE,
-    renewable BOOLEAN DEFAULT FALSE,
-    country TEXT,
-    apply_url TEXT,
-    source_url TEXT,
-    source TEXT, -- For future: 'user_entered' (default for MVP), 'curated', 'scraped', 'web_search'
-    active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
-  );
-
-  -- Many-to-many: scholarships <-> subject_areas
-  CREATE TABLE public.scholarship_subject_areas (
-    scholarship_id BIGINT REFERENCES public.scholarships(id) ON DELETE CASCADE,
-    subject_area_id BIGINT REFERENCES public.subject_areas(id) ON DELETE CASCADE,
-    PRIMARY KEY (scholarship_id, subject_area_id)
-  );
-
-  -- Geographic restrictions
-  CREATE TABLE public.scholarship_geographic_restrictions (
-    id BIGSERIAL PRIMARY KEY,
-    scholarship_id BIGINT REFERENCES public.scholarships(id) ON DELETE CASCADE,
-    region_name TEXT NOT NULL
-  );
-
-  -- Indexes
-  CREATE INDEX idx_scholarships_deadline ON public.scholarships(deadline);
-  CREATE INDEX idx_scholarships_active ON public.scholarships(active);
-  CREATE INDEX idx_scholarships_organization ON public.scholarships(organization);
-
-  -- RLS policies for user-specific scholarships
-  ALTER TABLE public.scholarships ENABLE ROW LEVEL SECURITY;
-  ALTER TABLE public.scholarship_subject_areas ENABLE ROW LEVEL SECURITY;
-  ALTER TABLE public.scholarship_geographic_restrictions ENABLE ROW LEVEL SECURITY;
-
-  -- Users can only view their own scholarships
-  CREATE POLICY "Users can view own scholarships" ON public.scholarships
-    FOR SELECT USING (user_id = auth.uid());
-
-  -- Users can insert their own scholarships
-  CREATE POLICY "Users can insert own scholarships" ON public.scholarships
-    FOR INSERT WITH CHECK (user_id = auth.uid());
-
-  -- Users can update their own scholarships
-  CREATE POLICY "Users can update own scholarships" ON public.scholarships
-    FOR UPDATE USING (user_id = auth.uid());
-
-  -- Users can delete their own scholarships
-  CREATE POLICY "Users can delete own scholarships" ON public.scholarships
-    FOR DELETE USING (user_id = auth.uid());
-
-  -- Related tables follow same pattern
-  CREATE POLICY "Users can manage own scholarship subject areas" ON public.scholarship_subject_areas
-    FOR ALL USING (
-      scholarship_id IN (
-        SELECT id FROM public.scholarships WHERE user_id = auth.uid()
-      )
-    );
-
-  CREATE POLICY "Users can manage own scholarship restrictions" ON public.scholarship_geographic_restrictions
-    FOR ALL USING (
-      scholarship_id IN (
-        SELECT id FROM public.scholarships WHERE user_id = auth.uid()
-      )
-    );
-  ```
-- [ ] Run migration
-- [ ] Insert some test subject areas and scholarships
-
-### TODO 1.4: Create Migration 003 - Applications
-- [ ] Create `003_applications.sql`:
-  ```sql
-  CREATE TYPE application_status AS ENUM (
-    'planning',
-    'in_progress',
-    'submitted',
-    'accepted',
-    'rejected',
-    'withdrawn'
-  );
-
-  CREATE TABLE public.applications (
-    id BIGSERIAL PRIMARY KEY,
-    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-    scholarship_id BIGINT REFERENCES public.scholarships(id) ON DELETE SET NULL,
-
-    -- Allow manual entry (if scholarship_id is NULL)
-    scholarship_name TEXT,
-    organization TEXT,
-    org_website TEXT,
-    platform TEXT,
-    application_link TEXT,
-    theme TEXT,
-    min_award INTEGER,
-    max_award INTEGER,
-    requirements TEXT,
-    renewable BOOLEAN,
-    renewable_terms TEXT,
-    document_info_link TEXT,
-    target_type TEXT,
-
-    -- Application tracking
-    current_action TEXT,
-    status application_status DEFAULT 'planning',
-    submission_date DATE,
-    open_date DATE,
-    due_date DATE,
-
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
-  );
-
-  CREATE INDEX idx_applications_user ON public.applications(user_id);
-  CREATE INDEX idx_applications_status ON public.applications(status);
-  CREATE INDEX idx_applications_due_date ON public.applications(due_date);
-
-  -- RLS
-  ALTER TABLE public.applications ENABLE ROW LEVEL SECURITY;
-  CREATE POLICY "Users can view own applications" ON public.applications
-    FOR SELECT USING (auth.uid() = user_id);
-
-  CREATE POLICY "Users can insert own applications" ON public.applications
-    FOR INSERT WITH CHECK (auth.uid() = user_id);
-
-  CREATE POLICY "Users can update own applications" ON public.applications
-    FOR UPDATE USING (auth.uid() = user_id);
-
-  CREATE POLICY "Users can delete own applications" ON public.applications
-    FOR DELETE USING (auth.uid() = user_id);
-  ```
-- [ ] Run migration
-- [ ] Test creating an application via Supabase UI
-
-### TODO 1.5: Create Migration 004 - Essays
-- [ ] Create `004_essays.sql`:
+### TODO 1.3: Create Migration 002 - Essays
+- [ ] Create `002_essays.sql`:
   ```sql
   CREATE TABLE public.essays (
-    id BIGSERIAL PRIMARY KEY,
+    essay_id BIGSERIAL PRIMARY KEY,
     application_id BIGINT REFERENCES public.applications(id) ON DELETE CASCADE NOT NULL,
     theme TEXT,
     units TEXT, -- 'words' | 'characters'
@@ -756,7 +595,7 @@ scholarship-hub/
     FOR SELECT USING (
       EXISTS (
         SELECT 1 FROM public.applications
-        WHERE applications.id = essays.application_id
+        WHERE applications.application_id = essays.application_id
         AND applications.user_id = auth.uid()
       )
     );
@@ -765,7 +604,7 @@ scholarship-hub/
     FOR INSERT WITH CHECK (
       EXISTS (
         SELECT 1 FROM public.applications
-        WHERE applications.id = essays.application_id
+        WHERE applications.application_id = essays.application_id
         AND applications.user_id = auth.uid()
       )
     );
@@ -774,7 +613,7 @@ scholarship-hub/
     FOR UPDATE USING (
       EXISTS (
         SELECT 1 FROM public.applications
-        WHERE applications.id = essays.application_id
+        WHERE applications.application_id = essays.application_id
         AND applications.user_id = auth.uid()
       )
     );
@@ -783,15 +622,15 @@ scholarship-hub/
     FOR DELETE USING (
       EXISTS (
         SELECT 1 FROM public.applications
-        WHERE applications.id = essays.application_id
+        WHERE applications.application_id = essays.application_id
         AND applications.user_id = auth.uid()
       )
     );
   ```
 - [ ] Run migration
 
-### TODO 1.6: Create Migration 005 - Collaborators (Polymorphic Design)
-- [ ] Create `005_collaborators.sql`:
+### TODO 1.4: Create Migration 003 - Collaborators (Polymorphic Design)
+- [ ] Create `003_collaborators.sql`:
   ```sql
   -- Collaborator types: recommenders, essay editors, counselors
   CREATE TYPE collaborator_type AS ENUM (
@@ -1007,8 +846,8 @@ scholarship-hub/
   - Add a counselor and create guidance collaboration with scheduled session
   - Test action tracking by updating `awaiting_action_from` field
 
-### TODO 1.7: Create Migration 006 - Saved Filters (Optional)
-- [ ] Create `006_saved_filters.sql`:
+### TODO 1.5: Create Migration 004 - Saved Filters (Optional)
+- [ ] Create `004_saved_filters.sql`:
   ```sql
   -- Optional: Saved filter criteria for user's scholarship list
   -- Can defer this to post-MVP if needed
@@ -1034,7 +873,7 @@ scholarship-hub/
 
 **Note**: `user_seen_scholarships` table has been removed from MVP since scholarships are user-specific. It will be needed when implementing discovery features (see `SCHOLARSHIP_DISCOVERY_PHASE.md`).
 
-### TODO 1.8: Set Up Migration Workflow
+### TODO 1.6: Set Up Migration Workflow
 - [ ] Document all migrations in `docs/database-schema.md`
 - [ ] Create backup/restore procedures
 - [ ] Test schema with sample data

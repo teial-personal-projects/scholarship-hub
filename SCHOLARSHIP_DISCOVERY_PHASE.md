@@ -196,6 +196,64 @@ POST /api/scholarships/import - Import search result as scholarship
 
 ### Tables Needed
 
+### Core Scholarships Table (For Discovery Features)
+
+  -- subject_areas lookup table
+  CREATE TABLE public.subject_areas (
+    id BIGSERIAL PRIMARY KEY,
+    name TEXT UNIQUE NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+  );
+
+  -- scholarships table (global/shared - not user-specific)
+  -- Used for scholarship discovery/scraping service
+  CREATE TABLE public.scholarships (
+    scholarship_id BIGSERIAL PRIMARY KEY,
+    title TEXT NOT NULL,
+    description TEXT,
+    organization TEXT,
+    org_website TEXT,
+    target_type TEXT, -- 'need' | 'merit' | 'both'
+    min_award INTEGER,
+    max_award INTEGER,
+    min_gpa DECIMAL(3,2),
+    deadline DATE,
+    eligibility TEXT,
+    gender TEXT,
+    essay_required BOOLEAN DEFAULT FALSE,
+    recommendation_required BOOLEAN DEFAULT FALSE,
+    renewable BOOLEAN DEFAULT FALSE,
+    country TEXT,
+    apply_url TEXT,
+    source_url TEXT,
+    source TEXT, -- 'curated', 'scraped', 'web_search'
+    active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+  );
+
+  -- Many-to-many: scholarships <-> subject_areas
+  CREATE TABLE public.scholarship_subject_areas (
+    scholarship_id BIGINT REFERENCES public.scholarships(scholarship_id) ON DELETE CASCADE,
+    subject_area_id BIGINT REFERENCES public.subject_areas(id) ON DELETE CASCADE,
+    PRIMARY KEY (scholarship_id, subject_area_id)
+  );
+
+  -- Geographic restrictions
+  CREATE TABLE public.scholarship_geographic_restrictions (
+    id BIGSERIAL PRIMARY KEY,
+    scholarship_id BIGINT REFERENCES public.scholarships(scholarship_id) ON DELETE CASCADE,
+    region_name TEXT NOT NULL
+  );
+
+  -- Indexes
+  CREATE INDEX idx_scholarships_deadline ON public.scholarships(deadline);
+  CREATE INDEX idx_scholarships_active ON public.scholarships(active);
+  CREATE INDEX idx_scholarships_organization ON public.scholarships(organization);
+
+  -- Note: No RLS policies needed - scholarships are global/shared
+  -- Access control will be handled at the application level if needed
+
 The following tables support discovery features and are already in the main implementation plan:
 
 ```sql
