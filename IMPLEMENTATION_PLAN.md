@@ -511,9 +511,9 @@ scholarship-hub/
 **Goal**: Design and implement core database schema in Supabase
 
 ### TODO 1.1: Plan Database Schema
-- [ ] Review ChatGPT's schema suggestions
-- [ ] Map your existing types to PostgreSQL tables
-- [ ] Decide on naming conventions (snake_case for DB, camelCase for TypeScript)
+- [✅  ] Review ChatGPT's schema suggestions
+- [ ✅] Map your existing types to PostgreSQL tables
+- [✅ ] Decide on naming conventions (snake_case for DB, camelCase for TypeScript)
 - [ ] Document schema in `docs/database-schema.md`
 
 ### TODO 1.2: Create Migration 001 - Core User Tables
@@ -521,17 +521,12 @@ scholarship-hub/
   ```sql
   -- users table (extends Supabase auth.users)
   CREATE TABLE public.user_profiles (
-    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    user_id BIGSERIAL PRIMARY KEY,
+    auth_user_id UUID NOT NULL UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
     first_name TEXT,
     last_name TEXT,
-    academic_level TEXT,
-    major TEXT,
-    gpa DECIMAL(3,2),
-    gender TEXT,
-    ethnicity TEXT,
-    city TEXT,
-    state TEXT,
-    country TEXT,
+    email_address TEXT NOT NULL UNIQUE,
+    phone_number TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
   );
@@ -540,11 +535,27 @@ scholarship-hub/
   CREATE TYPE user_role AS ENUM ('student', 'recommender', 'collaborator');
 
   CREATE TABLE public.user_roles (
-    id BIGSERIAL PRIMARY KEY,
-    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    user_id BIGINT REFERENCES public.user_profiles(user_id) ON DELETE CASCADE NOT NULL,
     role user_role NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     UNIQUE(user_id, role)
+  );
+
+
+  -- User search preferences table - normalized representation of nested User.searchPreferences
+  CREATE TABLE public.user_search_preferences (
+    user_id BIGINT PRIMARY KEY REFERENCES public.user_profiles(user_id) ON DELETE CASCADE,
+    target_type TEXT,
+    subject_areas TEXT[] DEFAULT ARRAY[]::TEXT[],
+    gender TEXT,
+    ethnicity TEXT,
+    min_award NUMERIC(10,2),
+    geographic_restrictions TEXT,
+    essay_required BOOLEAN,
+    recommendation_required BOOLEAN,
+    academic_level TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
   );
 
   -- Enable Row Level Security
