@@ -1,15 +1,14 @@
--- Migration 001: Users & Profiles
--- This migration creates the user profiles, search preferences, and roles tables
--- Supabase Auth handles the actual user authentication (auth.users table)
+-- Migration 002: Normalize user profiles and add search preferences table
+-- Applies on top of the original 001_users_profiles.sql schema
 
--- User role enum
-CREATE TYPE user_role AS ENUM (
-  'student',
-  'recommender',
-  'collaborator'
-);
+BEGIN;
 
-CREATE TABLE public.user_profiles (
+-- Drop old trigger/function hookups so we can recreate them with the new schema
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+DROP FUNCTION IF EXISTS public.handle_new_user();
+
+-- Create new table structure that matches shared/src/types/user.types.ts
+CREATE TABLE public.user_profiles_new (
   id BIGSERIAL PRIMARY KEY,
   auth_user_id UUID NOT NULL UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
   first_name TEXT,
@@ -20,7 +19,39 @@ CREATE TABLE public.user_profiles (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- User search preferences table - normalized representation of nested User.searchPreferences
+-- Migrate existing profile data into the new structure
+INSERT INTO public.user_profiles_new (
+  auth_user_id,
+  first_name,
+  last_name,
+  email_address,
+  phone_number,
+  created_at,
+  updated_at
+)
+SELECT
+  p.id AS auth_user_id,
+  p.first_name,
+  p.last_name,
+  COALESCE(u.email, CONCAT('unknown-', p.id::text, '@placeholder.local')) AS email_address,
+  NULL::TEXT AS phone_number,
+  p.created_at,
+  p.updated_at
+FROM public.user_profiles p
+LEFT JOIN auth.users u ON u.id = p.id;
+
+-- Replace the old table with the new structure
+DROP TABLE public.user_profiles;
+ALTER TABLE public.user_profiles_new RENAME TO user_profiles;
+
+-- Ensure the auto-increment sequence follows the renamed table
+ALTER SEQUENCE public.user_profiles_new_id_seq OWNED BY public.user_profiles.id;
+ALTER SEQUENCE public.user_profiles_new_id_seq RENAME TO user_profiles_id_seq;
+
+-- Enable RLS on the new profile table
+ALTER TABLE public.user_profiles ENABLE ROW LEVEL SECURITY;
+
+-- Create the normalized search preferences table that links back to user_profiles
 CREATE TABLE public.user_search_preferences (
   id BIGSERIAL PRIMARY KEY,
   user_id BIGINT NOT NULL UNIQUE REFERENCES public.user_profiles(id) ON DELETE CASCADE,
@@ -37,22 +68,9 @@ CREATE TABLE public.user_search_preferences (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- User roles table - tracks what roles a user has in the system
--- A user can have multiple roles (e.g., both student and recommender)
-CREATE TABLE public.user_roles (
-  id BIGSERIAL PRIMARY KEY,
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-  role user_role NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(user_id, role)
-);
-
--- Enable Row Level Security
-ALTER TABLE public.user_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_search_preferences ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
 
--- RLS Policies for user_profiles
+-- Row Level Security policies for user_profiles
 CREATE POLICY "Users can view own profile" ON public.user_profiles
   FOR SELECT USING (auth.uid() = auth_user_id);
 
@@ -62,12 +80,12 @@ CREATE POLICY "Users can update own profile" ON public.user_profiles
 CREATE POLICY "Users can insert own profile" ON public.user_profiles
   FOR INSERT WITH CHECK (auth.uid() = auth_user_id);
 
--- RLS Policies for user_search_preferences
+-- RLS for user_search_preferences referencing the owning profile
 CREATE POLICY "Users can view own search preferences" ON public.user_search_preferences
   FOR SELECT USING (
     EXISTS (
       SELECT 1 FROM public.user_profiles p
-      WHERE p.id = user_search_preferences.user_id
+      WHERE p.id = public.user_search_preferences.user_id
         AND p.auth_user_id = auth.uid()
     )
   );
@@ -76,7 +94,7 @@ CREATE POLICY "Users can update own search preferences" ON public.user_search_pr
   FOR UPDATE USING (
     EXISTS (
       SELECT 1 FROM public.user_profiles p
-      WHERE p.id = user_search_preferences.user_id
+      WHERE p.id = public.user_search_preferences.user_id
         AND p.auth_user_id = auth.uid()
     )
   );
@@ -85,35 +103,17 @@ CREATE POLICY "Users can insert own search preferences" ON public.user_search_pr
   FOR INSERT WITH CHECK (
     EXISTS (
       SELECT 1 FROM public.user_profiles p
-      WHERE p.id = user_search_preferences.user_id
+      WHERE p.id = public.user_search_preferences.user_id
         AND p.auth_user_id = auth.uid()
     )
   );
 
--- RLS Policies for user_roles
-CREATE POLICY "Users can view own roles" ON public.user_roles
-  FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can insert own roles" ON public.user_roles
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
-
--- Indexes for performance
-CREATE INDEX idx_user_profiles_id ON public.user_profiles(id);
+-- Indexes to support lookups
 CREATE INDEX idx_user_profiles_auth_user_id ON public.user_profiles(auth_user_id);
 CREATE INDEX idx_user_profiles_email_address ON public.user_profiles(email_address);
-CREATE INDEX idx_user_roles_user_id ON public.user_roles(user_id);
-CREATE INDEX idx_user_roles_role ON public.user_roles(role);
 CREATE INDEX idx_user_search_preferences_user_id ON public.user_search_preferences(user_id);
 
--- Function to automatically update updated_at timestamp
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-  NEW.updated_at = NOW();
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
+-- Recreate updated_at triggers using the existing helper function
 CREATE TRIGGER update_user_profiles_updated_at
   BEFORE UPDATE ON public.user_profiles
   FOR EACH ROW
@@ -124,7 +124,7 @@ CREATE TRIGGER update_user_search_preferences_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
 
--- Optional: Function to create default profile on user signup
+-- Recreate the signup hook to insert rows into the new schema
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -132,7 +132,6 @@ BEGIN
   VALUES (NEW.id, NEW.email)
   ON CONFLICT (auth_user_id) DO NOTHING;
 
-  -- Assign default 'student' role
   INSERT INTO public.user_roles (user_id, role)
   VALUES (NEW.id, 'student')
   ON CONFLICT DO NOTHING;
@@ -141,12 +140,13 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Trigger to create profile when new user signs up
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW
   EXECUTE FUNCTION public.handle_new_user();
 
+-- Documentation comments
 COMMENT ON TABLE public.user_profiles IS 'Extended user account data linked to Supabase auth.users via auth_user_id';
 COMMENT ON TABLE public.user_search_preferences IS 'Normalized storage of nested User.searchPreferences object';
-COMMENT ON TABLE public.user_roles IS 'User roles in the system - users can have multiple roles';
+
+COMMIT;
