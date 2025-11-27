@@ -152,7 +152,7 @@ scholarship-hub/
 - scholarship_geographic_restrictions (scholarship_id, region_name)
 
 -- Applications
-- applications (id, user_id, scholarship_id, status, due_date, ...)
+- applications (id, user_id, scholarship_name, target_type, organization, status, due_date, ...)
 ```
 
 ### Extended Tables (Phase 2-3)
@@ -161,8 +161,8 @@ scholarship-hub/
 - essays (id, application_id, theme, word_count, essay_link, ...)
 
 -- Collaborators (unified polymorphic design)
-- collaborators (id, first_name, last_name, email, collaborator_type, ...)
-  -- collaborator_type: 'recommender' | 'essayEditor' | 'counselor'
+- collaborators (id, user_id, first_name, last_name, email, relationship, ...)
+  -- No collaborator_type field - same person can do multiple collaboration types
 - collaborations (id, collaborator_id, application_id, collaboration_type, status, awaiting_action_from, ...)
   -- collaboration_type: 'recommendation' | 'essayReview' | 'guidance'
   -- Base table with common fields + action tracking
@@ -173,10 +173,6 @@ scholarship-hub/
 - guidance_collaborations (collaboration_id, session_type, meeting_url, scheduled_for, ...)
   -- Type-specific data for guidance/counseling
 - collaboration_history (id, collaboration_id, action, details, ...)
-
--- Optional: Saved Filters (for filtering user's own scholarships)
-- saved_filters (id, user_id, name, filter_criteria_json, ...)
-  -- Note: Deferred to post-MVP if needed
 ```
 
 ---
@@ -511,7 +507,7 @@ scholarship-hub/
 **Goal**: Design and implement core database schema in Supabase
 
 ### TODO 1.1: Plan Database Schema
-- [✅  ] Review ChatGPT's schema suggestions
+- [✅] Review ChatGPT's schema suggestions
 - [ ✅] Map your existing types to PostgreSQL tables
 - [✅] Decide on naming conventions (snake_case for DB, camelCase for TypeScript)
 - [ ] Document schema in `docs/database-schema.md`
@@ -572,11 +568,115 @@ scholarship-hub/
 - [ ] Run migration in Supabase SQL Editor
 - [ ] Verify tables created in Table Editor
 
-### TODO 1.3: Create Migration 002 - Essays
-- [ ] Create `002_essays.sql`:
+### TODO 1.3: Create Migration 002 - Applications
+- [✅] Create `002_applications.sql`:
+  ```sql
+  -- Application status enum
+  CREATE TYPE application_status AS ENUM (
+    'Not Started',
+    'In Progress',
+    'Submitted',
+    'Awarded',
+    'Not Awarded'
+  );
+
+  -- Target type enum
+  CREATE TYPE target_type AS ENUM (
+    'Merit',
+    'Need',
+    'Both'
+  );
+
+  -- Applications table
+  CREATE TABLE public.applications (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT REFERENCES public.user_profiles(id) ON DELETE CASCADE NOT NULL,
+
+    -- Scholarship details
+    scholarship_name TEXT NOT NULL,
+    target_type target_type,
+    organization TEXT,
+    org_website TEXT,
+    platform TEXT,
+    application_link TEXT,
+    theme TEXT,
+    min_award NUMERIC(10,2),
+    max_award NUMERIC(10,2),
+    requirements TEXT,
+    renewable BOOLEAN DEFAULT FALSE,
+    renewable_terms TEXT,
+    document_info_link TEXT,
+
+    -- Application tracking
+    current_action TEXT,
+    status application_status DEFAULT 'Not Started',
+    submission_date DATE,
+    open_date DATE,
+    due_date DATE NOT NULL,
+
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+  );
+
+  -- Indexes for performance
+  CREATE INDEX idx_applications_user_id ON public.applications(user_id);
+  CREATE INDEX idx_applications_status ON public.applications(status);
+  CREATE INDEX idx_applications_due_date ON public.applications(due_date);
+
+  -- Enable Row Level Security
+  ALTER TABLE public.applications ENABLE ROW LEVEL SECURITY;
+
+  -- RLS Policies
+  CREATE POLICY "Users can view own applications" ON public.applications
+    FOR SELECT USING (
+      user_id IN (
+        SELECT id FROM public.user_profiles
+        WHERE auth_user_id = auth.uid()
+      )
+    );
+
+  CREATE POLICY "Users can insert own applications" ON public.applications
+    FOR INSERT WITH CHECK (
+      user_id IN (
+        SELECT id FROM public.user_profiles
+        WHERE auth_user_id = auth.uid()
+      )
+    );
+
+  CREATE POLICY "Users can update own applications" ON public.applications
+    FOR UPDATE USING (
+      user_id IN (
+        SELECT id FROM public.user_profiles
+        WHERE auth_user_id = auth.uid()
+      )
+    );
+
+  CREATE POLICY "Users can delete own applications" ON public.applications
+    FOR DELETE USING (
+      user_id IN (
+        SELECT id FROM public.user_profiles
+        WHERE auth_user_id = auth.uid()
+      )
+    );
+
+  -- Trigger to automatically update updated_at timestamp
+  CREATE TRIGGER update_applications_updated_at
+    BEFORE UPDATE ON public.applications
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+  -- Comments for documentation
+  COMMENT ON TABLE public.applications IS 'Scholarship applications tracked by students';
+  COMMENT ON COLUMN public.applications.user_id IS 'The student who owns this application';
+  COMMENT ON COLUMN public.applications.target_type IS 'Whether scholarship is merit-based, need-based, or both';
+  ```
+- [ ] Run migration
+
+### TODO 1.4: Create Migration 003 - Essays
+- [✅] Create `003_essays.sql`:
   ```sql
   CREATE TABLE public.essays (
-    essay_id BIGSERIAL PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
     application_id BIGINT REFERENCES public.applications(id) ON DELETE CASCADE NOT NULL,
     theme TEXT,
     units TEXT, -- 'words' | 'characters'
@@ -586,59 +686,52 @@ scholarship-hub/
     updated_at TIMESTAMPTZ DEFAULT NOW()
   );
 
-  CREATE INDEX idx_essays_application ON public.essays(application_id);
+  CREATE INDEX idx_essays_application ON public.essays(id);
 
   -- RLS (users can manage essays for their own applications)
   ALTER TABLE public.essays ENABLE ROW LEVEL SECURITY;
 
   CREATE POLICY "Users can view essays for own applications" ON public.essays
     FOR SELECT USING (
-      EXISTS (
-        SELECT 1 FROM public.applications
-        WHERE applications.application_id = essays.application_id
-        AND applications.user_id = auth.uid()
+      application_id IN (
+        SELECT a.id FROM public.applications a
+        JOIN public.user_profiles p ON p.id = a.user_id
+        WHERE p.auth_user_id = auth.uid()
       )
     );
 
   CREATE POLICY "Users can insert essays for own applications" ON public.essays
     FOR INSERT WITH CHECK (
-      EXISTS (
-        SELECT 1 FROM public.applications
-        WHERE applications.application_id = essays.application_id
-        AND applications.user_id = auth.uid()
+      application_id IN (
+        SELECT a.id FROM public.applications a
+        JOIN public.user_profiles p ON p.id = a.user_id
+        WHERE p.auth_user_id = auth.uid()
       )
     );
 
   CREATE POLICY "Users can update essays for own applications" ON public.essays
     FOR UPDATE USING (
-      EXISTS (
-        SELECT 1 FROM public.applications
-        WHERE applications.application_id = essays.application_id
-        AND applications.user_id = auth.uid()
+      application_id IN (
+        SELECT a.id FROM public.applications a
+        JOIN public.user_profiles p ON p.id = a.user_id
+        WHERE p.auth_user_id = auth.uid()
       )
     );
 
   CREATE POLICY "Users can delete essays for own applications" ON public.essays
     FOR DELETE USING (
-      EXISTS (
-        SELECT 1 FROM public.applications
-        WHERE applications.application_id = essays.application_id
-        AND applications.user_id = auth.uid()
+      application_id IN (
+        SELECT a.id FROM public.applications a
+        JOIN public.user_profiles p ON p.id = a.user_id
+        WHERE p.auth_user_id = auth.uid()
       )
     );
   ```
-- [ ] Run migration
+- [✅] Run migration
 
-### TODO 1.4: Create Migration 003 - Collaborators (Polymorphic Design)
-- [ ] Create `003_collaborators.sql`:
+### TODO 1.5: Create Migration 004 - Collaborators (Polymorphic Design)
+- [✅] Create `004_collaborators.sql`:
   ```sql
-  -- Collaborator types: recommenders, essay editors, counselors
-  CREATE TYPE collaborator_type AS ENUM (
-    'recommender',
-    'essayEditor',
-    'counselor'
-  );
-
   -- Collaboration types: what kind of help they're providing
   CREATE TYPE collaboration_type AS ENUM (
     'recommendation',
@@ -669,14 +762,14 @@ scholarship-hub/
     'final'
   );
 
-  -- Unified collaborators table (replaces separate recommenders and collaborators)
+  -- Collaborators table (people who help students - owned by user)
+  -- NOTE: No collaborator_type field - same person can do multiple collaboration types
   CREATE TABLE public.collaborators (
     id BIGSERIAL PRIMARY KEY,
-    user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL, -- if they sign up
+    user_id BIGINT REFERENCES public.user_profiles(id) ON DELETE CASCADE NOT NULL, -- Student who owns this collaborator
     first_name TEXT NOT NULL,
     last_name TEXT NOT NULL,
     email TEXT NOT NULL,
-    collaborator_type collaborator_type NOT NULL,
     relationship TEXT, -- e.g., 'Teacher', 'Counselor', 'Tutor', 'Parent'
     phone_number TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -705,20 +798,24 @@ scholarship-hub/
     UNIQUE(collaborator_id, application_id, collaboration_type)
   );
 
-  -- Essay review-specific table
+  -- Essay review-specific table (one collaboration can review multiple essays)
   CREATE TABLE public.essay_review_collaborations (
-    collaboration_id BIGINT PRIMARY KEY REFERENCES public.collaborations(id) ON DELETE CASCADE,
+    id BIGSERIAL PRIMARY KEY,
+    collaboration_id BIGINT REFERENCES public.collaborations(id) ON DELETE CASCADE NOT NULL,
     essay_id BIGINT REFERENCES public.essays(id) ON DELETE CASCADE NOT NULL,
 
     -- Essay review tracking
     current_draft_version INT DEFAULT 0,
     feedback_rounds INT DEFAULT 0,
-    last_feedback_at TIMESTAMPTZ
+    last_feedback_at TIMESTAMPTZ,
+
+    UNIQUE(collaboration_id, essay_id)
   );
 
-  -- Recommendation-specific table
+  -- Recommendation-specific table (one-to-one with collaboration)
   CREATE TABLE public.recommendation_collaborations (
-    collaboration_id BIGINT PRIMARY KEY REFERENCES public.collaborations(id) ON DELETE CASCADE,
+    id BIGSERIAL PRIMARY KEY,
+    collaboration_id BIGINT REFERENCES public.collaborations(id) ON DELETE CASCADE NOT NULL UNIQUE,
 
     -- Recommendation tracking
     portal_url TEXT,
@@ -727,9 +824,10 @@ scholarship-hub/
     letter_submitted_at TIMESTAMPTZ
   );
 
-  -- Guidance/counseling-specific table
+  -- Guidance/counseling-specific table (one-to-one with collaboration)
   CREATE TABLE public.guidance_collaborations (
-    collaboration_id BIGINT PRIMARY KEY REFERENCES public.collaborations(id) ON DELETE CASCADE,
+    id BIGSERIAL PRIMARY KEY,
+    collaboration_id BIGINT REFERENCES public.collaborations(id) ON DELETE CASCADE NOT NULL UNIQUE,
 
     -- Guidance tracking
     session_type session_type,
@@ -762,38 +860,44 @@ scholarship-hub/
   ALTER TABLE public.guidance_collaborations ENABLE ROW LEVEL SECURITY;
   ALTER TABLE public.collaboration_history ENABLE ROW LEVEL SECURITY;
 
-  -- RLS Policies: Students can view collaborators they've added
-  CREATE POLICY "Users can view collaborators for own applications" ON public.collaborators
+  -- RLS Policies: Students can view their own collaborators
+  CREATE POLICY "Users can view own collaborators" ON public.collaborators
     FOR SELECT USING (
       EXISTS (
-        SELECT 1 FROM public.collaborations c
-        JOIN public.applications a ON a.id = c.application_id
-        WHERE c.collaborator_id = collaborators.id
-        AND a.user_id = auth.uid()
+        SELECT 1 FROM public.user_profiles p
+        WHERE p.id = collaborators.user_id
+        AND p.auth_user_id = auth.uid()
       )
     );
 
-  -- RLS Policies: Students can insert collaborators
-  CREATE POLICY "Users can insert collaborators" ON public.collaborators
-    FOR INSERT WITH CHECK (true);
+  -- RLS Policies: Students can insert their own collaborators
+  CREATE POLICY "Users can insert own collaborators" ON public.collaborators
+    FOR INSERT WITH CHECK (
+      EXISTS (
+        SELECT 1 FROM public.user_profiles p
+        WHERE p.id = user_id
+        AND p.auth_user_id = auth.uid()
+      )
+    );
+
+  -- RLS Policies: Students can update their own collaborators
+  CREATE POLICY "Users can update own collaborators" ON public.collaborators
+    FOR UPDATE USING (
+      EXISTS (
+        SELECT 1 FROM public.user_profiles p
+        WHERE p.id = collaborators.user_id
+        AND p.auth_user_id = auth.uid()
+      )
+    );
 
   -- RLS Policies: Students can view their collaborations
   CREATE POLICY "Users can view own collaborations" ON public.collaborations
     FOR SELECT USING (
       EXISTS (
-        SELECT 1 FROM public.applications a
-        WHERE a.id = collaborations.application_id
-        AND a.user_id = auth.uid()
-      )
-    );
-
-  -- RLS Policies: Collaborators can view their assigned collaborations
-  CREATE POLICY "Collaborators can view assigned work" ON public.collaborations
-    FOR SELECT USING (
-      EXISTS (
         SELECT 1 FROM public.collaborators c
+        JOIN public.user_profiles p ON p.id = c.user_id
         WHERE c.id = collaborations.collaborator_id
-        AND c.user_id = auth.uid()
+        AND p.auth_user_id = auth.uid()
       )
     );
 
@@ -802,9 +906,10 @@ scholarship-hub/
     FOR SELECT USING (
       EXISTS (
         SELECT 1 FROM public.collaborations c
-        JOIN public.applications a ON a.id = c.application_id
+        JOIN public.collaborators co ON co.id = c.collaborator_id
+        JOIN public.user_profiles p ON p.id = co.user_id
         WHERE c.id = essay_review_collaborations.collaboration_id
-        AND a.user_id = auth.uid()
+        AND p.auth_user_id = auth.uid()
       )
     );
 
@@ -812,9 +917,10 @@ scholarship-hub/
     FOR SELECT USING (
       EXISTS (
         SELECT 1 FROM public.collaborations c
-        JOIN public.applications a ON a.id = c.application_id
+        JOIN public.collaborators co ON co.id = c.collaborator_id
+        JOIN public.user_profiles p ON p.id = co.user_id
         WHERE c.id = recommendation_collaborations.collaboration_id
-        AND a.user_id = auth.uid()
+        AND p.auth_user_id = auth.uid()
       )
     );
 
@@ -822,58 +928,118 @@ scholarship-hub/
     FOR SELECT USING (
       EXISTS (
         SELECT 1 FROM public.collaborations c
-        JOIN public.applications a ON a.id = c.application_id
+        JOIN public.collaborators co ON co.id = c.collaborator_id
+        JOIN public.user_profiles p ON p.id = co.user_id
         WHERE c.id = guidance_collaborations.collaboration_id
-        AND a.user_id = auth.uid()
+        AND p.auth_user_id = auth.uid()
       )
     );
 
-  -- Policies for collaboration_history...
+  -- Policies for collaboration_history
   CREATE POLICY "Users can view own collaboration history" ON public.collaboration_history
     FOR SELECT USING (
       EXISTS (
         SELECT 1 FROM public.collaborations c
-        JOIN public.applications a ON a.id = c.application_id
+        JOIN public.collaborators co ON co.id = c.collaborator_id
+        JOIN public.user_profiles p ON p.id = co.user_id
         WHERE c.id = collaboration_history.collaboration_id
-        AND a.user_id = auth.uid()
+        AND p.auth_user_id = auth.uid()
       )
     );
   ```
-- [ ] Run migration
+- [✅] Run migration
 - [ ] Test with sample data:
   - Add a recommender and create recommendation collaboration with portal URL
   - Add an essay editor and create essay review collaboration linked to an essay
   - Add a counselor and create guidance collaboration with scheduled session
   - Test action tracking by updating `awaiting_action_from` field
 
-### TODO 1.5: Create Migration 004 - Saved Filters (Optional)
-- [ ] Create `004_saved_filters.sql`:
+
+### TODO 1.6: Create Migration 005 - Recommendations
+- [✅] Create `005_recommendations.sql`:
   ```sql
-  -- Optional: Saved filter criteria for user's scholarship list
-  -- Can defer this to post-MVP if needed
-  CREATE TABLE public.saved_filters (
-    id BIGSERIAL PRIMARY KEY,
-    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-    name TEXT NOT NULL,
-    filter_criteria JSONB NOT NULL, -- stores FilterCriteria object (keyword, award range, etc.)
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+  -- Recommendation status enum
+  CREATE TYPE recommendation_status AS ENUM (
+    'Pending',
+    'Submitted'
   );
 
-  CREATE INDEX idx_saved_filters_user ON public.saved_filters(user_id);
+  -- Recommendations table
+  CREATE TABLE public.recommendations (
+    id BIGSERIAL PRIMARY KEY,
+    application_id BIGINT REFERENCES public.applications(id) ON DELETE CASCADE NOT NULL,
+    recommender_id BIGINT REFERENCES public.collaborators(id) ON DELETE CASCADE NOT NULL,
+
+    -- Recommendation tracking
+    status recommendation_status DEFAULT 'Pending',
+    submitted_at TIMESTAMPTZ,
+    due_date DATE,
+
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+
+    -- A recommender can only have one recommendation per application
+    UNIQUE(application_id, recommender_id)
+  );
+
+  -- Indexes for performance
+  CREATE INDEX idx_recommendations_application_id ON public.recommendations(application_id);
+  CREATE INDEX idx_recommendations_recommender_id ON public.recommendations(recommender_id);
+  CREATE INDEX idx_recommendations_status ON public.recommendations(status);
 
   -- Enable Row Level Security
-  ALTER TABLE public.saved_filters ENABLE ROW LEVEL SECURITY;
+  ALTER TABLE public.recommendations ENABLE ROW LEVEL SECURITY;
 
-  -- RLS Policies: Users can only access their own saved filters
-  CREATE POLICY "Users can manage own saved filters" ON public.saved_filters
-    FOR ALL USING (user_id = auth.uid());
+  -- RLS Policies
+  CREATE POLICY "Users can view recommendations for own applications" ON public.recommendations
+    FOR SELECT USING (
+      application_id IN (
+        SELECT a.id FROM public.applications a
+        JOIN public.user_profiles p ON p.id = a.user_id
+        WHERE p.auth_user_id = auth.uid()
+      )
+    );
+
+  CREATE POLICY "Users can insert recommendations for own applications" ON public.recommendations
+    FOR INSERT WITH CHECK (
+      application_id IN (
+        SELECT a.id FROM public.applications a
+        JOIN public.user_profiles p ON p.id = a.user_id
+        WHERE p.auth_user_id = auth.uid()
+      )
+    );
+
+  CREATE POLICY "Users can update recommendations for own applications" ON public.recommendations
+    FOR UPDATE USING (
+      application_id IN (
+        SELECT a.id FROM public.applications a
+        JOIN public.user_profiles p ON p.id = a.user_id
+        WHERE p.auth_user_id = auth.uid()
+      )
+    );
+
+  CREATE POLICY "Users can delete recommendations for own applications" ON public.recommendations
+    FOR DELETE USING (
+      application_id IN (
+        SELECT a.id FROM public.applications a
+        JOIN public.user_profiles p ON p.id = a.user_id
+        WHERE p.auth_user_id = auth.uid()
+      )
+    );
+
+  -- Trigger to automatically update updated_at timestamp
+  CREATE TRIGGER update_recommendations_updated_at
+    BEFORE UPDATE ON public.recommendations
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+  -- Comments for documentation
+  COMMENT ON TABLE public.recommendations IS 'Recommendation letters for scholarship applications';
+  COMMENT ON COLUMN public.recommendations.recommender_id IS 'The collaborator writing the recommendation';
   ```
-- [ ] Run migration (or skip if deferring saved filters feature)
+- [ ] Run migration
 
-**Note**: `user_seen_scholarships` table has been removed from MVP since scholarships are user-specific. It will be needed when implementing discovery features (see `SCHOLARSHIP_DISCOVERY_PHASE.md`).
-
-### TODO 1.6: Set Up Migration Workflow
+### TODO 1.7: Set Up Migration Workflow
 - [ ] Document all migrations in `docs/database-schema.md`
 - [ ] Create backup/restore procedures
 - [ ] Test schema with sample data
@@ -1350,12 +1516,10 @@ scholarship-hub/
 
 ### TODO 7.1: Backend - Collaborators CRUD
 - [ ] Create routes/controllers/services for:
-  - `POST /api/collaborators` - Student adds a collaborator (with collaboratorType)
-  - `GET /api/collaborators` - List all collaborators for the user
+  - `POST /api/collaborators` - Student adds a collaborator
   - `GET /api/collaborators/:id` - Get specific collaborator
   - `PATCH /api/collaborators/:id` - Update collaborator info
   - `DELETE /api/collaborators/:id` - Remove collaborator
-- [ ] Support filtering by `collaboratorType`: 'recommender', 'essayEditor', 'counselor'
 
 ### TODO 7.2: Backend - Collaborations Management
 - [ ] Create routes/controllers/services for:
@@ -1386,7 +1550,7 @@ scholarship-hub/
   - List all collaborators grouped by type
   - Add collaborator button (opens form with type selector)
 - [ ] Create `web/src/components/CollaboratorForm.tsx`:
-  - Fields: firstName, lastName, email, collaboratorType (dropdown), relationship, phone
+  - Fields: firstName, lastName, email, relationship, phone
   - Validation: email required, type required
 - [ ] Create `web/src/components/AssignCollaboratorModal.tsx`:
   - Assign existing collaborator to application or essay

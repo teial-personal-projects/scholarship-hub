@@ -246,7 +246,6 @@ interface Collaboration {
 
 ### After (Unified + Polymorphic)
 ```typescript
-type CollaboratorType = 'recommender' | 'essayEditor' | 'counselor';
 type CollaborationType = 'recommendation' | 'essayReview' | 'guidance';
 type CollaborationStatus =
   | 'pending'
@@ -287,7 +286,6 @@ interface Collaborator {
   firstName: string;
   lastName: string;
   emailAddress: string;
-  collaboratorType: CollaboratorType;
   relationship?: string;
   phoneNumber?: string;
   createdAt?: Date;
@@ -395,7 +393,6 @@ const recommender = await createCollaborator({
   firstName: 'Dr. Smith',
   lastName: 'Johnson',
   emailAddress: 'smith@school.edu',
-  collaboratorType: 'recommender',
   relationship: 'AP Physics Teacher'
 });
 
@@ -419,7 +416,6 @@ const editor = await createCollaborator({
   firstName: 'Jane',
   lastName: 'Doe',
   emailAddress: 'jane@writingcenter.edu',
-  collaboratorType: 'essayEditor',
   relationship: 'Writing Center Tutor'
 });
 
@@ -446,7 +442,6 @@ const counselor = await createCollaborator({
   firstName: 'Ms.',
   lastName: 'Rodriguez',
   emailAddress: 'rodriguez@school.edu',
-  collaboratorType: 'counselor', // Primary type
   relationship: 'School Counselor'
 });
 

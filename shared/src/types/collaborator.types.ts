@@ -1,4 +1,3 @@
-export type CollaboratorType = 'recommender' | 'essayEditor' | 'counselor';
 export type CollaborationType = 'recommendation' | 'essayReview' | 'guidance';
 export type CollaborationStatus =
   | 'pending'
@@ -44,7 +43,6 @@ export interface Collaborator {
   firstName: string;
   lastName: string;
   emailAddress: string;
-  collaboratorType: CollaboratorType;
   relationship?: string;
   phoneNumber?: string;
   createdAt?: Date;
