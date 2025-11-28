@@ -1037,12 +1037,12 @@ scholarship-hub/
   COMMENT ON TABLE public.recommendations IS 'Recommendation letters for scholarship applications';
   COMMENT ON COLUMN public.recommendations.recommender_id IS 'The collaborator writing the recommendation';
   ```
-- [ ] Run migration
+- [✅] Run migration
 
 ### TODO 1.7: Set Up Migration Workflow
-- [ ] Document all migrations in `docs/database-schema.md`
-- [ ] Create backup/restore procedures
-- [ ] Test schema with sample data
+- [✅] Document all migrations in `docs/database-schema.md`
+- [✅] Create backup/restore procedures
+- [✅] Test schema with sample data
 
 **Milestone**: Database schema complete and documented
 
@@ -1150,22 +1150,19 @@ scholarship-hub/
 - [ ] Create `src/controllers/users.controller.ts`
 - [ ] Create `src/services/users.service.ts`
 - [ ] Implement endpoints:
-  - `GET /api/users/me` - Get current user profile
+  - `GET /api/users/me` - Get current user profile (includes search preferences)
   - `PATCH /api/users/me` - Update current user profile
   - `GET /api/users/me/roles` - Get user roles
+  - `GET /api/users/me/search-preferences` - Get user's search preferences
+  - `PATCH /api/users/me/search-preferences` - Update search preferences
+- [ ] Note: `GET /api/users/me` should join and return `user_search_preferences` data
 - [ ] Test with curl or Postman
 
-### TODO 2.6: Implement Scholarships API (Read-Only)
-- [ ] Create `src/routes/scholarships.routes.ts`
-- [ ] Create `src/controllers/scholarships.controller.ts`
-- [ ] Create `src/services/scholarships.service.ts`
-- [ ] Implement endpoints:
-  - `GET /api/scholarships` - List scholarships (with pagination)
-  - `GET /api/scholarships/:id` - Get scholarship details
-- [ ] Test with sample data
-
-### TODO 2.7: Implement Applications API
-- [ ] Create full CRUD for applications:
+### TODO 2.6: Implement Applications API
+- [ ] Create `src/routes/applications.routes.ts`
+- [ ] Create `src/controllers/applications.controller.ts`
+- [ ] Create `src/services/applications.service.ts`
+- [ ] Implement full CRUD for applications:
   - `GET /api/applications` - List user's applications
   - `POST /api/applications` - Create new application
   - `GET /api/applications/:id` - Get application details
@@ -1174,7 +1171,64 @@ scholarship-hub/
 - [ ] Ensure RLS policies are enforced
 - [ ] Test all endpoints
 
-**Milestone**: Backend can serve user profiles, scholarships, and applications via REST API
+### TODO 2.7: Implement Essays API
+- [ ] Create `src/routes/essays.routes.ts`
+- [ ] Create `src/controllers/essays.controller.ts`
+- [ ] Create `src/services/essays.service.ts`
+- [ ] Implement endpoints:
+  - `GET /api/applications/:applicationId/essays` - List essays for an application
+  - `POST /api/applications/:applicationId/essays` - Create new essay
+  - `GET /api/essays/:id` - Get essay details
+  - `PATCH /api/essays/:id` - Update essay
+  - `DELETE /api/essays/:id` - Delete essay
+- [ ] Ensure RLS policies are enforced
+- [ ] Test all endpoints
+
+### TODO 2.8: Implement Collaborators API
+- [ ] Create `src/routes/collaborators.routes.ts`
+- [ ] Create `src/controllers/collaborators.controller.ts`
+- [ ] Create `src/services/collaborators.service.ts`
+- [ ] Implement endpoints:
+  - `GET /api/collaborators` - List user's collaborators
+  - `POST /api/collaborators` - Add new collaborator
+  - `GET /api/collaborators/:id` - Get collaborator details
+  - `PATCH /api/collaborators/:id` - Update collaborator
+  - `DELETE /api/collaborators/:id` - Delete collaborator
+- [ ] Ensure RLS policies are enforced
+- [ ] Test all endpoints
+
+### TODO 2.9: Implement Collaborations API
+- [ ] Create `src/routes/collaborations.routes.ts`
+- [ ] Create `src/controllers/collaborations.controller.ts`
+- [ ] Create `src/services/collaborations.service.ts`
+- [ ] Implement endpoints:
+  - `GET /api/applications/:applicationId/collaborations` - List collaborations for an application
+  - `POST /api/collaborations` - Create new collaboration
+  - `GET /api/collaborations/:id` - Get collaboration details
+  - `PATCH /api/collaborations/:id` - Update collaboration status/notes
+  - `DELETE /api/collaborations/:id` - Delete collaboration
+  - `POST /api/collaborations/:id/history` - Add history entry
+  - `GET /api/collaborations/:id/history` - Get collaboration history
+- [ ] Handle type-specific tables (essay_review_collaborations, recommendation_collaborations, guidance_collaborations)
+- [ ] Ensure RLS policies are enforced
+- [ ] Test all endpoints
+
+### TODO 2.10: Implement Recommendations API
+- [ ] Create `src/routes/recommendations.routes.ts`
+- [ ] Create `src/controllers/recommendations.controller.ts`
+- [ ] Create `src/services/recommendations.service.ts`
+- [ ] Implement endpoints:
+  - `GET /api/applications/:applicationId/recommendations` - List recommendations for an application
+  - `POST /api/recommendations` - Create new recommendation
+  - `GET /api/recommendations/:id` - Get recommendation details
+  - `PATCH /api/recommendations/:id` - Update recommendation status
+  - `DELETE /api/recommendations/:id` - Delete recommendation
+- [ ] Ensure RLS policies are enforced
+- [ ] Test all endpoints
+
+**Milestone**: Backend can serve all core resources (users, applications, essays, collaborators, collaborations, recommendations) via REST API
+
+**Note**: Scholarships API has been deferred. See `SCHOLARSHIP_DISCOVERY_PHASE.md` for future implementation when scholarship discovery features are added.
 
 ---
 
