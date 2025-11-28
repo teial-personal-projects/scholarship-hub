@@ -5,6 +5,7 @@ import morgan from 'morgan';
 import { config } from './config/index.js';
 import { errorHandler } from './middleware/error-handler.js';
 import { testSupabaseConnection } from './config/supabase.js';
+import apiRoutes from './routes/index.js';
 
 const app = express();
 
@@ -19,8 +20,8 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// API routes will be added here
-// app.use('/api', routes);
+// API routes
+app.use('/api', apiRoutes);
 
 // 404 handler - must be after all routes
 app.use((_req, res) => {

@@ -1146,17 +1146,17 @@ scholarship-hub/
 - [✅] Create `src/middleware/validate.ts` using Zod for request validation
 
 ### TODO 2.5: Implement Users API
-- [ ] Create `src/routes/users.routes.ts`
-- [ ] Create `src/controllers/users.controller.ts`
-- [ ] Create `src/services/users.service.ts`
-- [ ] Implement endpoints:
+- [✅] Create `src/routes/users.routes.ts`
+- [✅] Create `src/controllers/users.controller.ts`
+- [✅] Create `src/services/users.service.ts`
+- [✅] Implement endpoints:
   - `GET /api/users/me` - Get current user profile (includes search preferences)
   - `PATCH /api/users/me` - Update current user profile
   - `GET /api/users/me/roles` - Get user roles
   - `GET /api/users/me/search-preferences` - Get user's search preferences
   - `PATCH /api/users/me/search-preferences` - Update search preferences
-- [ ] Note: `GET /api/users/me` should join and return `user_search_preferences` data
-- [ ] Test with curl or Postman
+- [✅] Note: `GET /api/users/me` should join and return `user_search_preferences` data
+- [✅] Test with curl and Insomnia.
 
 ### TODO 2.6: Implement Applications API
 - [ ] Create `src/routes/applications.routes.ts`
