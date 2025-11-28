@@ -1052,8 +1052,8 @@ scholarship-hub/
 **Goal**: Set up Node.js backend with Supabase integration, basic API endpoints
 
 ### TODO 2.1: Initialize Backend Package
-- [ ] `cd api && npm init -y`
-- [ ] Update `package.json`:
+- [✅] `cd api && npm init -y`
+- [✅] Update `package.json`:
   ```json
   {
     "name": "@scholarship-hub/api",
@@ -1087,12 +1087,12 @@ scholarship-hub/
     }
   }
   ```
-- [ ] Install dependencies: `npm install`
-- [ ] Create `tsconfig.json`
-- [ ] Directory structure already created in Phase 0
+- [✅] Install dependencies: `npm install`
+- [✅] Create `tsconfig.json`
+- [✅] Directory structure already created in Phase 0
 
 ### TODO 2.2: Create Basic Server Structure
-- [ ] Create `src/index.ts`:
+- [ ✅] Create `src/index.ts`:
   ```typescript
   import express from 'express';
   import cors from 'cors';
