@@ -1468,114 +1468,21 @@ scholarship-hub/
 
 **Milestone**: Students can fully manage applications and essays
 
----
-
-## PHASE 6: Scholarship Management & Filtering
-**Goal**: Allow users to manually add scholarships and search/filter their own list
-
-### TODO 6.1: Backend - Scholarship CRUD
-- [ ] Create routes/controllers/services for:
-  - `POST /api/scholarships` - Add a new scholarship (manually entered by user)
-  - `GET /api/scholarships` - List all scholarships for the user
-  - `GET /api/scholarships/:id` - Get specific scholarship
-  - `PATCH /api/scholarships/:id` - Update scholarship details
-  - `DELETE /api/scholarships/:id` - Delete scholarship
-- [ ] Note: For MVP, scholarships are user-specific (each user maintains their own list)
-- [ ] Each scholarship should include:
-  - Basic info: title, organization, url
-  - Financial: min_award, max_award
-  - Deadline: deadline date
-  - Eligibility: academic_level, major, min_gpa, etc.
-  - Optional: description, requirements, notes
-
-### TODO 6.2: Backend - Search/Filter Service
-- [ ] Create `src/services/scholarships.filter.service.ts`
-- [ ] Implement filtering for user's scholarships:
-  ```typescript
-  interface FilterCriteria {
-    keyword?: string; // Search in title, organization, description
-    minAward?: number;
-    maxAward?: number;
-    deadlineAfter?: string;
-    deadlineBefore?: string;
-    academicLevel?: string;
-    major?: string;
-    sortBy?: 'deadline' | 'award' | 'title' | 'created';
-    sortOrder?: 'asc' | 'desc';
-  }
-  ```
-- [ ] Use PostgreSQL full-text search with `to_tsvector` on title/organization/description
-- [ ] Return filtered and sorted results
-
-### TODO 6.3: Backend - Filter Endpoint
-- [ ] Create `GET /api/scholarships?keyword=...&minAward=...` (query params for filtering)
-- [ ] Or `POST /api/scholarships/filter` with `FilterCriteria` in body
-- [ ] Return user's scholarships matching criteria
-- [ ] Support pagination
-
-### TODO 6.4: Frontend - Add Scholarship Page
-- [ ] Create `src/pages/AddScholarship.tsx`
-- [ ] Build form for manual scholarship entry:
-  - **Quick Entry**: Name, organization, deadline, award amount, URL
-  - "Add Details Later" vs "Full Details" toggle
-  - **Full Entry**: All eligibility criteria, requirements, description
-- [ ] Submit to `POST /api/scholarships`
-- [ ] Redirect to scholarships list or "Create Application" flow
-- [ ] Make the form fast and easy to use
-
-### TODO 6.5: Frontend - Scholarships List Page
-- [ ] Create `src/pages/Scholarships.tsx`
-- [ ] Display user's scholarships in cards/table
-- [ ] Each entry shows: title, organization, deadline, award amount
-- [ ] Actions for each scholarship:
-  - "Create Application" → go to new application flow
-  - "Edit" → edit scholarship details
-  - "Delete" → remove scholarship
-- [ ] Show scholarships with upcoming deadlines prominently
-
-### TODO 6.6: Frontend - Search/Filter UI
-- [ ] Add search bar at top of scholarships list
-- [ ] Add filter controls:
-  - Keyword search (searches title, org, description)
-  - Award range (min/max sliders or inputs)
-  - Deadline range (date pickers)
-  - Academic level dropdown
-  - Major dropdown
-- [ ] Add sort options:
-  - By deadline (soonest first)
-  - By award amount (highest first)
-  - By title (A-Z)
-  - By date added (newest first)
-- [ ] Apply filters client-side if list is small, or call backend filter endpoint
-- [ ] Update URL query params to make filters shareable/bookmarkable
-
-### TODO 6.7: Optional - Saved Filters (Can Defer)
-- [ ] Backend:
-  - `POST /api/saved-filters` - Save filter criteria
-  - `GET /api/saved-filters` - List user's saved filters
-  - `DELETE /api/saved-filters/:id` - Delete saved filter
-- [ ] Frontend:
-  - "Save Filter" button on scholarships page
-  - Sidebar or dropdown showing saved filters
-  - Click to apply saved filter
-
-**Milestone**: Users can easily add, manage, search, and filter their scholarship list
-
-**Note**: External scholarship discovery (browse, web search, scraper) has been deferred. See `SCHOLARSHIP_DISCOVERY_PHASE.md` for future enhancement options.
+**Note**: Scholarship discovery and management features have been deferred. Students will find scholarships externally and create applications directly in the app. See `SCHOLARSHIP_DISCOVERY_PHASE.md` for future scholarship-related features.
 
 ---
 
-## PHASE 7: Collaborators (Unified)
+## PHASE 6: Collaborators (Unified)
 **Goal**: Students can add collaborators (recommenders, essay editors, counselors), send invites, track status
 
-### TODO 7.1: Backend - Collaborators CRUD
+### TODO 6.1: Backend - Collaborators CRUD
 - [ ] Create routes/controllers/services for:
   - `POST /api/collaborators` - Student adds a collaborator
   - `GET /api/collaborators/:id` - Get specific collaborator
   - `PATCH /api/collaborators/:id` - Update collaborator info
   - `DELETE /api/collaborators/:id` - Remove collaborator
 
-### TODO 7.2: Backend - Collaborations Management
+### TODO 6.2: Backend - Collaborations Management
 - [ ] Create routes/controllers/services for:
   - `POST /api/collaborations` - Create a collaboration (link collaborator to application/essay)
     - Required: `collaboratorId`, `applicationId`, `collaborationType`
@@ -1587,7 +1494,7 @@ scholarship-hub/
   - `POST /api/collaborations/:id/history` - Log action to history
   - `DELETE /api/collaborations/:id` - Remove collaboration
 
-### TODO 7.3: Backend - Email Invitations
+### TODO 6.3: Backend - Email Invitations
 - [ ] Set up email service (Supabase has built-in, or use SendGrid/Resend)
 - [ ] Create `POST /api/collaborations/:id/invite` endpoint:
   - Generate secure invite token
@@ -1598,7 +1505,7 @@ scholarship-hub/
   - Link format: `https://app.com/collaborate/invite/:token`
 - [ ] Store invite token in DB with expiry (e.g., 7 days)
 
-### TODO 7.4: Frontend - Collaborator Management
+### TODO 6.4: Frontend - Collaborator Management
 - [ ] Create `web/src/pages/Collaborators.tsx`:
   - Tabbed view: Recommenders | Essay Editors | Counselors
   - List all collaborators grouped by type
@@ -1611,7 +1518,7 @@ scholarship-hub/
   - Select collaboration type (recommendation, essayReview, guidance)
   - Set due date and add notes
 
-### TODO 7.5: Frontend - Student View of Collaborations
+### TODO 6.5: Frontend - Student View of Collaborations
 - [ ] On `ApplicationDetail` page:
   - Section: "Recommendations" - show all recommendation collaborations
   - Section: "Essay Reviews" - show all essay review collaborations
@@ -1620,7 +1527,7 @@ scholarship-hub/
   - List collaborators assigned to this essay
   - "Add Reviewer" button
 
-### TODO 7.6: Frontend - Collaborator Dashboard
+### TODO 6.6: Frontend - Collaborator Dashboard
 - [ ] Create `web/src/pages/CollaboratorDashboard.tsx`:
   - Shows all collaborations assigned to the logged-in collaborator
   - Grouped by type: Recommendations | Essay Reviews | Guidance
@@ -1631,7 +1538,7 @@ scholarship-hub/
     - Add notes/feedback
     - View full details
 
-### TODO 7.7: Frontend - Invite Flow
+### TODO 6.7: Frontend - Invite Flow
 - [ ] Create `web/src/pages/CollaboratorInvite.tsx`:
   - Collaborator receives email → clicks link → lands here
   - Show invitation details (student, type of help needed, due date)
@@ -1643,7 +1550,7 @@ scholarship-hub/
   - Redirect to CollaboratorDashboard
   - Show the specific collaboration they accepted
 
-### TODO 7.8: Collaboration History
+### TODO 6.8: Collaboration History
 - [ ] Log all actions: invited, reminder_sent, viewed, accepted, declined, in_progress, submitted, comment_added
 - [ ] Display history timeline on:
   - ApplicationDetail page (for students)
@@ -1654,8 +1561,233 @@ scholarship-hub/
 
 ---
 
-## PHASE 8: Polish, Testing & Deployment
-**Goal**: Final touches, testing, deploy to production
+## PHASE 7: Testing & Quality Assurance
+**Goal**: Implement comprehensive testing strategy for both backend and frontend
+
+### TODO 7.1: Set Up Backend Testing Infrastructure
+- [ ] Install testing dependencies:
+  ```bash
+  cd api
+  npm install -D vitest @vitest/ui @vitest/coverage-v8 supertest @types/supertest
+  ```
+- [ ] Create `api/vitest.config.ts`:
+  ```typescript
+  import { defineConfig } from 'vitest/config';
+
+  export default defineConfig({
+    test: {
+      globals: true,
+      environment: 'node',
+      setupFiles: ['./src/test/setup.ts'],
+      coverage: {
+        provider: 'v8',
+        reporter: ['text', 'json', 'html'],
+        exclude: ['node_modules/', 'dist/', 'src/test/']
+      }
+    }
+  });
+  ```
+- [ ] Create test setup file `api/src/test/setup.ts`
+- [ ] Add test scripts to `api/package.json`:
+  ```json
+  {
+    "scripts": {
+      "test": "vitest",
+      "test:ui": "vitest --ui",
+      "test:coverage": "vitest --coverage"
+    }
+  }
+  ```
+
+### TODO 7.2: Create Backend Test Utilities & Mocks
+- [ ] Create `api/src/test/helpers/supabase-mock.ts`:
+  - Mock Supabase client for testing
+  - Mock database queries and responses
+  - Helper functions for common test data
+- [ ] Create `api/src/test/helpers/auth-mock.ts`:
+  - Mock authentication middleware
+  - Generate test JWT tokens
+  - Mock user sessions
+- [ ] Create `api/src/test/fixtures/` directory:
+  - `users.fixture.ts` - Sample user data
+  - `applications.fixture.ts` - Sample application data
+  - `collaborators.fixture.ts` - Sample collaborator data
+  - `essays.fixture.ts` - Sample essay data
+  - `recommendations.fixture.ts` - Sample recommendation data
+- [ ] Create `api/src/test/helpers/test-server.ts`:
+  - Helper to spin up Express app for integration tests
+  - Clean database state between tests
+
+### TODO 7.3: Write Backend Unit Tests
+- [ ] Test services layer (`api/src/services/*.service.ts`):
+  - `users.service.test.ts` - Test user CRUD operations
+  - `applications.service.test.ts` - Test application business logic
+  - `essays.service.test.ts` - Test essay operations
+  - `collaborators.service.test.ts` - Test collaborator management
+  - `collaborations.service.test.ts` - Test collaboration logic (including type-specific tables)
+  - `recommendations.service.test.ts` - Test recommendation tracking
+- [ ] Test utilities (`api/src/utils/*.ts`):
+  - Test case conversion (snake_case ↔ camelCase)
+  - Test validation schemas
+  - Test helper functions
+
+### TODO 7.4: Write Backend Integration Tests
+- [ ] Test API endpoints with supertest:
+  - `routes/users.test.ts`:
+    - GET /api/users/me (authenticated)
+    - PATCH /api/users/me
+    - GET /api/users/me/search-preferences
+  - `routes/applications.test.ts`:
+    - Full CRUD operations
+    - RLS policy enforcement
+    - Pagination
+  - `routes/essays.test.ts`:
+    - Nested routes under applications
+    - File upload handling (if implemented)
+  - `routes/collaborators.test.ts`:
+    - CRUD operations
+    - Relationship validation
+  - `routes/collaborations.test.ts`:
+    - Creating different collaboration types
+    - Type-specific table inserts
+    - Status transitions
+    - History tracking
+  - `routes/recommendations.test.ts`:
+    - Status updates
+    - Due date tracking
+- [ ] Test authentication flows:
+  - Registration
+  - Login
+  - Token refresh
+  - Protected route access
+- [ ] Test error handling:
+  - 404 for non-existent resources
+  - 401 for unauthenticated requests
+  - 403 for unauthorized access
+  - 400 for validation errors
+
+### TODO 7.5: Set Up Frontend Testing Infrastructure
+- [ ] Install testing dependencies:
+  ```bash
+  cd web
+  npm install -D vitest @vitest/ui @testing-library/react @testing-library/jest-dom @testing-library/user-event jsdom
+  ```
+- [ ] Create `web/vitest.config.ts`:
+  ```typescript
+  import { defineConfig } from 'vitest/config';
+  import react from '@vitejs/plugin-react';
+
+  export default defineConfig({
+    plugins: [react()],
+    test: {
+      globals: true,
+      environment: 'jsdom',
+      setupFiles: ['./src/test/setup.ts'],
+      coverage: {
+        provider: 'v8',
+        reporter: ['text', 'json', 'html'],
+        exclude: ['node_modules/', 'dist/', 'src/test/']
+      }
+    }
+  });
+  ```
+- [ ] Create `web/src/test/setup.ts`:
+  ```typescript
+  import '@testing-library/jest-dom';
+  import { cleanup } from '@testing-library/react';
+  import { afterEach } from 'vitest';
+
+  afterEach(() => {
+    cleanup();
+  });
+  ```
+- [ ] Add test scripts to `web/package.json`
+
+### TODO 7.6: Create Frontend Test Utilities & Mocks
+- [ ] Create `web/src/test/helpers/render.tsx`:
+  - Custom render function with providers (AuthProvider, Router, etc.)
+  - Helper to render with authenticated user
+- [ ] Create `web/src/test/mocks/api.ts`:
+  - Mock API responses using MSW (Mock Service Worker)
+  - Mock all API endpoints
+- [ ] Create `web/src/test/mocks/supabase.ts`:
+  - Mock Supabase client for frontend
+- [ ] Create `web/src/test/fixtures/`:
+  - Sample data matching backend fixtures
+  - Helper functions to generate test data
+
+### TODO 7.7: Write Frontend Component Tests
+- [ ] Test reusable components:
+  - Form components (inputs, selects, date pickers)
+  - ApplicationForm component
+  - EssayForm component
+  - CollaboratorForm component
+  - Navigation components
+  - Layout components
+- [ ] Test with different states:
+  - Loading states
+  - Error states
+  - Empty states
+  - Success states
+
+### TODO 7.8: Write Frontend Integration Tests
+- [ ] Test page components:
+  - `Login.test.tsx` - Login form, validation, submission
+  - `Register.test.tsx` - Registration flow
+  - `Dashboard.test.tsx` - User dashboard, data fetching
+  - `Applications.test.tsx` - Application list, filtering
+  - `ApplicationDetail.test.tsx` - Full application view
+  - `Collaborators.test.tsx` - Collaborator management
+- [ ] Test user flows:
+  - Complete application creation
+  - Adding essay to application
+  - Adding collaborator and creating collaboration
+  - Updating recommendation status
+
+### TODO 7.9: Write End-to-End Tests (Optional but Recommended)
+- [ ] Install Playwright:
+  ```bash
+  npm install -D @playwright/test
+  npx playwright install
+  ```
+- [ ] Create `e2e/` directory at root
+- [ ] Write critical user flows:
+  - `auth.spec.ts` - Registration and login
+  - `application-lifecycle.spec.ts` - Create, edit, submit application
+  - `collaboration.spec.ts` - Add collaborator, request recommendation
+- [ ] Configure GitHub Actions for E2E tests (optional)
+
+### TODO 7.10: Set Up Continuous Integration
+- [ ] Create `.github/workflows/test.yml`:
+  ```yaml
+  name: Tests
+
+  on: [push, pull_request]
+
+  jobs:
+    test:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v3
+        - uses: actions/setup-node@v3
+          with:
+            node-version: '18'
+        - run: npm install
+        - run: npm run build --workspace=shared
+        - run: npm run test --workspace=api
+        - run: npm run test --workspace=web
+        - run: npm run test:coverage --workspace=api
+        - run: npm run test:coverage --workspace=web
+  ```
+- [ ] Set coverage thresholds
+- [ ] Add status badges to README
+
+**Milestone**: Comprehensive test coverage for backend and frontend, automated CI pipeline
+
+---
+
+## PHASE 8: Polish & Deployment
+**Goal**: Final touches, optimization, deploy to production
 
 ### TODO 8.1: Error Handling & Validation
 - [ ] Review all API endpoints for proper error handling
@@ -1668,19 +1800,7 @@ scholarship-hub/
 - [ ] Add success/error toast notifications
 - [ ] Improve form UX (disable submit during request, etc.)
 
-### TODO 8.3: Testing
-- [ ] Backend:
-  - Write integration tests for key endpoints (use Jest/Vitest)
-  - Test auth flows
-  - Test CRUD operations
-- [ ] Frontend:
-  - Write component tests (use Vitest + React Testing Library)
-  - Test auth flows
-  - Test forms
-- [ ] End-to-end:
-  - Use Playwright or Cypress for critical user flows
-
-### TODO 8.4: Documentation
+### TODO 8.3: Documentation
 - [ ] Complete `README.md` with:
   - Architecture overview
   - Setup instructions
@@ -1692,7 +1812,7 @@ scholarship-hub/
   - API reference
   - User guides
 
-### TODO 8.5: Performance Optimization
+### TODO 8.4: Performance Optimization
 - [ ] Backend:
   - Add database indexes for commonly queried fields
   - Implement response caching (Redis or in-memory) if needed
@@ -1703,14 +1823,14 @@ scholarship-hub/
   - Optimize images
   - Bundle size analysis
 
-### TODO 8.6: Security Audit
+### TODO 8.5: Security Audit
 - [ ] Review RLS policies in Supabase
 - [ ] Ensure no sensitive data exposed in API responses
 - [ ] Rate limiting on auth endpoints
 - [ ] HTTPS everywhere in production
 - [ ] Environment variables properly secured
 
-### TODO 8.7: Deployment
+### TODO 8.6: Deployment
 - [ ] Frontend:
   - Deploy to Vercel/Netlify/Cloudflare Pages
   - Configure environment variables
@@ -1724,7 +1844,7 @@ scholarship-hub/
   - Set up backups
   - Monitor usage
 
-### TODO 8.8: Monitoring & Analytics
+### TODO 8.7: Monitoring & Analytics
 - [ ] Set up error tracking (Sentry)
 - [ ] Set up analytics (PostHog, Plausible, or GA4)
 - [ ] Set up uptime monitoring (UptimeRobot)
@@ -1744,13 +1864,13 @@ This is a rough estimate to help you plan, not a deadline:
 - **Phase 3** (Auth): 2-3 days
 - **Phase 4** (Frontend Foundation): 3-4 days
 - **Phase 5** (Applications/Essays UI): 4-5 days
-- **Phase 6** (Search): 3-4 days
-- **Phase 7** (Collaborators - Unified): 4-5 days
-- **Phase 8** (Polish/Deploy): 3-5 days
+- **Phase 6** (Collaborators - Unified): 4-5 days
+- **Phase 7** (Testing & QA): 3-5 days
+- **Phase 8** (Polish/Deploy): 2-3 days
 
-**Total**: ~27-38 days of focused work (working solo, a few hours per day)
+**Total**: ~25-36 days of focused work (working solo, a few hours per day)
 
-**Note**: Scholarship scraper integration has been deferred to a future phase. See `SCRAPER_PHASE.md` for details.
+**Note**: Scholarship discovery, management, and filtering have been deferred to a future phase. Students will find scholarships externally and create applications directly. See `SCHOLARSHIP_DISCOVERY_PHASE.md` for details.
 
 ---
 
