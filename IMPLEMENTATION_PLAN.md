@@ -1159,17 +1159,17 @@ scholarship-hub/
 - [✅] Test with curl and Insomnia.
 
 ### TODO 2.6: Implement Applications API
-- [ ] Create `src/routes/applications.routes.ts`
-- [ ] Create `src/controllers/applications.controller.ts`
-- [ ] Create `src/services/applications.service.ts`
-- [ ] Implement full CRUD for applications:
+- [✅] Create `src/routes/applications.routes.ts`
+- [✅] Create `src/controllers/applications.controller.ts`
+- [✅] Create `src/services/applications.service.ts`
+- [✅] Implement full CRUD for applications:
   - `GET /api/applications` - List user's applications
   - `POST /api/applications` - Create new application
   - `GET /api/applications/:id` - Get application details
   - `PATCH /api/applications/:id` - Update application
   - `DELETE /api/applications/:id` - Delete application
-- [ ] Ensure RLS policies are enforced
-- [ ] Test all endpoints
+- [✅] Ensure RLS policies are enforced
+- [✅] Test all endpoints
 
 ### TODO 2.7: Implement Essays API
 - [ ] Create `src/routes/essays.routes.ts`

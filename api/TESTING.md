@@ -126,9 +126,54 @@ curl -X PATCH http://localhost:3001/api/users/me/search-preferences \
 - `GET /api/users/me/search-preferences` - Get search preferences
 - `PATCH /api/users/me/search-preferences` - Update search preferences
 
+### Applications API
+
+- `GET /api/applications` - List user's applications
+- `POST /api/applications` - Create new application
+- `GET /api/applications/:id` - Get application details
+- `PATCH /api/applications/:id` - Update application
+- `DELETE /api/applications/:id` - Delete application
+
+Example:
+```bash
+# List all applications
+curl http://localhost:3001/api/applications \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Create new application
+curl -X POST http://localhost:3001/api/applications \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "scholarshipName": "Example Scholarship",
+    "targetType": "Merit",
+    "organization": "Test Org",
+    "minAward": 1000,
+    "maxAward": 5000,
+    "dueDate": "2025-12-31",
+    "status": "Not Started"
+  }'
+
+# Get single application
+curl http://localhost:3001/api/applications/1 \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Update application
+curl -X PATCH http://localhost:3001/api/applications/1 \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "status": "In Progress",
+    "currentAction": "Drafting Essay"
+  }'
+
+# Delete application
+curl -X DELETE http://localhost:3001/api/applications/1 \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
 ### Future Endpoints
 
-- Applications API (TODO 2.6)
 - Essays API (TODO 2.7)
 - Collaborators API (TODO 2.8)
 - Collaborations API (TODO 2.9)
