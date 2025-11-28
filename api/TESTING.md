@@ -39,8 +39,7 @@ All `/api/*` endpoints require a valid Supabase JWT token in the `Authorization`
 1. Go to Supabase Dashboard → Authentication → Users
 2. Find user: `teial.dickens@gmail.com` (auth_user_id: `fcb86d3c-aa8c-4245-931b-a584ac4afbe0`)
 3. Set a password for this user (if not already set)
-4. **Confirm the email** (click "Confirm email" button in the dashboard, or see Option 1b below)
-5. Use Supabase Auth API to get a token:
+4. Use Supabase Auth API to get a token:
 
 ```bash
 curl -X POST 'https://ljzvgcbtstxozqlvvzaf.supabase.co/auth/v1/token?grant_type=password' \
@@ -51,29 +50,6 @@ curl -X POST 'https://ljzvgcbtstxozqlvvzaf.supabase.co/auth/v1/token?grant_type=
     "password": "YOUR_PASSWORD"
   }'
 ```
-
-**Option 1b: Confirm Email Programmatically (If you get "email_not_confirmed" error)**
-
-If you're getting an `email_not_confirmed` error, you can confirm the email using this script:
-
-```bash
-# From the api directory
-npx tsx src/scripts/confirm-user-email.ts teial.dickens@gmail.com
-```
-
-This script will:
-- Find the user by email
-- Confirm their email address (bypasses email confirmation requirement)
-- Allow you to authenticate immediately
-
-**Alternative: Disable Email Confirmation (Development Only)**
-
-For development, you can disable email confirmation in Supabase:
-1. Go to Supabase Dashboard → Authentication → Settings
-2. Under "Email Auth", toggle off "Enable email confirmations"
-3. Save changes
-
-⚠️ **Warning**: Only disable email confirmation in development environments, never in production!
 
 **Option 2: Use Frontend (Once Built)**
 The frontend will handle authentication and provide tokens automatically.
@@ -126,55 +102,52 @@ curl -X PATCH http://localhost:3001/api/users/me/search-preferences \
 - `GET /api/users/me/search-preferences` - Get search preferences
 - `PATCH /api/users/me/search-preferences` - Update search preferences
 
-### Applications API
+### Essays API
 
-- `GET /api/applications` - List user's applications
-- `POST /api/applications` - Create new application
-- `GET /api/applications/:id` - Get application details
-- `PATCH /api/applications/:id` - Update application
-- `DELETE /api/applications/:id` - Delete application
+- `GET /api/applications/:applicationId/essays` - List essays for an application
+- `POST /api/applications/:applicationId/essays` - Create new essay
+- `GET /api/essays/:id` - Get essay details
+- `PATCH /api/essays/:id` - Update essay
+- `DELETE /api/essays/:id` - Delete essay
 
-Example:
+#### Testing Essays Endpoints
+
 ```bash
-# List all applications
-curl http://localhost:3001/api/applications \
+# List all essays for an application (replace APPLICATION_ID with actual ID)
+curl http://localhost:3001/api/applications/1/essays \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 
-# Create new application
-curl -X POST http://localhost:3001/api/applications \
+# Create a new essay
+curl -X POST http://localhost:3001/api/applications/1/essays \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "scholarshipName": "Example Scholarship",
-    "targetType": "Merit",
-    "organization": "Test Org",
-    "minAward": 1000,
-    "maxAward": 5000,
-    "dueDate": "2025-12-31",
-    "status": "Not Started"
+    "theme": "Why I deserve this scholarship",
+    "units": "words",
+    "essayLink": "https://docs.google.com/document/d/...",
+    "wordCount": 500
   }'
 
-# Get single application
-curl http://localhost:3001/api/applications/1 \
+# Get a specific essay
+curl http://localhost:3001/api/essays/1 \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 
-# Update application
-curl -X PATCH http://localhost:3001/api/applications/1 \
+# Update an essay
+curl -X PATCH http://localhost:3001/api/essays/1 \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "status": "In Progress",
-    "currentAction": "Drafting Essay"
+    "theme": "Updated essay theme",
+    "wordCount": 600
   }'
 
-# Delete application
-curl -X DELETE http://localhost:3001/api/applications/1 \
+# Delete an essay
+curl -X DELETE http://localhost:3001/api/essays/1 \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
 ### Future Endpoints
 
-- Essays API (TODO 2.7)
 - Collaborators API (TODO 2.8)
 - Collaborations API (TODO 2.9)
 - Recommendations API (TODO 2.10)
@@ -219,3 +192,13 @@ Current test user in database:
 - Conversion happens automatically at the API boundary
 - All timestamps are in ISO 8601 format
 - Protected endpoints check user ownership via RLS policies
+
+## RLS Policy Enforcement
+
+The API uses Supabase's service role key which bypasses Row Level Security (RLS) at the database level. However, **all service layer functions manually enforce the same ownership checks** that RLS policies would enforce:
+
+- **Essays**: All operations verify that the essay belongs to an application owned by the authenticated user
+- **Applications**: All operations verify that the application belongs to the authenticated user
+- **Users**: All operations verify that the profile belongs to the authenticated user
+
+This dual-layer approach ensures security even when using the service role key. The RLS policies defined in the migrations (`003_essays.sql`, etc.) provide an additional security layer if the API were to use the anon key instead.

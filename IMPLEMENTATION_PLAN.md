@@ -1172,17 +1172,17 @@ scholarship-hub/
 - [✅] Test all endpoints
 
 ### TODO 2.7: Implement Essays API
-- [ ] Create `src/routes/essays.routes.ts`
-- [ ] Create `src/controllers/essays.controller.ts`
-- [ ] Create `src/services/essays.service.ts`
-- [ ] Implement endpoints:
+- [✅] Create `src/routes/essays.routes.ts`
+- [✅] Create `src/controllers/essays.controller.ts`
+- [✅] Create `src/services/essays.service.ts`
+- [✅] Implement endpoints:
   - `GET /api/applications/:applicationId/essays` - List essays for an application
   - `POST /api/applications/:applicationId/essays` - Create new essay
   - `GET /api/essays/:id` - Get essay details
   - `PATCH /api/essays/:id` - Update essay
   - `DELETE /api/essays/:id` - Delete essay
-- [ ] Ensure RLS policies are enforced
-- [ ] Test all endpoints
+- [✅] Ensure RLS policies are enforced
+- [✅] Test all endpoints
 
 ### TODO 2.8: Implement Collaborators API
 - [ ] Create `src/routes/collaborators.routes.ts`
