@@ -146,11 +146,184 @@ curl -X DELETE http://localhost:3001/api/essays/1 \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
-### Future Endpoints
+### Collaborators API
 
-- Collaborators API (TODO 2.8)
-- Collaborations API (TODO 2.9)
-- Recommendations API (TODO 2.10)
+- `GET /api/collaborators` - List user's collaborators
+- `POST /api/collaborators` - Add new collaborator
+- `GET /api/collaborators/:id` - Get collaborator details
+- `PATCH /api/collaborators/:id` - Update collaborator
+- `DELETE /api/collaborators/:id` - Delete collaborator
+
+#### Testing Collaborators Endpoints
+
+```bash
+# List all collaborators
+curl http://localhost:3001/api/collaborators \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Create a new collaborator
+curl -X POST http://localhost:3001/api/collaborators \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "firstName": "John",
+    "lastName": "Smith",
+    "emailAddress": "john.smith@example.com",
+    "relationship": "Teacher",
+    "phoneNumber": "555-1234"
+  }'
+
+# Get a specific collaborator
+curl http://localhost:3001/api/collaborators/1 \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Update a collaborator
+curl -X PATCH http://localhost:3001/api/collaborators/1 \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "relationship": "Counselor",
+    "phoneNumber": "555-5678"
+  }'
+
+# Delete a collaborator
+curl -X DELETE http://localhost:3001/api/collaborators/1 \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+### Collaborations API
+
+- `GET /api/applications/:applicationId/collaborations` - List collaborations for an application
+- `POST /api/collaborations` - Create new collaboration
+- `GET /api/collaborations/:id` - Get collaboration details
+- `PATCH /api/collaborations/:id` - Update collaboration status/notes
+- `DELETE /api/collaborations/:id` - Delete collaboration
+- `POST /api/collaborations/:id/history` - Add history entry
+- `GET /api/collaborations/:id/history` - Get collaboration history
+
+#### Testing Collaborations Endpoints
+
+```bash
+# List all collaborations for an application
+curl http://localhost:3001/api/applications/1/collaborations \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Create a recommendation collaboration
+curl -X POST http://localhost:3001/api/collaborations \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "collaboratorId": 1,
+    "applicationId": 1,
+    "collaborationType": "recommendation",
+    "status": "pending",
+    "awaitingActionFrom": "collaborator",
+    "portalUrl": "https://portal.example.com",
+    "portalDeadline": "2024-12-31"
+  }'
+
+# Create an essay review collaboration
+curl -X POST http://localhost:3001/api/collaborations \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "collaboratorId": 1,
+    "applicationId": 1,
+    "collaborationType": "essayReview",
+    "essayId": 1,
+    "status": "in_progress",
+    "awaitingActionFrom": "collaborator"
+  }'
+
+# Create a guidance collaboration
+curl -X POST http://localhost:3001/api/collaborations \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "collaboratorId": 1,
+    "applicationId": 1,
+    "collaborationType": "guidance",
+    "status": "pending",
+    "sessionType": "initial",
+    "meetingUrl": "https://meet.example.com/room",
+    "scheduledFor": "2024-12-15T10:00:00Z"
+  }'
+
+# Get a specific collaboration
+curl http://localhost:3001/api/collaborations/1 \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Update a collaboration
+curl -X PATCH http://localhost:3001/api/collaborations/1 \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "status": "in_progress",
+    "awaitingActionFrom": "student",
+    "notes": "Waiting for student to provide essay draft"
+  }'
+
+# Add history entry
+curl -X POST http://localhost:3001/api/collaborations/1/history \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "action": "invited",
+    "details": "Collaborator invited via email"
+  }'
+
+# Get collaboration history
+curl http://localhost:3001/api/collaborations/1/history \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Delete a collaboration
+curl -X DELETE http://localhost:3001/api/collaborations/1 \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+### Recommendations API
+
+- `GET /api/applications/:applicationId/recommendations` - List recommendations for an application
+- `POST /api/recommendations` - Create new recommendation
+- `GET /api/recommendations/:id` - Get recommendation details
+- `PATCH /api/recommendations/:id` - Update recommendation status
+- `DELETE /api/recommendations/:id` - Delete recommendation
+
+#### Testing Recommendations Endpoints
+
+```bash
+# List all recommendations for an application
+curl http://localhost:3001/api/applications/1/recommendations \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Create a new recommendation
+curl -X POST http://localhost:3001/api/recommendations \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "applicationId": 1,
+    "recommenderId": 1,
+    "status": "Pending",
+    "dueDate": "2024-12-31"
+  }'
+
+# Get a specific recommendation
+curl http://localhost:3001/api/recommendations/1 \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Update a recommendation
+curl -X PATCH http://localhost:3001/api/recommendations/1 \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "status": "Submitted",
+    "submittedAt": "2024-12-15T10:00:00Z"
+  }'
+
+# Delete a recommendation
+curl -X DELETE http://localhost:3001/api/recommendations/1 \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
 
 ## Error Responses
 
@@ -200,5 +373,8 @@ The API uses Supabase's service role key which bypasses Row Level Security (RLS)
 - **Essays**: All operations verify that the essay belongs to an application owned by the authenticated user
 - **Applications**: All operations verify that the application belongs to the authenticated user
 - **Users**: All operations verify that the profile belongs to the authenticated user
+- **Collaborators**: All operations verify that the collaborator belongs to the authenticated user
+- **Collaborations**: All operations verify that the collaboration belongs to the authenticated user through the collaborator relationship
+- **Recommendations**: All operations verify that the recommendation belongs to an application owned by the authenticated user
 
 This dual-layer approach ensures security even when using the service role key. The RLS policies defined in the migrations (`003_essays.sql`, etc.) provide an additional security layer if the API were to use the anon key instead.

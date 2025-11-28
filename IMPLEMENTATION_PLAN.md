@@ -1185,23 +1185,23 @@ scholarship-hub/
 - [✅] Test all endpoints
 
 ### TODO 2.8: Implement Collaborators API
-- [ ] Create `src/routes/collaborators.routes.ts`
-- [ ] Create `src/controllers/collaborators.controller.ts`
-- [ ] Create `src/services/collaborators.service.ts`
-- [ ] Implement endpoints:
+- [✅] Create `src/routes/collaborators.routes.ts`
+- [✅] Create `src/controllers/collaborators.controller.ts`
+- [✅] Create `src/services/collaborators.service.ts`
+- [✅] Implement endpoints:
   - `GET /api/collaborators` - List user's collaborators
   - `POST /api/collaborators` - Add new collaborator
   - `GET /api/collaborators/:id` - Get collaborator details
   - `PATCH /api/collaborators/:id` - Update collaborator
   - `DELETE /api/collaborators/:id` - Delete collaborator
-- [ ] Ensure RLS policies are enforced
-- [ ] Test all endpoints
+- [✅] Ensure RLS policies are enforced
+- [✅] Test all endpoints
 
 ### TODO 2.9: Implement Collaborations API
-- [ ] Create `src/routes/collaborations.routes.ts`
-- [ ] Create `src/controllers/collaborations.controller.ts`
-- [ ] Create `src/services/collaborations.service.ts`
-- [ ] Implement endpoints:
+- [✅] Create `src/routes/collaborations.routes.ts`
+- [✅] Create `src/controllers/collaborations.controller.ts`
+- [✅] Create `src/services/collaborations.service.ts`
+- [✅] Implement endpoints:
   - `GET /api/applications/:applicationId/collaborations` - List collaborations for an application
   - `POST /api/collaborations` - Create new collaboration
   - `GET /api/collaborations/:id` - Get collaboration details
@@ -1209,22 +1209,22 @@ scholarship-hub/
   - `DELETE /api/collaborations/:id` - Delete collaboration
   - `POST /api/collaborations/:id/history` - Add history entry
   - `GET /api/collaborations/:id/history` - Get collaboration history
-- [ ] Handle type-specific tables (essay_review_collaborations, recommendation_collaborations, guidance_collaborations)
-- [ ] Ensure RLS policies are enforced
-- [ ] Test all endpoints
+- [✅] Handle type-specific tables (essay_review_collaborations, recommendation_collaborations, guidance_collaborations)
+- [✅] Ensure RLS policies are enforced
+- [✅] Test all endpoints
 
 ### TODO 2.10: Implement Recommendations API
-- [ ] Create `src/routes/recommendations.routes.ts`
-- [ ] Create `src/controllers/recommendations.controller.ts`
-- [ ] Create `src/services/recommendations.service.ts`
-- [ ] Implement endpoints:
+- [✅] Create `src/routes/recommendations.routes.ts`
+- [✅] Create `src/controllers/recommendations.controller.ts`
+- [✅] Create `src/services/recommendations.service.ts`
+- [✅] Implement endpoints:
   - `GET /api/applications/:applicationId/recommendations` - List recommendations for an application
   - `POST /api/recommendations` - Create new recommendation
   - `GET /api/recommendations/:id` - Get recommendation details
   - `PATCH /api/recommendations/:id` - Update recommendation status
   - `DELETE /api/recommendations/:id` - Delete recommendation
-- [ ] Ensure RLS policies are enforced
-- [ ] Test all endpoints
+- [✅] Ensure RLS policies are enforced
+- [✅] Test all endpoints
 
 **Milestone**: Backend can serve all core resources (users, applications, essays, collaborators, collaborations, recommendations) via REST API
 
