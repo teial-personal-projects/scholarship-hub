@@ -1,0 +1,54 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import dotenv from 'dotenv';
+
+const loadEnvFile = (filePath: string, override = false) => {
+  const { error } = dotenv.config({ path: filePath, override });
+  if (error) {
+    console.error(`[config] Failed to load environment file at ${filePath}`, error);
+    return false;
+  }
+
+  return true;
+};
+
+const workspaceRoot = process.cwd();
+const env = process.env.NODE_ENV || 'local';
+const envFileName = `.env.${env}`;
+const envPath = path.resolve(workspaceRoot, envFileName);
+
+if (fs.existsSync(envPath)) {
+  loadEnvFile(envPath);
+} else {
+  console.warn(`[config] Environment file "${envFileName}" not found at ${envPath}.`);
+}
+
+
+interface Config {
+  port: number;
+  nodeEnv: string;
+  supabase: {
+    url: string;
+    serviceRoleKey: string;
+  };
+}
+
+export const config: Config = {
+  port: parseInt(process.env.PORT || '3001', 10),
+  nodeEnv: process.env.NODE_ENV || 'local',
+  supabase: {
+    url: process.env.SUPABASE_URL || '',
+    serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY || '',
+  },
+};
+
+// Validate required environment variables
+const requiredEnvVars = ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY'];
+const missingEnvVars = requiredEnvVars.filter((envVar) => !process.env[envVar]);
+
+if (missingEnvVars.length > 0) {
+  console.warn(
+    `⚠️  Warning: Missing environment variables: ${missingEnvVars.join(', ')}`
+  );
+  console.warn('   Create a .env file in the api directory with these values.');
+}

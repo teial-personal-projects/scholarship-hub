@@ -1118,12 +1118,12 @@ scholarship-hub/
     console.log(`🚀 Server running on http://localhost:${config.port}`);
   });
   ```
-- [ ] Create `src/config/index.ts` to load environment variables
-- [ ] Test: `npm run dev` should start server at http://localhost:3001
-- [ ] Test: `curl http://localhost:3001/health` should return `{"status":"ok"}`
+- [✅] Create `src/config/index.ts` to load environment variables
+- [✅] Test: `npm run dev` should start server at http://localhost:3001
+- [✅] Test: `curl http://localhost:3001/health` should return `{"status":"ok"}`
 
 ### TODO 2.3: Set Up Supabase Client
-- [ ] Create `src/config/supabase.ts`:
+- [✅] Create `src/config/supabase.ts`:
   ```typescript
   import { createClient } from '@supabase/supabase-js';
   import { config } from './index.js';
@@ -1133,17 +1133,17 @@ scholarship-hub/
     config.supabase.serviceRoleKey // Use service role key for server
   );
   ```
-- [ ] Create helper utilities in `src/utils/supabase.ts` for common DB operations
-- [ ] Test connection: write a simple script to fetch from `user_profiles` table
+- [✅] Create helper utilities in `src/utils/supabase.ts` for common DB operations
+- [✅] Test connection: write a simple script to fetch from `user_profiles` table
 
 ### TODO 2.4: Create Middleware
-- [ ] Create `src/middleware/auth.ts`:
+- [✅] Create `src/middleware/auth.ts`:
   ```typescript
   // Middleware to verify Supabase JWT token
   // Extract user from token and attach to req.user
   ```
-- [ ] Create `src/middleware/error-handler.ts` for centralized error handling
-- [ ] Create `src/middleware/validate.ts` using Zod for request validation
+- [✅] Create `src/middleware/error-handler.ts` for centralized error handling
+- [✅] Create `src/middleware/validate.ts` using Zod for request validation
 
 ### TODO 2.5: Implement Users API
 - [ ] Create `src/routes/users.routes.ts`
