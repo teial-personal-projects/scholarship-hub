@@ -1421,7 +1421,60 @@ scholarship-hub/
 - [ ] Show list of applications (fetch from `/api/applications`)
 - [ ] Add "New Application" button (goes to form, implement in Phase 5)
 
-**Milestone**: Frontend can register, login, view dashboard with basic data
+### TODO 4.7: Dashboard Reminders & Alerts Section
+- [ ] Backend - Create reminders endpoint:
+  - `GET /api/users/me/reminders` - Get upcoming and overdue items for current user
+  - Return structure:
+    ```typescript
+    interface DashboardReminders {
+      applications: {
+        dueSoon: Application[];      // Due within 7 days
+        overdue: Application[];       // Past due date
+      };
+      collaborations: {
+        pendingResponse: Collaboration[];  // Waiting for collaborator response
+        dueSoon: Collaboration[];          // Due within 7 days
+        overdue: Collaboration[];          // Past due date
+      };
+      stats: {
+        totalUpcoming: number;
+        totalOverdue: number;
+      };
+    }
+    ```
+- [ ] Backend - Implement reminder logic in service:
+  - Query applications where `due_date` is within next 7 days
+  - Query applications where `due_date` is in the past and status != 'Submitted'
+  - Query collaborations where `next_action_due_date` is within next 7 days
+  - Query collaborations where status is 'pending' or 'invited' for more than X days
+  - Query collaborations where `next_action_due_date` is in the past
+- [ ] Frontend - Create `src/components/DashboardReminders.tsx`:
+  - Display alerts/notifications at top of dashboard
+  - Use color coding:
+    - Red: Overdue items
+    - Yellow/Orange: Due within 3 days
+    - Blue: Due within 7 days
+    - Gray: Pending responses
+  - Show grouped sections:
+    - **Overdue Applications** (if any)
+    - **Applications Due Soon** (next 7 days)
+    - **Overdue Collaborations** (if any)
+    - **Collaborations Due Soon** (next 7 days)
+    - **Pending Collaborator Responses** (invited but not accepted)
+  - Each item shows:
+    - Title/name
+    - Days until due (or days overdue)
+    - Quick action button (e.g., "View Application", "Send Reminder")
+- [ ] Frontend - Add visual indicators:
+  - Badge showing total count of urgent items
+  - Expandable/collapsible sections
+  - Empty state: "All caught up! No urgent items."
+- [ ] Frontend - Add quick actions:
+  - Click to navigate to application/collaboration detail
+  - "Dismiss" option for non-critical reminders
+  - "Send Reminder" button for pending collaborations
+
+**Milestone**: Frontend can register, login, view dashboard with reminders and alerts
 
 ---
 
@@ -1557,7 +1610,73 @@ scholarship-hub/
   - CollaboratorDashboard (for collaborators)
 - [ ] Show: action, timestamp, details (if any)
 
-**Milestone**: Full unified collaborator system - students can add any type of collaborator, assign them to applications/essays, and collaborators can manage their work
+### TODO 6.9: Automated Reminders & Notifications
+- [ ] Backend - Set up email service:
+  - Use Supabase Edge Functions or cron service (GitHub Actions, Vercel Cron, etc.)
+  - Or use external scheduler (Railway Cron, EasyCron)
+  - Set up email provider (Supabase built-in, SendGrid, Resend, or AWS SES)
+- [ ] Backend - Create reminder service (`src/services/reminders.service.ts`):
+  - Query for upcoming due dates (applications and collaborations)
+  - Query for overdue items
+  - Generate appropriate reminder emails
+  - Track last reminder sent to avoid spam
+- [ ] Backend - Create email templates:
+  - **Student - Application Due Soon**: "Your application for [scholarship] is due in [X] days"
+  - **Student - Application Overdue**: "Your application for [scholarship] was due [X] days ago"
+  - **Student - Collaboration Pending**: "[Collaborator] hasn't responded to your collaboration request"
+  - **Collaborator - New Request**: "[Student] invited you to help with [collaboration type]"
+  - **Collaborator - Due Soon**: "Reminder: [Student] needs your [collaboration type] by [date] (due in [X] days)"
+  - **Collaborator - Overdue**: "Your [collaboration type] for [Student] was due [X] days ago"
+- [ ] Backend - Implement reminder schedule logic:
+  ```typescript
+  interface ReminderConfig {
+    type: 'application' | 'collaboration';
+    intervals: number[]; // Days before due date to send reminder (e.g., [7, 3, 1])
+    overdueIntervals: number[]; // Days after due date (e.g., [1, 3, 7])
+  }
+  ```
+- [ ] Backend - Create scheduled job/cron endpoint:
+  - `POST /api/cron/send-reminders` (protected with secret key)
+  - Check all applications with upcoming due dates
+  - Check all collaborations with upcoming `next_action_due_date`
+  - Send appropriate emails
+  - Log reminder in `collaboration_history` table
+- [ ] Backend - Add reminder preferences (optional):
+  - Allow users to configure reminder intervals
+  - Allow users to opt-out of certain reminder types
+  - Store in `user_profiles` or new `user_notification_preferences` table
+- [ ] Database - Add tracking fields:
+  - Add `last_reminder_sent_at` to applications table
+  - Add `last_reminder_sent_at` to collaborations table
+  - Or track in collaboration_history
+- [ ] Frontend - Notification preferences UI (optional):
+  - Settings page to configure reminder preferences
+  - Toggle reminders on/off
+  - Set custom reminder intervals
+- [ ] Testing:
+  - Test reminder logic with various due date scenarios
+  - Test email sending (use test email addresses)
+  - Verify reminder history is logged correctly
+  - Test that reminders don't spam (check last_reminder_sent_at)
+- [ ] Setup scheduled execution:
+  - Configure cron job to run daily (or multiple times per day)
+  - Example with GitHub Actions:
+    ```yaml
+    name: Send Reminders
+    on:
+      schedule:
+        - cron: '0 12 * * *'  # Run daily at noon UTC
+      workflow_dispatch:  # Allow manual trigger
+    jobs:
+      send-reminders:
+        runs-on: ubuntu-latest
+        steps:
+          - run: |
+              curl -X POST https://your-api.com/api/cron/send-reminders \
+                -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
+    ```
+
+**Milestone**: Full unified collaborator system with automated reminders - students and collaborators receive timely notifications about upcoming and overdue deadlines
 
 ---
 
