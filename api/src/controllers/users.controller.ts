@@ -1,20 +1,7 @@
 import { Request, Response } from 'express';
 import * as usersService from '../services/users.service.js';
 import { asyncHandler } from '../middleware/error-handler.js';
-
-/**
- * Convert database snake_case to API camelCase
- */
-const toCamelCase = (obj: Record<string, unknown>): Record<string, unknown> => {
-  const result: Record<string, unknown> = {};
-
-  for (const [key, value] of Object.entries(obj)) {
-    const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
-    result[camelKey] = value;
-  }
-
-  return result;
-};
+import { toCamelCase } from '@scholarship-hub/shared/utils/case-conversion';
 
 /**
  * GET /api/users/me
