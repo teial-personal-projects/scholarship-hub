@@ -7,7 +7,7 @@ import './App.css';
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
       <div className="app">
         <nav style={{ padding: '1rem', borderBottom: '1px solid #ccc' }}>
           <Link to="/login" style={{ marginRight: '1rem' }}>Login</Link>
