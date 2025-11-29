@@ -1524,26 +1524,27 @@ scholarship-hub/
 **Goal**: Full CRUD UI for applications and essays
 
 ### TODO 5.1: Build Application List Page
-- [ ] Create `src/pages/Applications.tsx`
-- [ ] Fetch and display all applications in a table/grid
-- [ ] Show: scholarship name, status, due date, actions (edit, delete)
-- [ ] Add pagination if needed
-- [ ] Add search/filter by status
+- [✅] Create `src/pages/Applications.tsx`
+- [✅] Fetch and display all applications in a table/grid
+- [✅] Show: scholarship name, status, due date, actions (edit, delete)
+- [✅] Add pagination if needed
+- [✅] Add search/filter by status
 
 ### TODO 5.2: Build Application Form (Create/Edit)
-- [ ] Create `src/components/ApplicationForm.tsx`
-- [ ] Fields: scholarship name, organization, deadline, status, etc.
-- [ ] Support both creating new and editing existing
-- [ ] Validation using Zod or similar
-- [ ] Submit to backend API
-- [ ] Show success/error messages
+- [✅] Create `src/components/ApplicationForm.tsx`
+- [✅] Fields: scholarship name, organization, deadline, status, etc.
+- [✅] Support both creating new and editing existing
+- [✅] Validation using Zod or similar
+- [✅] Submit to backend API
+- [✅] Show success/error messages
 
 ### TODO 5.3: Build Application Detail Page
-- [ ] Create `src/pages/ApplicationDetail.tsx`
-- [ ] Show full application info
-- [ ] List associated essays
-- [ ] List associated recommendations
-- [ ] Actions: Edit application, Add essay, Add recommender
+- [✅] Create `src/pages/ApplicationDetail.tsx`
+- [✅] Show full application info
+- [✅] List associated essays
+- [✅] List associated recommendations
+- [✅] Actions: Edit application, Add essay, Add recommender
+- [✅] Add routes to App.tsx for all application pages
 
 ### TODO 5.4: Build Essay Management
 - [ ] Create `src/components/EssayForm.tsx`

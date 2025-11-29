@@ -2,6 +2,7 @@
 export * from './types/user.types';
 export * from './types/scholarship.types';
 export * from './types/application.types';
+export * from './types/application.constants';
 export * from './types/essay.types';
 export * from './types/recommendation.types';
 export * from './types/collaborator.types';
