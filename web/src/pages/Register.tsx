@@ -1,9 +1,142 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  Box,
+  Button,
+  Container,
+  FormControl,
+  FormLabel,
+  Heading,
+  Input,
+  Stack,
+  Text,
+  useToast,
+  Link as ChakraLink,
+  Card,
+  CardBody,
+  SimpleGrid,
+} from '@chakra-ui/react';
+import { Link as RouterLink } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+
 function Register() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const { signUp } = useAuth();
+  const navigate = useNavigate();
+  const toast = useToast();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      await signUp(email, password, firstName, lastName);
+      toast({
+        title: 'Account created',
+        description: 'Your account has been created successfully. Please sign in.',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
+      navigate('/login');
+    } catch (error) {
+      toast({
+        title: 'Registration failed',
+        description: error instanceof Error ? error.message : 'Failed to create account',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <div>
-      <h1>Register</h1>
-      <p>Registration page coming soon...</p>
-    </div>
+    <Container maxW="lg" py={{ base: '12', md: '24' }}>
+      <Stack spacing="8">
+        <Stack spacing="6" align="center">
+          <Heading size="xl">ScholarshipHub</Heading>
+          <Text color="gray.600">Create your account</Text>
+        </Stack>
+
+        <Card>
+          <CardBody>
+            <form onSubmit={handleSubmit}>
+              <Stack spacing="6">
+                <SimpleGrid columns={{ base: 1, md: 2 }} spacing="6">
+                  <FormControl isRequired>
+                    <FormLabel>First Name</FormLabel>
+                    <Input
+                      type="text"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      placeholder="John"
+                    />
+                  </FormControl>
+
+                  <FormControl isRequired>
+                    <FormLabel>Last Name</FormLabel>
+                    <Input
+                      type="text"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      placeholder="Doe"
+                    />
+                  </FormControl>
+                </SimpleGrid>
+
+                <FormControl isRequired>
+                  <FormLabel>Email</FormLabel>
+                  <Input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
+                  />
+                </FormControl>
+
+                <FormControl isRequired>
+                  <FormLabel>Password</FormLabel>
+                  <Input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Create a strong password"
+                  />
+                  <Text fontSize="sm" color="gray.500" mt="2">
+                    Password must be at least 6 characters
+                  </Text>
+                </FormControl>
+
+                <Button
+                  type="submit"
+                  colorScheme="blue"
+                  size="lg"
+                  isLoading={isLoading}
+                  loadingText="Creating account..."
+                >
+                  Sign up
+                </Button>
+              </Stack>
+            </form>
+          </CardBody>
+        </Card>
+
+        <Box textAlign="center">
+          <Text>
+            Already have an account?{' '}
+            <ChakraLink as={RouterLink} to="/login" color="blue.500">
+              Sign in
+            </ChakraLink>
+          </Text>
+        </Box>
+      </Stack>
+    </Container>
   );
 }
 

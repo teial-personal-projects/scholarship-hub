@@ -1430,15 +1430,22 @@ scholarship-hub/
 - [✅] Wrap app with AuthProvider in `web/src/main.tsx`
 
 ### TODO 4.4: Build Login & Registration Pages
-- [ ] Create `src/pages/Login.tsx`:
-  - Email/password form
-  - Call Supabase auth
+- [✅] Install Chakra UI v2 for styling (`@chakra-ui/react@^2.8.2`, `@emotion/react`, `@emotion/styled`, `framer-motion`)
+- [✅] Set up ChakraProvider in main.tsx
+- [✅] Create `src/pages/Login.tsx`:
+  - Email/password form with Chakra UI components
+  - Call Supabase auth via useAuth hook
+  - Toast notifications for success/error
   - Redirect to /dashboard on success
-- [ ] Create `src/pages/Register.tsx`:
-  - Email/password/name form
-  - Call backend `/api/auth/register`
-  - Redirect to /dashboard on success
-- [ ] Style with basic CSS or a UI library (optional: shadcn/ui, Tailwind)
+  - Link to register page
+- [✅] Create `src/pages/Register.tsx`:
+  - Email/password/firstName/lastName form with Chakra UI
+  - Call backend `/api/auth/register` via useAuth signUp
+  - Toast notifications for success/error
+  - Redirect to /login on success
+  - Link to login page
+- [✅] Style with Chakra UI (responsive, mobile-friendly out of the box)
+- [✅] Test both servers running (API on :3001, Web on :5173)
 
 ### TODO 4.5: Build Protected Route Component
 - [ ] Create `src/components/ProtectedRoute.tsx`:
