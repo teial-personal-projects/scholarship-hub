@@ -1448,13 +1448,13 @@ scholarship-hub/
 - [✅] Test both servers running (API on :3001, Web on :5173)
 
 ### TODO 4.5: Build Protected Route Component
-- [ ] Create `src/components/ProtectedRoute.tsx`:
+- [✅] Create `src/components/ProtectedRoute.tsx`:
   ```typescript
   // Check if user is authenticated
   // If not, redirect to /login
   ```
-- [ ] Apply to dashboard and other protected routes
-- [ ] Test: unauthenticated access should redirect to login
+- [✅] Apply to dashboard and other protected routes
+- [✅] Test: unauthenticated access should redirect to login
 
 ### TODO 4.6: Build Student Dashboard (Basic)
 - [ ] Create `src/pages/Dashboard.tsx`
