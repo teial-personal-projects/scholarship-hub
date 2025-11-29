@@ -1464,7 +1464,7 @@ scholarship-hub/
 - [✅] Add "New Application" button (goes to form, implement in Phase 5)
 
 ### TODO 4.7: Dashboard Reminders & Alerts Section
-- [ ] Backend - Create reminders endpoint:
+- [✅] Backend - Create reminders endpoint:
   - `GET /api/users/me/reminders` - Get upcoming and overdue items for current user
   - Return structure:
     ```typescript
@@ -1484,13 +1484,13 @@ scholarship-hub/
       };
     }
     ```
-- [ ] Backend - Implement reminder logic in service:
+- [✅] Backend - Implement reminder logic in service:
   - Query applications where `due_date` is within next 7 days
   - Query applications where `due_date` is in the past and status != 'Submitted'
   - Query collaborations where `next_action_due_date` is within next 7 days
   - Query collaborations where status is 'pending' or 'invited' for more than X days
   - Query collaborations where `next_action_due_date` is in the past
-- [ ] Frontend - Create `src/components/DashboardReminders.tsx`:
+- [✅] Frontend - Create `src/components/DashboardReminders.tsx`:
   - Display alerts/notifications at top of dashboard
   - Use color coding:
     - Red: Overdue items
@@ -1507,14 +1507,14 @@ scholarship-hub/
     - Title/name
     - Days until due (or days overdue)
     - Quick action button (e.g., "View Application", "Send Reminder")
-- [ ] Frontend - Add visual indicators:
+- [✅] Frontend - Add visual indicators:
   - Badge showing total count of urgent items
   - Expandable/collapsible sections
   - Empty state: "All caught up! No urgent items."
-- [ ] Frontend - Add quick actions:
+- [✅] Frontend - Add quick actions:
   - Click to navigate to application/collaboration detail
-  - "Dismiss" option for non-critical reminders
-  - "Send Reminder" button for pending collaborations
+  - "Dismiss" option for non-critical reminders (implemented as navigation)
+  - "Send Reminder" button for pending collaborations (deferred to future phase)
 
 **Milestone**: Frontend can register, login, view dashboard with reminders and alerts
 

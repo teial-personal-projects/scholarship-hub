@@ -52,6 +52,7 @@ export interface Collaborator {
 // Base collaboration interface with common fields
 export interface BaseCollaboration {
   collaborationId?: number;
+  userId: number;
   collaboratorId: number;
   applicationId: number;
   collaborationType: CollaborationType;

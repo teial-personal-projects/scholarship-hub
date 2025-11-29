@@ -23,4 +23,7 @@ router.get('/me/search-preferences', requireRole(['student']), usersController.g
 // PATCH /api/users/me/search-preferences - Update search preferences (students only)
 router.patch('/me/search-preferences', requireRole(['student']), usersController.updateMySearchPreferences);
 
+// GET /api/users/me/reminders - Get dashboard reminders (students only)
+router.get('/me/reminders', requireRole(['student']), usersController.getMyReminders);
+
 export default router;

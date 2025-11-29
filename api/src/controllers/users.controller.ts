@@ -134,3 +134,32 @@ export const updateMySearchPreferences = asyncHandler(
     res.json(response);
   }
 );
+
+/**
+ * GET /api/users/me/reminders
+ * Get dashboard reminders for current user
+ */
+export const getMyReminders = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+
+  const reminders = await usersService.getUserReminders(req.user.userId);
+
+  // Convert to camelCase for API response
+  const response = {
+    applications: {
+      dueSoon: reminders.applications.dueSoon.map(app => toCamelCase(app)),
+      overdue: reminders.applications.overdue.map(app => toCamelCase(app)),
+    },
+    collaborations: {
+      pendingResponse: reminders.collaborations.pendingResponse.map(collab => toCamelCase(collab)),
+      dueSoon: reminders.collaborations.dueSoon.map(collab => toCamelCase(collab)),
+      overdue: reminders.collaborations.overdue.map(collab => toCamelCase(collab)),
+    },
+    stats: reminders.stats,
+  };
+
+  res.json(response);
+});

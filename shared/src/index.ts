@@ -7,6 +7,8 @@ export * from './types/recommendation.types';
 export * from './types/collaborator.types';
 export * from './types/scholarship-search.types';
 export * from './types/user-search-preferences.types';
+export * from './types/reminders.types';
+export * from './types/api-responses.types';
 
 // Export all utils
 export * from './utils/case-conversion';

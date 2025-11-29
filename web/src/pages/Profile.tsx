@@ -27,31 +27,7 @@ import {
   Wrap,
 } from '@chakra-ui/react';
 import { apiGet, apiPatch } from '../services/api';
-
-interface UserProfile {
-  id: number;
-  authUserId: string;
-  firstName: string | null;
-  lastName: string | null;
-  emailAddress: string;
-  phoneNumber: string | null;
-  createdAt: string;
-  updatedAt: string;
-  searchPreferences: UserSearchPreferences | null;
-}
-
-interface UserSearchPreferences {
-  userId: number;
-  targetType?: string | null;
-  subjectAreas?: string[] | null;
-  gender?: string | null;
-  ethnicity?: string | null;
-  minAward?: number | null;
-  geographicRestrictions?: string | null;
-  essayRequired?: boolean | null;
-  recommendationRequired?: boolean | null;
-  academicLevel?: string | null;
-}
+import type { UserProfile } from '@scholarship-hub/shared';
 
 // Constants
 const TARGET_TYPES = ['Merit', 'Need', 'Both'];

@@ -118,21 +118,70 @@ shared/
 ├── package.json
 ├── tsconfig.json
 └── src/
-    ├── index.ts             # Main export
+    ├── index.ts             # Main export - exports ALL types and utils
     ├── types/               # Shared TypeScript types
-    │   ├── user.types.ts
-    │   ├── application.types.ts
-    │   ├── essay.types.ts
-    │   ├── collaborator.types.ts
-    │   ├── recommendation.types.ts
-    │   └── search.types.ts
-    ├── constants/           # Shared constants
-    │   ├── application.constants.ts
-    │   └── collaboration.constants.ts
+    │   ├── user.types.ts                    # Domain types (for database/business logic)
+    │   ├── application.types.ts             # Domain types
+    │   ├── essay.types.ts                   # Domain types
+    │   ├── collaborator.types.ts            # Domain types
+    │   ├── recommendation.types.ts          # Domain types
+    │   ├── user-search-preferences.types.ts # Domain types
+    │   ├── scholarship-search.types.ts      # Search types
+    │   ├── api-responses.types.ts           # API response types (camelCase)
+    │   ├── reminders.types.ts               # Dashboard reminders
+    │   └── application.constants.ts         # Enums and constants
     └── utils/               # Shared utilities
-        ├── validation.ts    # Zod schemas
-        └── formatting.ts    # Date, currency formatters
+        ├── case-conversion.ts  # snake_case ↔ camelCase conversion
+        ├── validation.ts       # Zod schemas (placeholder)
+        └── formatting.ts       # Date, currency formatters (placeholder)
 ```
+
+**IMPORTANT: Shared Types Usage Guidelines**
+
+1. **NEVER define types locally in React components or API controllers**
+   - ❌ Bad: Defining `interface Application { ... }` in `Dashboard.tsx`
+   - ✅ Good: Import `ApplicationResponse` from `@scholarship-hub/shared`
+
+2. **Two categories of types in shared package:**
+   - **Domain Types** (`application.types.ts`, `user.types.ts`, etc.):
+     - Represent business entities and database models
+     - May use different field names than API (e.g., `applicationId` vs `id`)
+     - Used for internal business logic
+
+   - **API Response Types** (`api-responses.types.ts`):
+     - Represent the EXACT shape of API responses after camelCase conversion
+     - Use `id` not `applicationId` (matches database primary key after conversion)
+     - Frontend should ALWAYS use these types
+     - Examples: `UserProfile`, `ApplicationResponse`, `CollaborationResponse`
+
+3. **When to add a new type to shared:**
+   - If both web and api need it → shared/types
+   - If only frontend-specific (e.g., UI state) → web/src/types
+   - If only backend-specific (e.g., internal utilities) → api/src/types
+   - **Default assumption: If in doubt, put it in shared**
+
+4. **Updating shared types workflow:**
+   ```bash
+   # 1. Edit type in shared/src/types/
+   # 2. Rebuild shared package
+   npm run build --workspace=shared
+   # 3. Types are immediately available to web and api
+   ```
+
+5. **Import pattern:**
+   ```typescript
+   // ✅ Good - Import from shared package
+   import type { UserProfile, ApplicationResponse } from '@scholarship-hub/shared';
+
+   // ❌ Bad - Defining locally
+   interface UserProfile { ... }
+   ```
+
+6. **Type naming conventions:**
+   - Domain types: `Application`, `User`, `Collaboration`
+   - API responses: `ApplicationResponse`, `UserProfile`, `CollaborationResponse`
+   - Request bodies: `CreateApplicationRequest`, `UpdateUserRequest`
+   - Constants/Enums: Prefix with `T` (e.g., `TApplicationStatus`, `TTargetType`)
 
 ## Database Schema
 
@@ -475,4 +524,4 @@ When I request changes:
 - Maintain type safety across frontend/backend
 - Don't create unnecessary files
 
-Current phase: Phase 2 (Backend Foundation)"
+Current phase: Phase 4 (Backend Foundation)"

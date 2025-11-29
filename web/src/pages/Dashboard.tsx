@@ -26,30 +26,8 @@ import {
 } from '@chakra-ui/react';
 import { apiGet } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
-
-interface UserProfile {
-  id: number;
-  authUserId: string;
-  firstName: string | null;
-  lastName: string | null;
-  emailAddress: string;
-  phoneNumber: string | null;
-  createdAt: string;
-  updatedAt: string;
-  searchPreferences: unknown | null;
-}
-
-interface Application {
-  id: number;
-  userId: number;
-  scholarshipName: string;
-  targetType: string | null;
-  organization: string | null;
-  status: string;
-  dueDate: string;
-  createdAt: string;
-  updatedAt: string;
-}
+import DashboardReminders from '../components/DashboardReminders';
+import type { UserProfile, ApplicationResponse } from '@scholarship-hub/shared';
 
 function Dashboard() {
   const { user, loading: authLoading } = useAuth();
@@ -57,7 +35,7 @@ function Dashboard() {
   const toast = useToast();
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [applications, setApplications] = useState<Application[]>([]);
+  const [applications, setApplications] = useState<ApplicationResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -79,7 +57,7 @@ function Dashboard() {
         setProfile(profileData);
 
         // Fetch applications
-        const applicationsData = await apiGet<Application[]>('/applications');
+        const applicationsData = await apiGet<ApplicationResponse[]>('/applications');
         setApplications(applicationsData || []);
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to load dashboard data';
@@ -155,6 +133,9 @@ function Dashboard() {
           </Heading>
           <Text color="gray.600">Here's an overview of your scholarship applications.</Text>
         </Box>
+
+        {/* Reminders Section */}
+        <DashboardReminders />
 
         {/* Actions */}
         <HStack spacing="4">
