@@ -1236,11 +1236,23 @@ scholarship-hub/
 **Goal**: Implement Supabase Auth for email/password authentication
 
 ### TODO 3.1: Configure Supabase Auth
-- [ ] In Supabase dashboard → Authentication → Settings:
-  - Enable email/password auth
+- [✅] In Supabase dashboard → Project Settings → Authentication:
+  - Under Auth Providers, Enable email/password auth
+ - Set URL
+  - Open your Supabase project dashboard
+  - Go to Authentication in the left sidebar
+  - Open URL Configuration (under CONFIGURATION)
+    - For local development: http://localhost:5173 (or your Vite dev server port)
+    - For production: your production domain (e.g., https://yourdomain.com)
+  - Redirect URLs
+    - Add all URLs where users can be redirected after authentication. Common ones:
+    - For local development:
+    - http://localhost:5173/auth/callback
+    - http://localhost:5173/auth/confirm
+    - http://localhost:5173/** (wildcard for dev) [I DID NOT DO THIS]
   - Configure email templates (welcome, reset password, etc.)
   - Set site URL and redirect URLs
-- [ ] Test email delivery (use your email)
+- [✅] Test email delivery (use your email)
 
 ### TODO 3.2: Backend Auth Endpoints
 - [ ] Create `src/routes/auth.routes.ts`
