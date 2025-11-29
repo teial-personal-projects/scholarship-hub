@@ -1457,11 +1457,11 @@ scholarship-hub/
 - [✅] Test: unauthenticated access should redirect to login
 
 ### TODO 4.6: Build Student Dashboard (Basic)
-- [ ] Create `src/pages/Dashboard.tsx`
-- [ ] Fetch user profile from `/api/users/me`
-- [ ] Display welcome message: "Welcome, [firstName]!"
-- [ ] Show list of applications (fetch from `/api/applications`)
-- [ ] Add "New Application" button (goes to form, implement in Phase 5)
+- [✅] Create `src/pages/Dashboard.tsx`
+- [✅] Fetch user profile from `/api/users/me`
+- [✅] Display welcome message: "Welcome, [firstName]!"
+- [✅] Show list of applications (fetch from `/api/applications`)
+- [✅] Add "New Application" button (goes to form, implement in Phase 5)
 
 ### TODO 4.7: Dashboard Reminders & Alerts Section
 - [ ] Backend - Create reminders endpoint:
