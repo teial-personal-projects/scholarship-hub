@@ -1557,14 +1557,9 @@ scholarship-hub/
 - [ ] Integrate into ApplicationDetail page
 - [ ] Test creating, editing, deleting essays
 
-### TODO 5.5: Add "Quick Add from Scholarship" Flow
-- [ ] From scholarship search results, add "Apply" button
-- [ ] Auto-populate application form with scholarship data
-- [ ] Save to applications table
-
 **Milestone**: Students can fully manage applications and essays
 
-**Note**: Scholarship discovery and management features have been deferred. Students will find scholarships externally and create applications directly in the app. See `SCHOLARSHIP_DISCOVERY_PHASE.md` for future scholarship-related features.
+**Note**: Scholarship discovery and management features (including quick-add from search) have been deferred. Students will find scholarships externally and create applications directly in the app. See `SCHOLARSHIP_DISCOVERY_PHASE.md` for future scholarship-related features.
 
 ---
 

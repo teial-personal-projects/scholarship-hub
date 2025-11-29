@@ -29,9 +29,18 @@ import {
   MenuList,
   MenuItem,
   Link as ChakraLink,
+  useDisclosure,
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogContent,
+  AlertDialogOverlay,
 } from '@chakra-ui/react';
-import { apiGet } from '../services/api';
+import { apiGet, apiDelete } from '../services/api';
 import type { ApplicationResponse, EssayResponse, CollaborationResponse } from '@scholarship-hub/shared';
+import EssayForm from '../components/EssayForm';
+import { useRef } from 'react';
 
 function ApplicationDetail() {
   const { id } = useParams<{ id: string }>();
@@ -43,6 +52,13 @@ function ApplicationDetail() {
   const [collaborations, setCollaborations] = useState<CollaborationResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Essay management
+  const { isOpen: isEssayFormOpen, onOpen: onEssayFormOpen, onClose: onEssayFormClose } = useDisclosure();
+  const [selectedEssay, setSelectedEssay] = useState<EssayResponse | null>(null);
+  const [deleteEssayId, setDeleteEssayId] = useState<number | null>(null);
+  const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();
+  const cancelRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -90,6 +106,66 @@ function ApplicationDetail() {
 
     fetchData();
   }, [id, toast]);
+
+  // Essay management handlers
+  const handleAddEssay = () => {
+    setSelectedEssay(null);
+    onEssayFormOpen();
+  };
+
+  const handleEditEssay = (essay: EssayResponse) => {
+    setSelectedEssay(essay);
+    onEssayFormOpen();
+  };
+
+  const handleDeleteClick = (essayId: number) => {
+    setDeleteEssayId(essayId);
+    onDeleteOpen();
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteEssayId) return;
+
+    try {
+      await apiDelete(`/essays/${deleteEssayId}`);
+      toast({
+        title: 'Success',
+        description: 'Essay deleted successfully',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+
+      // Refresh essays list
+      const essaysData = await apiGet<EssayResponse[]>(`/applications/${id}/essays`);
+      setEssays(essaysData || []);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to delete essay';
+      toast({
+        title: 'Error',
+        description: errorMessage,
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setDeleteEssayId(null);
+      onDeleteClose();
+    }
+  };
+
+  const handleEssaySuccess = async () => {
+    if (!id) return;
+
+    // Refresh essays list after create/update
+    try {
+      const essaysData = await apiGet<EssayResponse[]>(`/applications/${id}/essays`);
+      setEssays(essaysData || []);
+    } catch (err) {
+      // If no essays exist, that's okay
+      setEssays([]);
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -349,12 +425,7 @@ function ApplicationDetail() {
               <Button
                 size="sm"
                 colorScheme="blue"
-                onClick={() => toast({
-                  title: 'Coming Soon',
-                  description: 'Essay management will be available in the next update',
-                  status: 'info',
-                  duration: 3000,
-                })}
+                onClick={handleAddEssay}
               >
                 Add Essay
               </Button>
@@ -378,11 +449,6 @@ function ApplicationDetail() {
                       <Td>{essay.theme || 'Untitled'}</Td>
                       <Td>{essay.wordCount || '-'}</Td>
                       <Td>
-                        {essay.essayLink && (
-                          <ChakraLink href={essay.essayLink} isExternal color="blue.500" mr="3">
-                            View
-                          </ChakraLink>
-                        )}
                         <Menu>
                           <MenuButton
                             as={IconButton}
@@ -391,8 +457,18 @@ function ApplicationDetail() {
                             size="sm"
                           />
                           <MenuList>
-                            <MenuItem>Edit</MenuItem>
-                            <MenuItem color="red.500">Delete</MenuItem>
+                            <MenuItem onClick={() => handleEditEssay(essay)}>View/Edit</MenuItem>
+                            {essay.essayLink && (
+                              <MenuItem
+                                as="a"
+                                href={essay.essayLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                Open Document ↗
+                              </MenuItem>
+                            )}
+                            <MenuItem color="red.500" onClick={() => handleDeleteClick(essay.id)}>Delete</MenuItem>
                           </MenuList>
                         </Menu>
                       </Td>
@@ -473,6 +549,43 @@ function ApplicationDetail() {
           </CardBody>
         </Card>
       </Stack>
+
+      {/* Essay Form Modal */}
+      <EssayForm
+        isOpen={isEssayFormOpen}
+        onClose={onEssayFormClose}
+        applicationId={parseInt(id!)}
+        essay={selectedEssay}
+        onSuccess={handleEssaySuccess}
+      />
+
+      {/* Delete Essay Confirmation Dialog */}
+      <AlertDialog
+        isOpen={isDeleteOpen}
+        leastDestructiveRef={cancelRef}
+        onClose={onDeleteClose}
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+              Delete Essay
+            </AlertDialogHeader>
+
+            <AlertDialogBody>
+              Are you sure you want to delete this essay? This action cannot be undone.
+            </AlertDialogBody>
+
+            <AlertDialogFooter>
+              <Button ref={cancelRef} onClick={onDeleteClose}>
+                Cancel
+              </Button>
+              <Button colorScheme="red" onClick={handleDeleteConfirm} ml={3}>
+                Delete
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
     </Container>
   );
 }
