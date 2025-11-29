@@ -1314,9 +1314,9 @@ scholarship-hub/
 **Goal**: Set up React SPA with Vite, connect to backend
 
 ### TODO 4.1: Initialize Frontend Package
-- [ ] `cd web`
-- [ ] `npm create vite@latest . -- --template react-ts`
-- [ ] Update `package.json`:
+- [✅] `cd web`
+- [✅] `npm create vite@latest . -- --template react-ts`
+- [✅] Update `package.json`:
   ```json
   {
     "name": "@scholarship-hub/web",
@@ -1337,32 +1337,31 @@ scholarship-hub/
     }
   }
   ```
-- [ ] Install dependencies: `npm install`
-- [ ] Configure Vite to proxy API requests: update `vite.config.ts`
-- [ ] Directory structure already created in Phase 0
+- [✅] Install dependencies: `npm install`
+- [✅] Configure Vite to proxy API requests: update `vite.config.ts`
+- [✅] Directory structure already created in Phase 0
 
 ### TODO 4.2: Set Up Routing
-- [ ] Install `react-router-dom`:
+- [✅] Install `react-router-dom`:
   ```bash
   cd web
   npm install react-router-dom
   ```
-- [ ] Create `web/src/pages/` structure:
+- [✅] Create `web/src/pages/` structure:
   ```bash
   touch src/pages/Login.tsx
   touch src/pages/Register.tsx
   touch src/pages/Dashboard.tsx
   touch src/pages/Applications.tsx
-  touch src/pages/ScholarshipSearch.tsx
   ```
-- [ ] Create basic route structure in `web/src/App.tsx`:
+  Note: ScholarshipSearch page deferred to future phase
+- [✅] Create basic route structure in `web/src/App.tsx`:
   ```typescript
   import { BrowserRouter, Routes, Route } from 'react-router-dom';
   import Login from './pages/Login';
   import Register from './pages/Register';
   import Dashboard from './pages/Dashboard';
   import Applications from './pages/Applications';
-  import ScholarshipSearch from './pages/ScholarshipSearch';
 
   function App() {
     return (
@@ -1372,16 +1371,15 @@ scholarship-hub/
           <Route path="/register" element={<Register />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/applications" element={<Applications />} />
-          <Route path="/scholarships/search" element={<ScholarshipSearch />} />
         </Routes>
       </BrowserRouter>
     );
   }
   ```
-- [ ] Test navigation between routes
+- [✅] Test navigation between routes
 
 ### TODO 4.3: Create Auth Context
-- [ ] Create `web/src/config/supabase.ts`:
+- [✅] Create `web/src/config/supabase.ts`:
   ```typescript
   import { createClient } from '@supabase/supabase-js';
 
@@ -1394,7 +1392,7 @@ scholarship-hub/
 
   export const supabase = createClient(supabaseUrl, supabaseAnonKey);
   ```
-- [ ] Create `web/src/contexts/AuthContext.tsx`:
+- [✅] Create `web/src/contexts/AuthContext.tsx`:
   ```typescript
   import { createContext, useContext, useEffect, useState } from 'react';
   import { User } from '@supabase/supabase-js';
@@ -1429,7 +1427,7 @@ scholarship-hub/
     return context;
   }
   ```
-- [ ] Wrap app with AuthProvider in `web/src/main.tsx`
+- [✅] Wrap app with AuthProvider in `web/src/main.tsx`
 
 ### TODO 4.4: Build Login & Registration Pages
 - [ ] Create `src/pages/Login.tsx`:
