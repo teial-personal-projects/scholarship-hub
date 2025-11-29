@@ -1268,18 +1268,18 @@ scholarship-hub/
 - [✅] Test registration and login flow
 
 ### TODO 3.3: Protect Routes with Auth Middleware
-- [ ] Apply `auth` middleware to protected routes
-- [ ] Test that unauthenticated requests return 401
-- [ ] Test that authenticated requests work
+- [✅] Apply `auth` middleware to protected routes
+- [✅] Test that unauthenticated requests return 401
+- [✅] Test that authenticated requests work
 
 ### TODO 3.4: Role-Based Access Control (RBAC)
-- [ ] Create `src/middleware/role.ts`:
+- [✅] Create `src/middleware/role.ts`:
   ```typescript
   // Middleware to check if user has required role
   export const requireRole = (roles: UserRole[]) => { ... }
   ```
-- [ ] Apply to routes that need role restrictions
-- [ ] Test student vs recommender access
+- [✅] Apply to routes that need role restrictions
+- [✅] Test student vs recommender access
 
 **Milestone**: Full authentication working, routes protected
 
