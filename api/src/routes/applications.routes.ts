@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { auth } from '../middleware/auth.js';
+import { requireRole } from '../middleware/role.js';
 import * as applicationsController from '../controllers/applications.controller.js';
 import * as essaysController from '../controllers/essays.controller.js';
 import * as collaborationsController from '../controllers/collaborations.controller.js';
@@ -7,8 +8,9 @@ import * as recommendationsController from '../controllers/recommendations.contr
 
 const router = Router();
 
-// All routes require authentication
+// All routes require authentication and student role
 router.use(auth);
+router.use(requireRole(['student']));
 
 // GET /api/applications - List user's applications
 router.get('/', applicationsController.getApplications);

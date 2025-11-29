@@ -1,11 +1,13 @@
 import { Router } from 'express';
 import { auth } from '../middleware/auth.js';
+import { requireRole } from '../middleware/role.js';
 import * as collaboratorsController from '../controllers/collaborators.controller.js';
 
 const router = Router();
 
-// All routes require authentication
+// All routes require authentication and student role
 router.use(auth);
+router.use(requireRole(['student']));
 
 // GET /api/collaborators - List user's collaborators
 router.get('/', collaboratorsController.getCollaborators);

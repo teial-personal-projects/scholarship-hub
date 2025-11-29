@@ -169,6 +169,10 @@ export const refresh = asyncHandler(async (req: Request, res: Response) => {
   try {
     const result = await authService.refreshSession(refreshToken);
 
+    if (!result.user) {
+      throw new AppError('Failed to refresh session', 401);
+    }
+
     res.json({
       user: {
         id: result.user.id,

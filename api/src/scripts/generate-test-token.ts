@@ -23,7 +23,7 @@ async function generateToken() {
 
   try {
     // Try to create/update the user with a known password
-    const { data: user, error: userError } = await supabaseAdmin.auth.admin.updateUserById(
+    const { error: userError } = await supabaseAdmin.auth.admin.updateUserById(
       'fcb86d3c-aa8c-4245-931b-a584ac4afbe0',
       {
         password: testPassword,

@@ -1278,8 +1278,33 @@ scholarship-hub/
   // Middleware to check if user has required role
   export const requireRole = (roles: UserRole[]) => { ... }
   ```
-- [✅] Apply to routes that need role restrictions
+- [✅] Apply to routes that need role restrictions:
+  - **Student-only routes** (applied `requireRole(['student'])`):
+    - `/api/users/me/search-preferences` (GET, PATCH) - Search preferences are student-specific
+    - `/api/applications/*` - All application routes (students manage their applications)
+    - `/api/essays/*` - All essay routes (students manage their essays)
+    - `/api/collaborators/*` - All collaborator routes (students manage their collaborators)
+    - `/api/collaborations/*` - All collaboration routes (students create/manage collaborations)
+    - `/api/recommendations/*` - All recommendation routes (students request recommendations)
+  - **All authenticated users** (only `auth` middleware, no role restriction):
+    - `/api/users/me` (GET, PATCH) - User profile available to all roles
+    - `/api/users/me/roles` (GET) - Role information available to all
+  - **Usage pattern**:
+    ```typescript
+    // Apply to entire router
+    router.use(auth);
+    router.use(requireRole(['student']));
+
+    // Or apply to specific routes
+    router.get('/me/search-preferences', requireRole(['student']), controller.getMySearchPreferences);
+    ```
 - [✅] Test student vs recommender access
+
+**Implementation Notes**:
+- The `requireRole()` middleware must run **after** the `auth` middleware (which populates `req.user`)
+- If user lacks required role, returns 403 Forbidden with message listing required roles
+- Multiple roles can be specified: `requireRole(['student', 'recommender'])` allows either role
+- Currently all data-managing routes require student role since the app is student-centric
 
 **Milestone**: Full authentication working, routes protected
 

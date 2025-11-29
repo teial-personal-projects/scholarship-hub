@@ -1,11 +1,13 @@
 import { Router } from 'express';
 import { auth } from '../middleware/auth.js';
+import { requireRole } from '../middleware/role.js';
 import * as collaborationsController from '../controllers/collaborations.controller.js';
 
 const router = Router();
 
-// All routes require authentication
+// All routes require authentication and student role
 router.use(auth);
+router.use(requireRole(['student']));
 
 // POST /api/collaborations - Create new collaboration
 router.post('/', collaborationsController.createCollaboration);

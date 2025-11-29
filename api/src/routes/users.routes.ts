@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { auth } from '../middleware/auth.js';
+import { requireRole } from '../middleware/role.js';
 import * as usersController from '../controllers/users.controller.js';
 
 const router = Router();
@@ -16,10 +17,10 @@ router.patch('/me', usersController.updateMe);
 // GET /api/users/me/roles - Get user roles
 router.get('/me/roles', usersController.getMyRoles);
 
-// GET /api/users/me/search-preferences - Get search preferences
-router.get('/me/search-preferences', usersController.getMySearchPreferences);
+// GET /api/users/me/search-preferences - Get search preferences (students only)
+router.get('/me/search-preferences', requireRole(['student']), usersController.getMySearchPreferences);
 
-// PATCH /api/users/me/search-preferences - Update search preferences
-router.patch('/me/search-preferences', usersController.updateMySearchPreferences);
+// PATCH /api/users/me/search-preferences - Update search preferences (students only)
+router.patch('/me/search-preferences', requireRole(['student']), usersController.updateMySearchPreferences);
 
 export default router;
