@@ -1,5 +1,9 @@
 import { supabase } from '../config/supabase.js';
 import { getUserProfileById } from '../utils/supabase.js';
+import {
+  DB_ERROR_CODES,
+  isDbErrorCode,
+} from '../constants/db-errors.js';
 
 /**
  * Get user profile by user ID
@@ -14,7 +18,7 @@ export const getUserProfile = async (userId: number) => {
     .eq('user_id', userId)
     .single();
 
-  if (searchError && searchError.code !== 'PGRST116') {
+  if (searchError && !isDbErrorCode(searchError, DB_ERROR_CODES.NO_ROWS_FOUND)) {
     // If error is not "not found", throw it
     throw searchError;
   }
@@ -78,7 +82,7 @@ export const getUserSearchPreferences = async (userId: number) => {
     .eq('user_id', userId)
     .single();
 
-  if (error && error.code !== 'PGRST116') {
+  if (error && !isDbErrorCode(error, DB_ERROR_CODES.NO_ROWS_FOUND)) {
     throw error;
   }
 

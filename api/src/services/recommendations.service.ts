@@ -5,6 +5,10 @@
 
 import { supabase } from '../config/supabase.js';
 import { AppError } from '../middleware/error-handler.js';
+import {
+  DB_ERROR_CODES,
+  isDbErrorCode,
+} from '../constants/db-errors.js';
 
 /**
  * Get all recommendations for a specific application
@@ -51,7 +55,7 @@ export const getRecommendationById = async (recommendationId: number, userId: nu
     .single();
 
   if (error) {
-    if (error.code === 'PGRST116') {
+    if (isDbErrorCode(error, DB_ERROR_CODES.NO_ROWS_FOUND)) {
       throw new AppError('Recommendation not found', 404);
     }
     throw error;

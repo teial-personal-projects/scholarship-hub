@@ -5,6 +5,10 @@
 
 import { supabase } from '../config/supabase.js';
 import { AppError } from '../middleware/error-handler.js';
+import {
+  DB_ERROR_CODES,
+  isDbErrorCode,
+} from '../constants/db-errors.js';
 
 /**
  * Verify that a collaborator belongs to the user
@@ -74,7 +78,7 @@ export const getCollaborationById = async (collaborationId: number, userId: numb
     .single();
 
   if (error) {
-    if (error.code === 'PGRST116') {
+    if (isDbErrorCode(error, DB_ERROR_CODES.NO_ROWS_FOUND)) {
       throw new AppError('Collaboration not found', 404);
     }
     throw error;

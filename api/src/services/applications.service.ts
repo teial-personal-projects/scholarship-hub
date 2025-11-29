@@ -1,5 +1,9 @@
 import { supabase } from '../config/supabase.js';
 import { AppError } from '../middleware/error-handler.js';
+import {
+  DB_ERROR_CODES,
+  isDbErrorCode,
+} from '../constants/db-errors.js';
 
 /**
  * Get all applications for a user
@@ -28,7 +32,7 @@ export const getApplicationById = async (applicationId: number, userId: number) 
     .single();
 
   if (error) {
-    if (error.code === 'PGRST116') {
+    if (isDbErrorCode(error, DB_ERROR_CODES.NO_ROWS_FOUND)) {
       throw new AppError('Application not found', 404);
     }
     throw error;

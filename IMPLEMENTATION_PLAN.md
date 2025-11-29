@@ -1255,9 +1255,9 @@ scholarship-hub/
 - [✅] Test email delivery (use your email)
 
 ### TODO 3.2: Backend Auth Endpoints
-- [ ] Create `src/routes/auth.routes.ts`
-- [ ] Create `src/controllers/auth.controller.ts`
-- [ ] Implement:
+- [✅] Create `src/routes/auth.routes.ts`
+- [✅] Create `src/controllers/auth.controller.ts`
+- [✅] Implement:
   - `POST /api/auth/register` - Register new user
     - Create user in Supabase Auth
     - Create user_profile record
@@ -1265,7 +1265,7 @@ scholarship-hub/
   - `POST /api/auth/login` - Login (handled by Supabase client, but you might proxy)
   - `POST /api/auth/logout` - Logout
   - `POST /api/auth/refresh` - Refresh session
-- [ ] Test registration and login flow
+- [✅] Test registration and login flow
 
 ### TODO 3.3: Protect Routes with Auth Middleware
 - [ ] Apply `auth` middleware to protected routes

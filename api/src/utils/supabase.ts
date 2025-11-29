@@ -1,4 +1,8 @@
 import { supabase } from '../config/supabase.js';
+import {
+  DB_ERROR_CODES,
+  isDbErrorCode,
+} from '../constants/db-errors.js';
 
 /**
  * Helper to get user profile by auth user ID
@@ -45,7 +49,7 @@ export const fetchOne = async <T>(
   const { data, error } = await query.single();
 
   if (error) {
-    if (error.code === 'PGRST116') return null; // Not found
+    if (isDbErrorCode(error, DB_ERROR_CODES.NO_ROWS_FOUND)) return null;
     throw error;
   }
 

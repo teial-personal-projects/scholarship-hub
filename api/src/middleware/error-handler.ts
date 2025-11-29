@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { DB_ERROR_CODES } from '../constants/db-errors.js';
 
 // Custom error class
 export class AppError extends Error {
@@ -39,22 +40,22 @@ export const errorHandler = (
   else if ('code' in err) {
     const pgError = err as { code: string; message: string };
     switch (pgError.code) {
-      case '23505': // Unique violation
+      case DB_ERROR_CODES.UNIQUE_VIOLATION:
         statusCode = 409;
         message = 'Resource already exists';
         isOperational = true;
         break;
-      case '23503': // Foreign key violation
+      case DB_ERROR_CODES.FOREIGN_KEY_VIOLATION:
         statusCode = 400;
         message = 'Invalid reference to related resource';
         isOperational = true;
         break;
-      case '23502': // Not null violation
+      case DB_ERROR_CODES.NOT_NULL_VIOLATION:
         statusCode = 400;
         message = 'Required field is missing';
         isOperational = true;
         break;
-      case 'PGRST116': // Supabase: No rows found
+      case DB_ERROR_CODES.NO_ROWS_FOUND:
         statusCode = 404;
         message = 'Resource not found';
         isOperational = true;
