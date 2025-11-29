@@ -85,6 +85,12 @@ function Login() {
                   />
                 </FormControl>
 
+                <Box textAlign="right">
+                  <ChakraLink as={RouterLink} to="/forgot-password" color="blue.500" fontSize="sm">
+                    Forgot password?
+                  </ChakraLink>
+                </Box>
+
                 <Button
                   type="submit"
                   colorScheme="blue"
