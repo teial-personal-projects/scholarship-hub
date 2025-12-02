@@ -2,12 +2,17 @@ import { Router } from 'express';
 import { auth } from '../middleware/auth.js';
 import { requireRole } from '../middleware/role.js';
 import * as essaysController from '../controllers/essays.controller.js';
+import * as collaborationsController from '../controllers/collaborations.controller.js';
 
 const router = Router();
 
 // All routes require authentication and student role
 router.use(auth);
 router.use(requireRole(['student']));
+
+// Nested collaborations routes - must come before /:id route
+// GET /api/essays/:essayId/collaborations - List collaborations for an essay
+router.get('/:essayId/collaborations', collaborationsController.getCollaborationsByEssay);
 
 // GET /api/essays/:id - Get essay details
 router.get('/:id', essaysController.getEssay);

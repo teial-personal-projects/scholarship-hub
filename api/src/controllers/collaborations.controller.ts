@@ -39,6 +39,36 @@ export const getCollaborationsByApplication = asyncHandler(
 );
 
 /**
+ * GET /api/essays/:essayId/collaborations
+ * Get all collaborations for an essay
+ */
+export const getCollaborationsByEssay = asyncHandler(
+  async (req: Request, res: Response) => {
+    if (!req.user) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const essayId = parseInt(req.params.essayId || '', 10);
+
+    if (isNaN(essayId)) {
+      res.status(400).json({ error: 'Invalid essay ID' });
+      return;
+    }
+
+    const collaborations = await collaborationsService.getCollaborationsByEssayId(
+      essayId,
+      req.user.userId
+    );
+
+    // Convert to camelCase
+    const response = collaborations.map((collab) => toCamelCase(collab));
+
+    res.json(response);
+  }
+);
+
+/**
  * POST /api/collaborations
  * Create new collaboration
  */

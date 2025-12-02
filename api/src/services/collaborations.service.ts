@@ -43,6 +43,24 @@ const verifyApplicationOwnership = async (applicationId: number, userId: number)
 };
 
 /**
+ * Verify that an essay belongs to the user
+ */
+const verifyEssayOwnership = async (essayId: number, userId: number) => {
+  const { data, error } = await supabase
+    .from('essays')
+    .select('id, application_id, applications!inner(user_id)')
+    .eq('id', essayId)
+    .eq('applications.user_id', userId)
+    .single();
+
+  if (error || !data) {
+    throw new AppError('Essay not found', 404);
+  }
+
+  return data;
+};
+
+/**
  * Get all collaborations for a specific application
  */
 export const getCollaborationsByApplicationId = async (
@@ -56,6 +74,42 @@ export const getCollaborationsByApplicationId = async (
     .from('collaborations')
     .select('*')
     .eq('application_id', applicationId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+
+  return data || [];
+};
+
+/**
+ * Get all collaborations for a specific essay
+ */
+export const getCollaborationsByEssayId = async (
+  essayId: number,
+  userId: number
+) => {
+  // Verify essay ownership
+  await verifyEssayOwnership(essayId, userId);
+
+  // Get essay review collaborations for this essay
+  const { data: essayReviewCollabs, error: reviewError } = await supabase
+    .from('essay_review_collaborations')
+    .select('collaboration_id')
+    .eq('essay_id', essayId);
+
+  if (reviewError) throw reviewError;
+
+  if (!essayReviewCollabs || essayReviewCollabs.length === 0) {
+    return [];
+  }
+
+  // Get full collaboration details for these essay reviews
+  const collaborationIds = essayReviewCollabs.map((erc) => erc.collaboration_id);
+
+  const { data, error } = await supabase
+    .from('collaborations')
+    .select('*')
+    .in('id', collaborationIds)
     .order('created_at', { ascending: false });
 
   if (error) throw error;

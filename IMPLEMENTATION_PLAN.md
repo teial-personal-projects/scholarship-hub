@@ -1547,15 +1547,15 @@ scholarship-hub/
 - [✅] Add routes to App.tsx for all application pages
 
 ### TODO 5.4: Build Essay Management
-- [ ] Create `src/components/EssayForm.tsx`
-- [ ] Fields: theme, word count, essay link (Google Docs URL)
-- [ ] Backend endpoints for essays:
+- [✅] Create `src/components/EssayForm.tsx`
+- [✅] Fields: theme, word count, essay link (Google Docs URL)
+- [✅] Backend endpoints for essays:
   - `GET /api/applications/:id/essays`
   - `POST /api/applications/:id/essays`
   - `PATCH /api/essays/:id`
   - `DELETE /api/essays/:id`
-- [ ] Integrate into ApplicationDetail page
-- [ ] Test creating, editing, deleting essays
+- [✅] Integrate into ApplicationDetail page
+- [✅] Test creating, editing, deleting essays
 
 **Milestone**: Students can fully manage applications and essays
 
@@ -1566,15 +1566,16 @@ scholarship-hub/
 ## PHASE 6: Collaborators (Unified)
 **Goal**: Students can add collaborators (recommenders, essay editors, counselors), send invites, track status
 
-### TODO 6.1: Backend - Collaborators CRUD
-- [ ] Create routes/controllers/services for:
+### TODO 6.1: Backend - Collaborators CRUD ✅
+- [✅] Create routes/controllers/services for:
   - `POST /api/collaborators` - Student adds a collaborator
   - `GET /api/collaborators/:id` - Get specific collaborator
   - `PATCH /api/collaborators/:id` - Update collaborator info
   - `DELETE /api/collaborators/:id` - Remove collaborator
+  - `GET /api/collaborators` - List all user's collaborators (bonus)
 
-### TODO 6.2: Backend - Collaborations Management
-- [ ] Create routes/controllers/services for:
+### TODO 6.2: Backend - Collaborations Management ✅
+- [✅] Create routes/controllers/services for:
   - `POST /api/collaborations` - Create a collaboration (link collaborator to application/essay)
     - Required: `collaboratorId`, `applicationId`, `collaborationType`
     - Optional: `essayId` (required for essayReview type)
