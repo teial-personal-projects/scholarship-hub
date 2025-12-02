@@ -31,6 +31,12 @@ interface Config {
     url: string;
     serviceRoleKey: string;
   };
+  resend: {
+    apiKey: string;
+  };
+  app: {
+    url: string; // Frontend URL for generating invite links
+  };
 }
 
 export const config: Config = {
@@ -39,6 +45,12 @@ export const config: Config = {
   supabase: {
     url: process.env.SUPABASE_URL || '',
     serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY || '',
+  },
+  resend: {
+    apiKey: process.env.RESEND_API_KEY || '',
+  },
+  app: {
+    url: process.env.APP_URL || 'http://localhost:5173',
   },
 };
 

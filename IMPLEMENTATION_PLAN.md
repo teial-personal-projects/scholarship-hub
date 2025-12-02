@@ -1587,15 +1587,113 @@ scholarship-hub/
   - `DELETE /api/collaborations/:id` - Remove collaboration
 
 ### TODO 6.3: Backend - Email Invitations
-- [ ] Set up email service (Supabase has built-in, or use SendGrid/Resend)
-- [ ] Create `POST /api/collaborations/:id/invite` endpoint:
-  - Generate secure invite token
-  - Send email with personalized message based on `collaborationType`:
+- [✅] **Set up Resend email service:**
+  - Create account at https://resend.com
+  - Get API key from dashboard
+  - Add `RESEND_API_KEY` to `.env.local` and `.env.example`
+  - Install Resend package: `npm install resend` in `api/`
+  - Create `api/src/services/email.service.ts`:
+    ```typescript
+    import { Resend } from 'resend';
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    // Export functions for sending collaboration invites
+    ```
+  - Verify domain in Resend dashboard (for production) - NOT DONE
+  - For development, can use Resend's test domain or add your domain
+
+- [✅] **Create database migration `007_collaborations_invitation.sql`:**
+  - Create `collaboration_invites` table with:
+    - `id` (primary key)
+    - `collaboration_id` (FK to collaborations)
+    - `invite_token` (unique, secure random string)
+    - `expires_at` (7 days from creation)
+    - `sent_at` (timestamp when email was sent)
+    - `accepted_at` (timestamp when collaborator accepted)
+    - `declined_at` (timestamp when collaborator declined)
+    - `resend_email_id` (Resend email ID for tracking)
+    - `delivery_status` (enum: 'pending', 'sent', 'delivered', 'bounced', 'failed')
+    - `opened_at` (timestamp from webhook)
+    - `clicked_at` (timestamp from webhook)
+    - `created_at`, `updated_at`
+  - Add indexes on `invite_token` and `collaboration_id`
+  - Add RLS policies (students can view invites for their collaborations)
+  - Run migration in Supabase SQL Editor
+
+- [✅] **Create email service (`api/src/services/email.service.ts`):**
+  - Function: `sendCollaborationInvite(collaborationId, collaboratorEmail, collaborationType, studentName, inviteToken)`
+  - Generate personalized email content based on `collaborationType`:
     - 'recommendation' → "You've been asked to write a recommendation letter"
     - 'essayReview' → "You've been invited to review an essay"
     - 'guidance' → "You've been invited to provide guidance"
-  - Link format: `https://app.com/collaborate/invite/:token`
-- [ ] Store invite token in DB with expiry (e.g., 7 days)
+  - Include invite link: `https://app.com/collaborate/invite/:token`
+  - Return Resend email ID for tracking
+
+- [ ] **Create invite endpoints:**
+  - `POST /api/collaborations/:id/invite` - Send invitation now
+    - Generate secure token (crypto.randomBytes(32).toString('hex'))
+    - Create record in `collaboration_invites` table
+    - Call email service to send email
+    - Update `collaboration_invites.sent_at` and `resend_email_id`
+    - Update `collaborations.status` to 'invited'
+    - Log action in `collaboration_history`
+  - `POST /api/collaborations/:id/invite/schedule` - Schedule invitation for later
+    - Accept `scheduled_for` timestamp
+    - Create invite record but don't send email yet
+    - Store scheduled time (can be implemented with cron job later)
+  - `POST /api/collaborations/:id/invite/resend` - Resend invitation
+    - Check if invite exists and is not expired
+    - Generate new token (invalidate old one)
+    - Send new email via Resend
+    - Update `sent_at` and `resend_email_id`
+    - Log 'resend' action in history
+
+- [ ] **Set up Resend webhook for delivery status:**
+  - In Resend dashboard → Webhooks → Add webhook
+  - Webhook URL: `https://your-api.com/api/webhooks/resend`
+  - Select events: `email.sent`, `email.delivered`, `email.bounced`, `email.opened`, `email.clicked`
+  - Create `POST /api/webhooks/resend` endpoint:
+    - Verify webhook signature (Resend provides signing secret)
+    - Extract `email_id` and event type from webhook payload
+    - Find `collaboration_invites` record by `resend_email_id`
+    - Update `delivery_status` based on event:
+      - `email.sent` → 'sent'
+      - `email.delivered` → 'delivered'
+      - `email.bounced` → 'bounced'
+      - `email.opened` → update `opened_at`
+      - `email.clicked` → update `clicked_at`
+    - Log webhook event in `collaboration_history` (optional)
+  - Add `RESEND_WEBHOOK_SECRET` to environment variables
+  - Protect endpoint with webhook signature verification (not auth middleware)
+
+- [ ] **Frontend - Confirmation dialog:**
+  - Create `web/src/components/SendInviteDialog.tsx`:
+    - Show collaboration details (collaborator name, type, application)
+    - Options:
+      - "Send Now" button → calls `POST /api/collaborations/:id/invite`
+      - "Schedule for Later" button → opens date/time picker → calls `POST /api/collaborations/:id/invite/schedule`
+      - "Cancel" button
+    - Show loading state during send
+    - Show success/error toast notifications
+  - Integrate into ApplicationDetail page:
+    - When student clicks "Send Invite" on a collaboration
+    - Open confirmation dialog
+    - After sending, update UI to show "Invited" status with timestamp
+
+- [ ] **Frontend - Resend functionality:**
+  - On ApplicationDetail page, for collaborations with status 'invited':
+    - Show "Resend Invite" button if:
+      - Invite was sent more than 3 days ago, OR
+      - Delivery status is 'bounced' or 'failed'
+    - Clicking opens confirmation: "Resend invitation to [collaborator name]?"
+    - On confirm, call `POST /api/collaborations/:id/invite/resend`
+    - Show success message: "Invitation resent successfully"
+
+- [ ] **Testing:**
+  - Test sending invitation (check email received)
+  - Test webhook delivery (use Resend's webhook testing tool)
+  - Test resend functionality
+  - Test expired token (should not work after 7 days)
+  - Test accepting invitation (see TODO 6.7)
 
 ### TODO 6.4: Frontend - Collaborator Management
 - [ ] Create `web/src/pages/Collaborators.tsx`:
