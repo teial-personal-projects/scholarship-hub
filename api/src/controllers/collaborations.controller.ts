@@ -324,3 +324,108 @@ export const getCollaborationHistory = asyncHandler(async (req: Request, res: Re
   res.json(response);
 });
 
+/**
+ * POST /api/collaborations/:id/invite
+ * Send collaboration invitation now
+ */
+export const sendInvite = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+
+  const collaborationId = parseInt(req.params.id || '', 10);
+
+  if (isNaN(collaborationId)) {
+    res.status(400).json({ error: 'Invalid collaboration ID' });
+    return;
+  }
+
+  const invite = await collaborationsService.sendCollaborationInvitation(
+    collaborationId,
+    req.user.userId
+  );
+
+  // Convert to camelCase
+  const response = toCamelCase(invite);
+
+  res.status(201).json(response);
+});
+
+/**
+ * POST /api/collaborations/:id/invite/schedule
+ * Schedule collaboration invitation for later
+ */
+export const scheduleInvite = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+
+  const collaborationId = parseInt(req.params.id || '', 10);
+
+  if (isNaN(collaborationId)) {
+    res.status(400).json({ error: 'Invalid collaboration ID' });
+    return;
+  }
+
+  const { scheduledFor } = req.body;
+
+  if (!scheduledFor) {
+    res.status(400).json({ error: 'scheduledFor is required' });
+    return;
+  }
+
+  // Validate date
+  const scheduledDate = new Date(scheduledFor);
+  if (isNaN(scheduledDate.getTime())) {
+    res.status(400).json({ error: 'Invalid scheduledFor date' });
+    return;
+  }
+
+  // Check if scheduled date is in the future
+  if (scheduledDate < new Date()) {
+    res.status(400).json({ error: 'scheduledFor must be in the future' });
+    return;
+  }
+
+  const invite = await collaborationsService.scheduleCollaborationInvitation(
+    collaborationId,
+    req.user.userId,
+    scheduledFor
+  );
+
+  // Convert to camelCase
+  const response = toCamelCase(invite);
+
+  res.status(201).json(response);
+});
+
+/**
+ * POST /api/collaborations/:id/invite/resend
+ * Resend collaboration invitation
+ */
+export const resendInvite = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+
+  const collaborationId = parseInt(req.params.id || '', 10);
+
+  if (isNaN(collaborationId)) {
+    res.status(400).json({ error: 'Invalid collaboration ID' });
+    return;
+  }
+
+  const invite = await collaborationsService.resendCollaborationInvitation(
+    collaborationId,
+    req.user.userId
+  );
+
+  // Convert to camelCase
+  const response = toCamelCase(invite);
+
+  res.json(response);
+});
+

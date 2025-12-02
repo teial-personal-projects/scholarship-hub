@@ -72,7 +72,7 @@ CREATE POLICY "Users can insert invites for own collaborations"
   FOR INSERT WITH CHECK (
     EXISTS (
       SELECT 1 FROM public.user_profiles p
-      WHERE p.id = user_id
+      WHERE p.id = collaboration_invites.user_id
         AND p.auth_user_id = auth.uid()
     )
   );

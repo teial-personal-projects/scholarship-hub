@@ -1628,6 +1628,7 @@ scholarship-hub/
   - Include invite link: `https://app.com/collaborate/invite/:token`
   - Return Resend email ID for tracking
 
+### TODO 6.3.4: Backend - Email Invitations
 - [ ] **Create invite endpoints:**
   - `POST /api/collaborations/:id/invite` - Send invitation now
     - Generate secure token (crypto.randomBytes(32).toString('hex'))
@@ -1647,6 +1648,7 @@ scholarship-hub/
     - Update `sent_at` and `resend_email_id`
     - Log 'resend' action in history
 
+### TODO 6.3.5: Backend - Email Invitations
 - [ ] **Set up Resend webhook for delivery status:**
   - In Resend dashboard → Webhooks → Add webhook
   - Webhook URL: `https://your-api.com/api/webhooks/resend`
@@ -1665,6 +1667,7 @@ scholarship-hub/
   - Add `RESEND_WEBHOOK_SECRET` to environment variables
   - Protect endpoint with webhook signature verification (not auth middleware)
 
+### TODO 6.3.6: Backend - Email Invitations
 - [ ] **Frontend - Confirmation dialog:**
   - Create `web/src/components/SendInviteDialog.tsx`:
     - Show collaboration details (collaborator name, type, application)
@@ -1679,6 +1682,7 @@ scholarship-hub/
     - Open confirmation dialog
     - After sending, update UI to show "Invited" status with timestamp
 
+### TODO 6.3.7: Backend - Email Invitations
 - [ ] **Frontend - Resend functionality:**
   - On ApplicationDetail page, for collaborations with status 'invited':
     - Show "Resend Invite" button if:
@@ -1688,6 +1692,7 @@ scholarship-hub/
     - On confirm, call `POST /api/collaborations/:id/invite/resend`
     - Show success message: "Invitation resent successfully"
 
+### TODO 6.3.8: Backend - Email Invitations
 - [ ] **Testing:**
   - Test sending invitation (check email received)
   - Test webhook delivery (use Resend's webhook testing tool)

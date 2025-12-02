@@ -3,12 +3,14 @@
  * Business logic for collaboration management
  */
 
+import { randomBytes } from 'node:crypto';
 import { supabase } from '../config/supabase.js';
 import { AppError } from '../middleware/error-handler.js';
 import {
   DB_ERROR_CODES,
   isDbErrorCode,
 } from '../constants/db-errors.js';
+import { sendCollaborationInvite } from './email.service.js';
 
 /**
  * Verify that a collaborator belongs to the user
@@ -414,5 +416,279 @@ export const getCollaborationHistory = async (collaborationId: number, userId: n
   if (error) throw error;
 
   return data || [];
+};
+
+/**
+ * Generate a secure random token for invitation
+ */
+function generateInviteToken(): string {
+  return randomBytes(32).toString('hex');
+}
+
+/**
+ * Get collaboration with related data for sending invite
+ */
+async function getCollaborationForInvite(
+  collaborationId: number,
+  userId: number
+) {
+  const { data, error } = await supabase
+    .from('collaborations')
+    .select(`
+      *,
+      collaborators!inner(
+        id,
+        first_name,
+        last_name,
+        email,
+        user_id
+      ),
+      applications!inner(
+        id,
+        scholarship_name,
+        due_date,
+        user_id
+      )
+    `)
+    .eq('id', collaborationId)
+    .single();
+
+  if (error || !data) {
+    throw new AppError('Collaboration not found', 404);
+  }
+
+  // Verify ownership through the application's user_id
+  if (data.applications.user_id !== userId) {
+    throw new AppError('Unauthorized', 403);
+  }
+
+  return data;
+}
+
+/**
+ * Send collaboration invitation
+ */
+export const sendCollaborationInvitation = async (
+  collaborationId: number,
+  userId: number
+) => {
+  // Get collaboration with related data
+  const collaboration = await getCollaborationForInvite(collaborationId, userId);
+
+  // Generate secure token
+  const inviteToken = generateInviteToken();
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 7); // 7 days from now
+
+  // Get student name for email
+  const { data: studentProfile } = await supabase
+    .from('user_profiles')
+    .select('first_name, last_name')
+    .eq('id', userId)
+    .single();
+
+  const studentName =
+    studentProfile?.first_name && studentProfile?.last_name
+      ? `${studentProfile.first_name} ${studentProfile.last_name}`
+      : 'A student';
+
+  const collaboratorName =
+    collaboration.collaborators.first_name && collaboration.collaborators.last_name
+      ? `${collaboration.collaborators.first_name} ${collaboration.collaborators.last_name}`
+      : collaboration.collaborators.email;
+
+  // Send email via Resend
+  const resendEmailId = await sendCollaborationInvite({
+    collaboratorEmail: collaboration.collaborators.email,
+    collaboratorName,
+    collaborationType: collaboration.collaboration_type as 'recommendation' | 'essayReview' | 'guidance',
+    studentName,
+    applicationName: collaboration.applications.scholarship_name,
+    inviteToken,
+    dueDate: collaboration.next_action_due_date
+      ? new Date(collaboration.next_action_due_date).toISOString()
+      : collaboration.applications.due_date
+      ? new Date(collaboration.applications.due_date).toISOString()
+      : undefined,
+    notes: collaboration.notes || undefined,
+  });
+
+  // Create invite record
+  const { data: invite, error: inviteError } = await supabase
+    .from('collaboration_invites')
+    .insert({
+      collaboration_id: collaborationId,
+      user_id: userId,
+      invite_token: inviteToken,
+      expires_at: expiresAt.toISOString(),
+      resend_email_id: resendEmailId,
+      delivery_status: 'sent',
+      sent_at: new Date().toISOString(),
+    })
+    .select()
+    .single();
+
+  if (inviteError) {
+    throw new AppError(`Failed to create invite record: ${inviteError.message}`, 500);
+  }
+
+  // Update collaboration status to 'invited'
+  const { error: updateError } = await supabase
+    .from('collaborations')
+    .update({
+      status: 'invited',
+      awaiting_action_from: 'collaborator',
+      awaiting_action_type: 'accept_invitation',
+    })
+    .eq('id', collaborationId);
+
+  if (updateError) {
+    throw new AppError(`Failed to update collaboration status: ${updateError.message}`, 500);
+  }
+
+  // Log action in history
+  await addCollaborationHistory(collaborationId, userId, {
+    action: 'invited',
+    details: `Invitation sent to ${collaboration.collaborators.email}`,
+  });
+
+  return invite;
+};
+
+/**
+ * Schedule collaboration invitation for later
+ */
+export const scheduleCollaborationInvitation = async (
+  collaborationId: number,
+  userId: number,
+  scheduledFor: string
+) => {
+  // Verify collaboration exists and user owns it
+  await getCollaborationForInvite(collaborationId, userId);
+
+  // Generate secure token
+  const inviteToken = generateInviteToken();
+  const expiresAt = new Date(scheduledFor);
+  expiresAt.setDate(expiresAt.getDate() + 7); // 7 days from scheduled date
+
+  // Create invite record (not sent yet)
+  const { data: invite, error: inviteError } = await supabase
+    .from('collaboration_invites')
+    .insert({
+      collaboration_id: collaborationId,
+      user_id: userId,
+      invite_token: inviteToken,
+      expires_at: expiresAt.toISOString(),
+      delivery_status: 'pending',
+      // sent_at will be null until email is actually sent
+    })
+    .select()
+    .single();
+
+  if (inviteError) {
+    throw new AppError(`Failed to create invite record: ${inviteError.message}`, 500);
+  }
+
+  // Log action in history
+  await addCollaborationHistory(collaborationId, userId, {
+    action: 'invite_scheduled',
+    details: `Invitation scheduled for ${new Date(scheduledFor).toLocaleString()}`,
+  });
+
+  return invite;
+};
+
+/**
+ * Resend collaboration invitation
+ */
+export const resendCollaborationInvitation = async (
+  collaborationId: number,
+  userId: number
+) => {
+  // Get collaboration with related data
+  const collaboration = await getCollaborationForInvite(collaborationId, userId);
+
+  // Find existing invite (get the most recent one)
+  const { data: existingInvites, error: findError } = await supabase
+    .from('collaboration_invites')
+    .select('*')
+    .eq('collaboration_id', collaborationId)
+    .order('created_at', { ascending: false })
+    .limit(1);
+
+  if (findError || !existingInvites || existingInvites.length === 0) {
+    throw new AppError('No existing invitation found to resend', 404);
+  }
+
+  const existingInvite = existingInvites[0];
+
+  // Check if invite is expired
+  if (new Date(existingInvite.expires_at) < new Date()) {
+    throw new AppError('Invitation has expired. Please send a new invitation.', 400);
+  }
+
+  // Generate new token (invalidate old one)
+  const newInviteToken = generateInviteToken();
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 7); // 7 days from now
+
+  // Get student name for email
+  const { data: studentProfile } = await supabase
+    .from('user_profiles')
+    .select('first_name, last_name')
+    .eq('id', userId)
+    .single();
+
+  const studentName =
+    studentProfile?.first_name && studentProfile?.last_name
+      ? `${studentProfile.first_name} ${studentProfile.last_name}`
+      : 'A student';
+
+  const collaboratorName =
+    collaboration.collaborators.first_name && collaboration.collaborators.last_name
+      ? `${collaboration.collaborators.first_name} ${collaboration.collaborators.last_name}`
+      : collaboration.collaborators.email;
+
+  // Send new email via Resend
+  const resendEmailId = await sendCollaborationInvite({
+    collaboratorEmail: collaboration.collaborators.email,
+    collaboratorName,
+    collaborationType: collaboration.collaboration_type as 'recommendation' | 'essayReview' | 'guidance',
+    studentName,
+    applicationName: collaboration.applications.scholarship_name,
+    inviteToken: newInviteToken,
+    dueDate: collaboration.next_action_due_date
+      ? new Date(collaboration.next_action_due_date).toISOString()
+      : collaboration.applications.due_date
+      ? new Date(collaboration.applications.due_date).toISOString()
+      : undefined,
+    notes: collaboration.notes || undefined,
+  });
+
+  // Update existing invite record with new token and email info
+  const { data: updatedInvite, error: updateError } = await supabase
+    .from('collaboration_invites')
+    .update({
+      invite_token: newInviteToken,
+      expires_at: expiresAt.toISOString(),
+      resend_email_id: resendEmailId,
+      delivery_status: 'sent',
+      sent_at: new Date().toISOString(),
+    })
+    .eq('id', existingInvite.id)
+    .select()
+    .single();
+
+  if (updateError) {
+    throw new AppError(`Failed to update invite record: ${updateError.message}`, 500);
+  }
+
+  // Log resend action in history
+  await addCollaborationHistory(collaborationId, userId, {
+    action: 'resend',
+    details: `Invitation resent to ${collaboration.collaborators.email}`,
+  });
+
+  return updatedInvite;
 };
 

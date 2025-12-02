@@ -27,5 +27,14 @@ router.post('/:id/history', collaborationsController.addCollaborationHistory);
 // GET /api/collaborations/:id/history - Get collaboration history
 router.get('/:id/history', collaborationsController.getCollaborationHistory);
 
+// POST /api/collaborations/:id/invite - Send invitation now
+router.post('/:id/invite', collaborationsController.sendInvite);
+
+// POST /api/collaborations/:id/invite/schedule - Schedule invitation for later
+router.post('/:id/invite/schedule', collaborationsController.scheduleInvite);
+
+// POST /api/collaborations/:id/invite/resend - Resend invitation
+router.post('/:id/invite/resend', collaborationsController.resendInvite);
+
 export default router;
 

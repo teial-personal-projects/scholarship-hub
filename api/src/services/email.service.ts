@@ -4,6 +4,7 @@
  */
 
 import { Resend } from 'resend';
+import he from 'he';
 import { config } from '../config/index.js';
 import { AppError } from '../middleware/error-handler.js';
 
@@ -35,17 +36,19 @@ export interface SendCollaborationInviteParams {
 
 /**
  * Generate email subject based on collaboration type
+ * Note: Email subjects are typically plain text, but we escape for safety
  */
 function getEmailSubject(collaborationType: CollaborationType, studentName: string): string {
+  const escapedName = he.encode(studentName);
   switch (collaborationType) {
     case 'recommendation':
-      return `${studentName} has requested a recommendation letter`;
+      return `${escapedName} has requested a recommendation letter`;
     case 'essayReview':
-      return `${studentName} has requested essay review assistance`;
+      return `${escapedName} has requested essay review assistance`;
     case 'guidance':
-      return `${studentName} has requested your guidance`;
+      return `${escapedName} has requested your guidance`;
     default:
-      return `${studentName} has requested your assistance`;
+      return `${escapedName} has requested your assistance`;
   }
 }
 
@@ -54,7 +57,14 @@ function getEmailSubject(collaborationType: CollaborationType, studentName: stri
  */
 function generateEmailContent(params: SendCollaborationInviteParams): string {
   const { collaboratorName, collaborationType, studentName, applicationName, inviteToken, dueDate, notes } = params;
-  const inviteLink = `${config.app.url}/collaborate/invite/${inviteToken}`;
+  
+  // Escape all user-provided data to prevent XSS
+  const escapedCollaboratorName = he.encode(collaboratorName);
+  const escapedStudentName = he.encode(studentName);
+  const escapedApplicationName = applicationName ? he.encode(applicationName) : undefined;
+  
+  // URL-encode the invite link for href attributes
+  const inviteLink = `${config.app.url}/collaborate/invite/${encodeURIComponent(inviteToken)}`;
 
   let actionDescription = '';
 
@@ -70,22 +80,23 @@ function generateEmailContent(params: SendCollaborationInviteParams): string {
       break;
   }
 
-  const applicationInfo = applicationName
-    ? `<p><strong>Application:</strong> ${applicationName}</p>`
+  const applicationInfo = escapedApplicationName
+    ? `<p><strong>Application:</strong> ${escapedApplicationName}</p>`
     : '';
 
   const dueDateInfo = dueDate
-    ? `<p><strong>Due Date:</strong> ${new Date(dueDate).toLocaleDateString('en-US', {
+    ? `<p><strong>Due Date:</strong> ${he.encode(new Date(dueDate).toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
-      })}</p>`
+      }))}</p>`
     : '';
 
+  // Escape notes first, then replace newlines with <br> tags
   const notesInfo = notes
     ? `<div style="margin-top: 20px; padding: 15px; background-color: #f5f5f5; border-radius: 5px;">
          <p><strong>Additional Notes:</strong></p>
-         <p>${notes.replace(/\n/g, '<br>')}</p>
+         <p>${he.encode(notes).replace(/\n/g, '<br>')}</p>
        </div>`
     : '';
 
@@ -101,9 +112,9 @@ function generateEmailContent(params: SendCollaborationInviteParams): string {
   <div style="background-color: #ffffff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 30px;">
     <h1 style="color: #2563eb; margin-top: 0;">Collaboration Invitation</h1>
     
-    <p>Hello ${collaboratorName},</p>
+    <p>Hello ${escapedCollaboratorName},</p>
     
-    <p>${actionDescription} for <strong>${studentName}</strong>.</p>
+    <p>${actionDescription} for <strong>${escapedStudentName}</strong>.</p>
     
     ${applicationInfo}
     ${dueDateInfo}
@@ -119,7 +130,7 @@ function generateEmailContent(params: SendCollaborationInviteParams): string {
     
     <p style="font-size: 12px; color: #666;">
       Or copy and paste this link into your browser:<br>
-      <a href="${inviteLink}" style="color: #2563eb; word-break: break-all;">${inviteLink}</a>
+      <a href="${inviteLink}" style="color: #2563eb; word-break: break-all;">${he.encode(inviteLink)}</a>
     </p>
     
     ${notesInfo}
@@ -127,7 +138,7 @@ function generateEmailContent(params: SendCollaborationInviteParams): string {
     <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;">
     
     <p style="font-size: 12px; color: #666;">
-      This invitation will expire in 7 days. If you have any questions, please contact ${studentName} directly.
+      This invitation will expire in 7 days. If you have any questions, please contact ${escapedStudentName} directly.
     </p>
     
     <p style="font-size: 12px; color: #666; margin-top: 20px;">
