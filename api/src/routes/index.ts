@@ -7,6 +7,7 @@ import collaboratorsRoutes from './collaborators.routes.js';
 import collaborationsRoutes from './collaborations.routes.js';
 import recommendationsRoutes from './recommendations.routes.js';
 import webhooksRoutes from './webhooks.routes.js';
+import cronRoutes from './cron.routes.js';
 
 const router = Router();
 
@@ -16,6 +17,9 @@ router.use('/auth', authRoutes);
 
 // Webhook routes (public, use signature verification instead of auth)
 router.use('/webhooks', webhooksRoutes);
+
+// Cron routes (public, use secret token verification instead of auth)
+router.use('/cron', cronRoutes);
 
 // Protected routes (require authentication)
 router.use('/users', usersRoutes);

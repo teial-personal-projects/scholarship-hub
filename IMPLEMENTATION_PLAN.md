@@ -1834,19 +1834,19 @@ scholarship-hub/
 
 ### TODO 6.9: Automated Reminders & Notifications
 
-### TODO 6.9.1: Backend - Set up email service
-- [ ] **Email Provider: Resend (already configured)**
+### TODO 6.9.1: Backend - Set up email service ✅ COMPLETED
+- [x] **Email Provider: Resend (already configured)**
   - ✅ Resend is already set up for collaboration invitations
-  - Extend existing `api/src/services/email.service.ts` to support reminder emails
+  - Extend existing `api/src/services/email.service.ts` to support reminder emails (TODO 6.9.3)
   - Reuse existing Resend client and configuration
   - No additional email provider setup needed
 
-- [✅] **Scheduler: GitHub Actions (recommended)**
+- [x] **Scheduler: GitHub Actions (recommended)**
   - **Alternatives Considered:**
     - **Supabase pg_cron or Edge Functions** (already using Supabase)
       - Pros: Already in our stack, no additional service, database-level scheduling
       - Cons: pg_cron requires enabling extension and more complex setup, Edge Functions have execution limits and may require paid plan for frequent runs
-    - **Cloud provider cron services** (AWS EventBridge, Google Cloud 
+    - **Cloud provider cron services** (AWS EventBridge, Google Cloud Scheduler)
   - **Why GitHub Actions was preferred:**
     - Free for public repositories and generous free tier for private repos (2,000 minutes/month)
     - Built into GitHub (no separate CI/CD service needed)
@@ -1857,25 +1857,31 @@ scholarship-hub/
     - Can manually trigger workflows for testing via `workflow_dispatch`
     - Version-controlled workflow files (part of the repository)
     - No additional costs for typical reminder scheduling needs
-  - Create `.github/workflows/send-reminders.yml`
-  - Configure to run daily (or multiple times per day)
-  - Example schedule: `cron: '0 12 * * *'` (daily at noon UTC)
-  - Include `workflow_dispatch` for manual triggering
-  - Call `POST /api/cron/send-reminders` endpoint with secret token
-  - Store `CRON_SECRET` in GitHub Secrets
-     - https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets
-     - Generate a secure secret using one of these methods (minimum 32 characters):
+  - ✅ Created `.github/workflows/send-reminders.yml`
+  - ✅ Configured to run daily at noon UTC: `cron: '0 12 * * *'`
+  - ✅ Includes `workflow_dispatch` for manual triggering
+  - ✅ Calls `POST /api/cron/send-reminders` endpoint with secret token
+  - Setup instructions in `.github/workflows/README.md`:
+    - Store `CRON_SECRET` in GitHub Secrets
+    - https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets
+    - Generate a secure secret using one of these methods (minimum 32 characters):
       - Node.js: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`
       - OpenSSL: `openssl rand -hex 32`
     - In GitHub repository: Settings → Secrets and variables → Actions → New repository secret
     - Name: `CRON_SECRET`
     - Value: (paste the generated secret)
+    - Also add `API_URL` secret with your API base URL
 
-- [ ] **Create protected cron endpoint:**
-  - `POST /api/cron/send-reminders`
-  - Protect with secret token (not user authentication)
-  - Add `CRON_SECRET` to environment variables
-  - This endpoint will be called by the scheduler to process reminders
+- [x] **Create protected cron endpoint:**
+  - ✅ Created `POST /api/cron/send-reminders` endpoint
+  - ✅ Protected with secret token verification (Bearer token in Authorization header)
+  - ✅ Added `CRON_SECRET` to environment variables (api/.env.example)
+  - ✅ Returns reminder statistics (applications, collaborations, errors, total)
+  - Files created:
+    - `api/src/routes/cron.routes.ts` - Cron route definitions
+    - `api/src/controllers/cron.controller.ts` - Cron endpoint with secret verification
+    - `api/src/services/reminders.service.ts` - Placeholder service (to be implemented in 6.9.2)
+  - This endpoint will be called by GitHub Actions to process reminders
 
 ### TODO 6.9.2: Backend - Create reminder service
 - [ ] Create `src/services/reminders.service.ts`:
