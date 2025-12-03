@@ -4,6 +4,7 @@
  */
 
 import { supabase } from '../config/supabase.js';
+import * as emailService from './email.service.js';
 
 export interface ReminderStats {
   applicationReminders: number;
@@ -139,13 +140,28 @@ async function processApplicationReminders(): Promise<number> {
         // TODO: Query last reminder from collaboration_history or add last_reminder_sent_at field
         // For now, we'll send reminders based on intervals only
         if (shouldSendReminder(dueDate, null, intervals)) {
-          // TODO 6.9.3: Send email via email service
-          console.log(
-            `[reminders.service] Would send application reminder for "${app.scholarship_name}" (${daysDiff} days)`
-          );
+          // Send reminder email
+          const userProfile = app.user_profiles as any;
+          const emailSent = await emailService.sendApplicationReminder({
+            studentEmail: userProfile.email,
+            studentName: `${userProfile.first_name} ${userProfile.last_name}`,
+            scholarshipName: app.scholarship_name,
+            dueDate: app.due_date,
+            daysUntilDue: daysDiff,
+            applicationId: app.id,
+          });
 
-          // TODO: Log reminder in collaboration_history or track in applications table
-          count++;
+          if (emailSent) {
+            console.log(
+              `[reminders.service] Application reminder sent for "${app.scholarship_name}" (${daysDiff} days, Email ID: ${emailSent})`
+            );
+            // TODO: Log reminder in collaboration_history or track in applications table
+            count++;
+          } else {
+            console.warn(
+              `[reminders.service] Failed to send application reminder for "${app.scholarship_name}"`
+            );
+          }
         }
       } catch (err) {
         console.error(
@@ -242,13 +258,33 @@ async function processCollaborationReminders(): Promise<number> {
         // Check if we should send a reminder
         // TODO: Query last reminder from collaboration_history
         if (shouldSendReminder(dueDate, null, intervals)) {
-          // TODO 6.9.3: Send email via email service
-          console.log(
-            `[reminders.service] Would send collaboration reminder for ${collab.collaboration_type} (${daysDiff} days)`
-          );
+          // Send reminder email to collaborator
+          const collaborator = collab.collaborators as any;
+          const application = collab.applications as any;
+          const student = application.user_profiles as any;
 
-          // TODO: Log reminder in collaboration_history table
-          count++;
+          const emailSent = await emailService.sendCollaborationReminder({
+            recipientEmail: collaborator.email,
+            recipientName: `${collaborator.first_name} ${collaborator.last_name}`,
+            collaborationType: collab.collaboration_type as any,
+            studentName: `${student.first_name} ${student.last_name}`,
+            dueDate: collab.next_action_due_date!,
+            daysUntilDue: daysDiff,
+            applicationName: application.scholarship_name,
+            collaborationId: collab.id,
+          });
+
+          if (emailSent) {
+            console.log(
+              `[reminders.service] Collaboration reminder sent for ${collab.collaboration_type} (${daysDiff} days, Email ID: ${emailSent})`
+            );
+            // TODO: Log reminder in collaboration_history table
+            count++;
+          } else {
+            console.warn(
+              `[reminders.service] Failed to send collaboration reminder for ${collab.collaboration_type}`
+            );
+          }
         }
       } catch (err) {
         console.error(

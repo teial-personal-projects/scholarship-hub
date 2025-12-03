@@ -1902,17 +1902,28 @@ scholarship-hub/
   - TODO 6.9.7: Add `last_reminder_sent_at` field to applications/collaborations tables for better tracking
   - Log reminders in `collaboration_history` table when sent
 
-### TODO 6.9.3: Backend - Create email templates
-- [ ] **Extend existing `api/src/services/email.service.ts`:**
-  - Add reminder email template functions
-  - Reuse existing Resend client (no new setup needed)
-  - Follow same pattern as `sendCollaborationInvite` function
-- [ ] **Student - Application Due Soon**: "Your application for [scholarship] is due in [X] days"
-- [ ] **Student - Application Overdue**: "Your application for [scholarship] was due [X] days ago"
-- [ ] **Student - Collaboration Pending**: "[Collaborator] hasn't responded to your collaboration request"
-- [ ] **Collaborator - New Request**: "[Student] invited you to help with [collaboration type]"
-- [ ] **Collaborator - Due Soon**: "Reminder: [Student] needs your [collaboration type] by [date] (due in [X] days)"
-- [ ] **Collaborator - Overdue**: "Your [collaboration type] for [Student] was due [X] days ago"
+### TODO 6.9.3: Backend - Create email templates ✅ COMPLETED
+- ✅ **Extended existing `api/src/services/email.service.ts`:**
+  - Added reminder email template functions
+  - Reused existing Resend client (no new setup needed)
+  - Followed same pattern as `sendCollaborationInvite` function
+- ✅ **Student - Application Due Soon**: "Your application for [scholarship] is due in [X] days"
+- ✅ **Student - Application Overdue**: "Your application for [scholarship] was due [X] days ago"
+- ✅ **Collaborator - Due Soon**: "Reminder: [Student] needs your [collaboration type] by [date] (due in [X] days)"
+- ✅ **Collaborator - Overdue**: "Your [collaboration type] for [Student] was due [X] days ago"
+- **Email Templates Created:**
+  - `sendApplicationReminder()` - Sends application due/overdue reminders to students
+  - `sendCollaborationReminder()` - Sends collaboration due/overdue reminders to collaborators
+  - HTML templates with responsive design, urgency color coding (blue → orange → red)
+  - Automatic template selection based on `daysUntilDue` (positive = upcoming, negative = overdue)
+  - XSS protection via `he.encode()` for all user-provided content
+  - Direct links to applications and collaborator dashboard
+- **Integration:**
+  - ✅ Integrated into `reminders.service.ts`
+  - ✅ Application reminders send emails to students with scholarship details
+  - ✅ Collaboration reminders send emails to collaborators with student and application context
+  - Returns Resend email ID for tracking (null if email service not configured)
+- **Note**: "Collaboration Pending" reminder type not implemented as it's covered by the invitation system
 
 ### TODO 6.9.4: Backend - Implement reminder schedule logic
 - [ ] Create reminder configuration interface:
