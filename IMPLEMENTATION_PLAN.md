@@ -1703,25 +1703,7 @@ scholarship-hub/
   - Test webhook using Resend's webhook testing tool or send a test email
 
 ### TODO 6.3.7.1 Backend - Test webhook
-  - [ ] **Test webhook endpoint:**
-    - **Note:** Resend doesn't have a built-in webhook testing tool in the dashboard
-    - **Method 1 - Send test email:**
-      - Send a collaboration invitation email through your app
-      - Check API logs for webhook processing messages
-      - Verify `collaboration_invites` table is updated with delivery status
-      - Check Resend dashboard → Webhooks → Activity log to see webhook delivery attempts
-    - **Method 2 - Use third-party webhook tester (for local testing):**
-      - Use a tool like [Webhook.site](https://webhook.site) or [Hooklistener](https://www.hooklistener.com/webhook-tester)
-      - Temporarily point your Resend webhook to the test URL
-      - Send a test email to see the webhook payload structure
-      - Then point it back to your actual endpoint
-    - **Method 3 - Manual webhook replay (if available):**
-      - In Resend dashboard → Webhooks → Activity log
-      - If a webhook delivery failed, you may be able to replay it
-    - **Verify:**
-      - Webhook signature verification works (invalid signatures are rejected)
-      - Events update `delivery_status`, `opened_at`, `clicked_at` correctly
-      - Webhook events are logged in `collaboration_history` (optional)
+  - [ ] Test webhook using Resend's webhook testing tool or send a test email
 
 ### TODO 6.3.8: Backend - Email Invitations
 - [ ] **Frontend - Confirmation dialog:**
