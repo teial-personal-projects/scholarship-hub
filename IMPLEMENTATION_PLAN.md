@@ -1805,34 +1805,40 @@ scholarship-hub/
     - `POST /api/invites/:token/decline` - Decline invitation
 
 ### TODO 6.8: Collaboration History ✅ COMPLETED
-- [x] Log all actions: invited, reminder_sent, viewed, accepted, declined, in_progress, submitted, comment_added
-- [x] Display history timeline on:
+- [✅] Log all actions: invited, reminder_sent, viewed, accepted, declined, in_progress, submitted, comment_added
+- [✅] Display history timeline on:
   - ApplicationDetail page (for students)
   - CollaboratorDashboard (for collaborators)
-- [x] Show: action, timestamp, details (if any)
+- [✅] Show: action, timestamp, details (if any)
 - Note: Backend endpoint required: `GET /api/collaborations/:id/history`
 - Components created:
   - `CollaborationHistory.tsx` - Timeline component with icons, badges, and relative timestamps
   - Integrated into both ApplicationDetail and CollaboratorDashboard with modal dialogs
 
 ### TODO 6.9: Automated Reminders & Notifications
-- [ ] Backend - Set up email service:
-  - Use Supabase Edge Functions or cron service (GitHub Actions, Vercel Cron, etc.)
-  - Or use external scheduler (Railway Cron, EasyCron)
-  - Set up email provider (Supabase built-in, SendGrid, Resend, or AWS SES)
-- [ ] Backend - Create reminder service (`src/services/reminders.service.ts`):
+
+### TODO 6.9.1: Backend - Set up email service
+- [ ] Use Supabase Edge Functions or cron service (GitHub Actions, Vercel Cron, etc.)
+- [ ] Or use external scheduler (Railway Cron, EasyCron)
+- [ ] Set up email provider (Supabase built-in, SendGrid, Resend, or AWS SES)
+
+### TODO 6.9.2: Backend - Create reminder service
+- [ ] Create `src/services/reminders.service.ts`:
   - Query for upcoming due dates (applications and collaborations)
   - Query for overdue items
   - Generate appropriate reminder emails
   - Track last reminder sent to avoid spam
-- [ ] Backend - Create email templates:
-  - **Student - Application Due Soon**: "Your application for [scholarship] is due in [X] days"
-  - **Student - Application Overdue**: "Your application for [scholarship] was due [X] days ago"
-  - **Student - Collaboration Pending**: "[Collaborator] hasn't responded to your collaboration request"
-  - **Collaborator - New Request**: "[Student] invited you to help with [collaboration type]"
-  - **Collaborator - Due Soon**: "Reminder: [Student] needs your [collaboration type] by [date] (due in [X] days)"
-  - **Collaborator - Overdue**: "Your [collaboration type] for [Student] was due [X] days ago"
-- [ ] Backend - Implement reminder schedule logic:
+
+### TODO 6.9.3: Backend - Create email templates
+- [ ] **Student - Application Due Soon**: "Your application for [scholarship] is due in [X] days"
+- [ ] **Student - Application Overdue**: "Your application for [scholarship] was due [X] days ago"
+- [ ] **Student - Collaboration Pending**: "[Collaborator] hasn't responded to your collaboration request"
+- [ ] **Collaborator - New Request**: "[Student] invited you to help with [collaboration type]"
+- [ ] **Collaborator - Due Soon**: "Reminder: [Student] needs your [collaboration type] by [date] (due in [X] days)"
+- [ ] **Collaborator - Overdue**: "Your [collaboration type] for [Student] was due [X] days ago"
+
+### TODO 6.9.4: Backend - Implement reminder schedule logic
+- [ ] Create reminder configuration interface:
   ```typescript
   interface ReminderConfig {
     type: 'application' | 'collaboration';
@@ -1840,46 +1846,60 @@ scholarship-hub/
     overdueIntervals: number[]; // Days after due date (e.g., [1, 3, 7])
   }
   ```
-- [ ] Backend - Create scheduled job/cron endpoint:
-  - `POST /api/cron/send-reminders` (protected with secret key)
-  - Check all applications with upcoming due dates
-  - Check all collaborations with upcoming `next_action_due_date`
-  - Send appropriate emails
-  - Log reminder in `collaboration_history` table
-- [ ] Backend - Add reminder preferences (optional):
-  - Allow users to configure reminder intervals
-  - Allow users to opt-out of certain reminder types
-  - Store in `user_profiles` or new `user_notification_preferences` table
-- [ ] Database - Add tracking fields:
-  - Add `last_reminder_sent_at` to applications table
-  - Add `last_reminder_sent_at` to collaborations table
-  - Or track in collaboration_history
-- [ ] Frontend - Notification preferences UI (optional):
-  - Settings page to configure reminder preferences
-  - Toggle reminders on/off
-  - Set custom reminder intervals
-- [ ] Testing:
-  - Test reminder logic with various due date scenarios
-  - Test email sending (use test email addresses)
-  - Verify reminder history is logged correctly
-  - Test that reminders don't spam (check last_reminder_sent_at)
-- [ ] Setup scheduled execution:
-  - Configure cron job to run daily (or multiple times per day)
-  - Example with GitHub Actions:
-    ```yaml
-    name: Send Reminders
-    on:
-      schedule:
-        - cron: '0 12 * * *'  # Run daily at noon UTC
-      workflow_dispatch:  # Allow manual trigger
-    jobs:
-      send-reminders:
-        runs-on: ubuntu-latest
-        steps:
-          - run: |
-              curl -X POST https://your-api.com/api/cron/send-reminders \
-                -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
-    ```
+- [ ] Implement logic to check if reminder should be sent based on intervals
+- [ ] Implement logic to prevent duplicate reminders
+
+### TODO 6.9.5: Backend - Create scheduled job/cron endpoint
+- [ ] Create `POST /api/cron/send-reminders` endpoint (protected with secret key)
+- [ ] Check all applications with upcoming due dates
+- [ ] Check all collaborations with upcoming `next_action_due_date`
+- [ ] Send appropriate emails based on schedule logic
+- [ ] Log reminder in `collaboration_history` table
+
+### TODO 6.9.6: Backend - Add reminder preferences (optional)
+- [ ] Allow users to configure reminder intervals
+- [ ] Allow users to opt-out of certain reminder types
+- [ ] Store in `user_profiles` or new `user_notification_preferences` table
+- [ ] Create API endpoints to get/update preferences
+
+### TODO 6.9.7: Database - Add tracking fields
+- [ ] Add `last_reminder_sent_at` to applications table
+- [ ] Add `last_reminder_sent_at` to collaborations table
+- [ ] Or track in collaboration_history
+- [ ] Create migration file for schema changes
+
+### TODO 6.9.8: Frontend - Notification preferences UI (optional)
+- [ ] Create settings page to configure reminder preferences
+- [ ] Toggle reminders on/off
+- [ ] Set custom reminder intervals
+- [ ] Display current preferences
+
+### TODO 6.9.9: Testing
+- [ ] Test reminder logic with various due date scenarios
+- [ ] Test email sending (use test email addresses)
+- [ ] Verify reminder history is logged correctly
+- [ ] Test that reminders don't spam (check last_reminder_sent_at)
+- [ ] Test reminder preferences (if implemented)
+
+### TODO 6.9.10: Setup scheduled execution
+- [ ] Configure cron job to run daily (or multiple times per day)
+- [ ] Example with GitHub Actions:
+  ```yaml
+  name: Send Reminders
+  on:
+    schedule:
+      - cron: '0 12 * * *'  # Run daily at noon UTC
+    workflow_dispatch:  # Allow manual trigger
+  jobs:
+    send-reminders:
+      runs-on: ubuntu-latest
+      steps:
+        - run: |
+            curl -X POST https://your-api.com/api/cron/send-reminders \
+              -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
+  ```
+- [ ] Test cron job execution
+- [ ] Set up monitoring/alerting for failed jobs
 
 **Milestone**: Full unified collaborator system with automated reminders - students and collaborators receive timely notifications about upcoming and overdue deadlines
 
