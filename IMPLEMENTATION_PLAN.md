@@ -1965,11 +1965,27 @@ scholarship-hub/
     - Consider adding `last_reminder_sent_at` field to applications table (see TODO 6.9.7)
 - **Returns:** ReminderStats with counts of application reminders, collaboration reminders, errors, and total processed
 
-### TODO 6.9.6: Backend - Add reminder preferences (optional)
-- [ ] Allow users to configure reminder intervals
-- [ ] Allow users to opt-out of certain reminder types
-- [ ] Store in `user_profiles` or new `user_notification_preferences` table
-- [ ] Create API endpoints to get/update preferences
+### TODO 6.9.6: Backend - Add reminder preferences ✅ COMPLETED
+- ✅ Allow users to configure reminder intervals
+- ✅ Allow users to opt-out of certain reminder types
+- ✅ Store in `user_profiles` table (chosen for simplicity)
+- ✅ No new API endpoints needed - use existing user profile endpoints
+- **Database Changes (Migration 008):**
+  - Added `application_reminders_enabled` (BOOLEAN, default: true) - Toggle application reminders on/off
+  - Added `collaboration_reminders_enabled` (BOOLEAN, default: true) - Toggle collaboration reminders on/off
+  - Added `reminder_intervals` (JSONB, default: `{"application": [7, 3, 1], "collaboration": [7, 3, 1]}`) - Custom reminder intervals
+- **Service Integration:**
+  - ✅ Updated `processApplicationReminders()` to check `application_reminders_enabled`
+  - ✅ Updated `processCollaborationReminders()` to check `collaboration_reminders_enabled`
+  - ✅ Respects custom `reminder_intervals` from user preferences
+  - ✅ Falls back to default intervals if user hasn't customized
+  - ✅ Skips sending reminders if user has disabled that reminder type
+- **Implementation Details:**
+  - User preferences stored directly in `user_profiles` table for simplicity
+  - No additional routes needed - frontend can update via existing user profile update endpoints
+  - JSONB format allows flexible interval configuration: `{"application": [7, 3, 1], "collaboration": [7, 3, 1]}`
+  - Default values ensure reminders work immediately for all users
+  - Frontend can add notification preferences section to user settings/profile page
 
 ### TODO 6.9.7: Database - Add tracking fields
 - [ ] Add `last_reminder_sent_at` to applications table

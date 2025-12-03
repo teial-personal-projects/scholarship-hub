@@ -94,6 +94,7 @@ async function processApplicationReminders(): Promise<number> {
 
     // Query applications with due dates in the reminder window
     // Exclude already submitted applications
+    // Include user notification preferences
     const { data: applications, error } = await supabase
       .from('applications')
       .select(
@@ -107,7 +108,9 @@ async function processApplicationReminders(): Promise<number> {
           id,
           first_name,
           last_name,
-          email
+          email,
+          application_reminders_enabled,
+          reminder_intervals
         )
       `
       )
@@ -130,11 +133,22 @@ async function processApplicationReminders(): Promise<number> {
     // Check each application to see if it needs a reminder
     for (const app of applications) {
       try {
+        const userProfile = app.user_profiles as any;
+
+        // Check if user has disabled application reminders
+        if (userProfile.application_reminders_enabled === false) {
+          console.log(`[reminders.service] Skipping application ${app.id} - user has disabled application reminders`);
+          continue;
+        }
+
         const dueDate = new Date(app.due_date);
         const daysDiff = Math.floor((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
-        // Determine which interval list to use
-        const intervals = daysDiff >= 0 ? config.intervals : config.overdueIntervals;
+        // Use user's custom intervals if available, otherwise use defaults
+        let intervals = daysDiff >= 0 ? config.intervals : config.overdueIntervals;
+        if (userProfile.reminder_intervals?.application) {
+          intervals = userProfile.reminder_intervals.application;
+        }
 
         // Check if we should send a reminder
         // TODO: Query last reminder from collaboration_history or add last_reminder_sent_at field
@@ -203,6 +217,7 @@ async function processCollaborationReminders(): Promise<number> {
 
     // Query collaborations with action due dates in the reminder window
     // Only include collaborations that are in progress or invited
+    // Include user notification preferences (from the student who owns the collaboration)
     const { data: collaborations, error } = await supabase
       .from('collaborations')
       .select(
@@ -228,7 +243,9 @@ async function processCollaborationReminders(): Promise<number> {
             id,
             first_name,
             last_name,
-            email
+            email,
+            collaboration_reminders_enabled,
+            reminder_intervals
           )
         )
       `
@@ -253,11 +270,23 @@ async function processCollaborationReminders(): Promise<number> {
     // Check each collaboration to see if it needs a reminder
     for (const collab of collaborations) {
       try {
+        const application = collab.applications as any;
+        const student = application.user_profiles as any;
+
+        // Check if student has disabled collaboration reminders
+        if (student.collaboration_reminders_enabled === false) {
+          console.log(`[reminders.service] Skipping collaboration ${collab.id} - student has disabled collaboration reminders`);
+          continue;
+        }
+
         const dueDate = new Date(collab.next_action_due_date!);
         const daysDiff = Math.floor((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
-        // Determine which interval list to use
-        const intervals = daysDiff >= 0 ? config.intervals : config.overdueIntervals;
+        // Use student's custom intervals if available, otherwise use defaults
+        let intervals = daysDiff >= 0 ? config.intervals : config.overdueIntervals;
+        if (student.reminder_intervals?.collaboration) {
+          intervals = student.reminder_intervals.collaboration;
+        }
 
         // Check if we should send a reminder
         // TODO: Query last reminder from collaboration_history
