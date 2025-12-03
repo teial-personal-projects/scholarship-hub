@@ -33,6 +33,7 @@ interface Config {
   };
   resend: {
     apiKey: string;
+    webhookSecret: string;
   };
   app: {
     url: string; // Frontend URL for generating invite links
@@ -48,6 +49,7 @@ export const config: Config = {
   },
   resend: {
     apiKey: process.env.RESEND_API_KEY || '',
+    webhookSecret: process.env.RESEND_WEBHOOK_SECRET || '',
   },
   app: {
     url: process.env.APP_URL || 'http://localhost:5173',

@@ -6,12 +6,16 @@ import essaysRoutes from './essays.routes.js';
 import collaboratorsRoutes from './collaborators.routes.js';
 import collaborationsRoutes from './collaborations.routes.js';
 import recommendationsRoutes from './recommendations.routes.js';
+import webhooksRoutes from './webhooks.routes.js';
 
 const router = Router();
 
 // Mount route modules
 // Auth routes (public, no auth middleware)
 router.use('/auth', authRoutes);
+
+// Webhook routes (public, use signature verification instead of auth)
+router.use('/webhooks', webhooksRoutes);
 
 // Protected routes (require authentication)
 router.use('/users', usersRoutes);

@@ -1629,7 +1629,7 @@ scholarship-hub/
   - Return Resend email ID for tracking
 
 ### TODO 6.3.4: Backend - Email Invitations
-- [ ] **Create invite endpoints:**
+- [✅] **Create invite endpoints:**
   - `POST /api/collaborations/:id/invite` - Send invitation now
     - Generate secure token (crypto.randomBytes(32).toString('hex'))
     - Create record in `collaboration_invites` table
@@ -1649,25 +1649,81 @@ scholarship-hub/
     - Log 'resend' action in history
 
 ### TODO 6.3.5: Backend - Email Invitations
-- [ ] **Set up Resend webhook for delivery status:**
+- [✅] **Set up local webhook testing with Cloudflare Tunnel:**
+  - Install Cloudflare Tunnel (cloudflared):
+    ```bash
+    # macOS (using Homebrew)
+    brew install cloudflare/cloudflare/cloudflared
+    
+    # Or download from: https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/install-and-setup/installation/
+    ```
+  - Start your API server on port 3001
+  - In a separate terminal, create a quick tunnel:
+    ```bash
+    cloudflared tunnel --url http://localhost:3001
+    ```
+  - **Note:** You may see a warning about "Cannot determine default origin certificate path" - this is safe to ignore. The tunnel will still work for HTTP requests.
+  - Look for the output line that says "Your quick Tunnel has been created! Visit it at:"
+  - Copy the HTTPS URL provided (e.g., `https://abc123.trycloudflare.com`)
+  - This URL will forward requests to your local API
+  - **Important:** The tunnel URL changes each time you restart cloudflared, so update the webhook URL in Resend dashboard if you restart
+  - Keep the cloudflared terminal running while testing webhooks
+
+### TODO 6.3.6 Backend - Set up Resend webhook
+- [✅] **Set up Resend webhook for delivery status:**
   - In Resend dashboard → Webhooks → Add webhook
-  - Webhook URL: `https://your-api.com/api/webhooks/resend`
+  - **For local testing:** Use the Cloudflare Tunnel URL: `https://your-tunnel-url.trycloudflare.com/api/webhooks/resend`
+  - **For production:** Use your production API URL: `https://your-api.com/api/webhooks/resend`
   - Select events: `email.sent`, `email.delivered`, `email.bounced`, `email.opened`, `email.clicked`
-  - Create `POST /api/webhooks/resend` endpoint:
-    - Verify webhook signature (Resend provides signing secret)
+  - Copy the webhook signing secret from Resend dashboard
+  - Add `RESEND_WEBHOOK_SECRET` to `api/.env.local`:
+    ```
+    RESEND_WEBHOOK_SECRET=whsec_xxxxxxxxxxxxx
+    ```
+
+### TODO 6.3.7 Backend - create webhook routes
+- [✅] **Create `POST /api/webhooks/resend` endpoint:**
+  - Create `api/src/routes/webhooks.routes.ts`:
+    - Mount at `/api/webhooks` (no auth middleware)
+    - Route: `POST /api/webhooks/resend`
+  - Create `api/src/controllers/webhooks.controller.ts`:
+    - Function: `handleResendWebhook(req, res)`
+    - Verify webhook signature using `RESEND_WEBHOOK_SECRET`
     - Extract `email_id` and event type from webhook payload
     - Find `collaboration_invites` record by `resend_email_id`
     - Update `delivery_status` based on event:
       - `email.sent` → 'sent'
       - `email.delivered` → 'delivered'
       - `email.bounced` → 'bounced'
-      - `email.opened` → update `opened_at`
-      - `email.clicked` → update `clicked_at`
+      - `email.opened` → update `opened_at` timestamp
+      - `email.clicked` → update `clicked_at` timestamp
     - Log webhook event in `collaboration_history` (optional)
-  - Add `RESEND_WEBHOOK_SECRET` to environment variables
+    - Return 200 OK to acknowledge receipt
   - Protect endpoint with webhook signature verification (not auth middleware)
+  - Test webhook using Resend's webhook testing tool or send a test email
 
-### TODO 6.3.6: Backend - Email Invitations
+### TODO 6.3.7.1 Backend - Test webhook
+  - [ ] **Test webhook endpoint:**
+    - **Note:** Resend doesn't have a built-in webhook testing tool in the dashboard
+    - **Method 1 - Send test email:**
+      - Send a collaboration invitation email through your app
+      - Check API logs for webhook processing messages
+      - Verify `collaboration_invites` table is updated with delivery status
+      - Check Resend dashboard → Webhooks → Activity log to see webhook delivery attempts
+    - **Method 2 - Use third-party webhook tester (for local testing):**
+      - Use a tool like [Webhook.site](https://webhook.site) or [Hooklistener](https://www.hooklistener.com/webhook-tester)
+      - Temporarily point your Resend webhook to the test URL
+      - Send a test email to see the webhook payload structure
+      - Then point it back to your actual endpoint
+    - **Method 3 - Manual webhook replay (if available):**
+      - In Resend dashboard → Webhooks → Activity log
+      - If a webhook delivery failed, you may be able to replay it
+    - **Verify:**
+      - Webhook signature verification works (invalid signatures are rejected)
+      - Events update `delivery_status`, `opened_at`, `clicked_at` correctly
+      - Webhook events are logged in `collaboration_history` (optional)
+
+### TODO 6.3.8: Backend - Email Invitations
 - [ ] **Frontend - Confirmation dialog:**
   - Create `web/src/components/SendInviteDialog.tsx`:
     - Show collaboration details (collaborator name, type, application)
@@ -1682,7 +1738,7 @@ scholarship-hub/
     - Open confirmation dialog
     - After sending, update UI to show "Invited" status with timestamp
 
-### TODO 6.3.7: Backend - Email Invitations
+### TODO 6.3.9: Backend - Email Invitations
 - [ ] **Frontend - Resend functionality:**
   - On ApplicationDetail page, for collaborations with status 'invited':
     - Show "Resend Invite" button if:
@@ -1692,7 +1748,7 @@ scholarship-hub/
     - On confirm, call `POST /api/collaborations/:id/invite/resend`
     - Show success message: "Invitation resent successfully"
 
-### TODO 6.3.8: Backend - Email Invitations
+### TODO 6.3.10: Backend - Email Invitations
 - [ ] **Testing:**
   - Test sending invitation (check email received)
   - Test webhook delivery (use Resend's webhook testing tool)
