@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { useToast } from '@chakra-ui/react';
 
 // TODO: Maybe combine into a single routine and pass status in.
@@ -17,7 +18,7 @@ export function useToastHelpers() {
    * @param duration - Duration in milliseconds (default: 5000)
    * @param isClosable - Whether the toast can be closed (default: true)
    */
-  const showSuccess = (
+  const showSuccess = useCallback((
     title: string,
     description: string,
     duration: number = 5000,
@@ -30,7 +31,7 @@ export function useToastHelpers() {
       duration,
       isClosable,
     });
-  };
+  }, [toast]);
 
   /**
    * Show an error toast notification
@@ -39,7 +40,7 @@ export function useToastHelpers() {
    * @param duration - Duration in milliseconds (default: 5000)
    * @param isClosable - Whether the toast can be closed (default: true)
    */
-  const showError = (
+  const showError = useCallback((
     title: string,
     description: string,
     duration: number = 5000,
@@ -52,7 +53,7 @@ export function useToastHelpers() {
       duration,
       isClosable,
     });
-  };
+  }, [toast]);
 
   return { showSuccess, showError };
 }

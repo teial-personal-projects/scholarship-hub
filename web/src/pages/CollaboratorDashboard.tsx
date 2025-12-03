@@ -32,15 +32,12 @@ import {
   ModalCloseButton,
   useDisclosure,
 } from '@chakra-ui/react';
-import { apiGet } from '../services/api';
+import { useCollaborations } from '../hooks/useCollaborations';
 import type { CollaborationResponse } from '@scholarship-hub/shared';
-import { useToastHelpers } from '../utils/toast';
 import CollaborationHistory from '../components/CollaborationHistory';
 
 function CollaboratorDashboard() {
-  const { showError } = useToastHelpers();
-  const [collaborations, setCollaborations] = useState<CollaborationResponse[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { collaborations, loading, fetchCollaborations } = useCollaborations();
 
   // History modal state
   const { isOpen: isHistoryOpen, onOpen: onHistoryOpen, onClose: onHistoryClose } = useDisclosure();
@@ -48,22 +45,7 @@ function CollaboratorDashboard() {
 
   useEffect(() => {
     fetchCollaborations();
-  }, []);
-
-  const fetchCollaborations = async () => {
-    try {
-      setLoading(true);
-      // Endpoint would be GET /api/collaborators/me/collaborations
-      // This needs to be implemented in the backend
-      const data = await apiGet<CollaborationResponse[]>('/collaborators/me/collaborations');
-      setCollaborations(data || []);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load collaborations';
-      showError('Error', errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [fetchCollaborations]);
 
   // Group collaborations by type
   const recommendations = collaborations.filter(c => c.collaborationType === 'recommendation');

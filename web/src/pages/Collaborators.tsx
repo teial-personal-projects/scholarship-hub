@@ -3,7 +3,7 @@
  * Manage all collaborators (recommenders, essay reviewers, counselors)
  */
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Container,
   Heading,
@@ -37,35 +37,22 @@ import {
   Box,
   Badge,
 } from '@chakra-ui/react';
-import { apiGet, apiDelete } from '../services/api';
+import { apiDelete } from '../services/api';
 import type { CollaboratorResponse } from '@scholarship-hub/shared';
 import CollaboratorForm from '../components/CollaboratorForm';
 import { useToastHelpers } from '../utils/toast';
 import { useRef } from 'react';
+import { useCollaborators } from '../hooks/useCollaborators';
 
 function Collaborators() {
   const { showSuccess, showError } = useToastHelpers();
-  const [collaborators, setCollaborators] = useState<CollaboratorResponse[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { collaborators, loading, fetchCollaborators } = useCollaborators();
   const [selectedCollaborator, setSelectedCollaborator] = useState<CollaboratorResponse | null>(null);
   const [deleteCollaboratorId, setDeleteCollaboratorId] = useState<number | null>(null);
 
   const { isOpen: isFormOpen, onOpen: onFormOpen, onClose: onFormClose } = useDisclosure();
   const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();
   const cancelRef = useRef<HTMLButtonElement>(null);
-
-  const fetchCollaborators = useCallback(async () => {
-    try {
-      setLoading(true);
-      const data = await apiGet<CollaboratorResponse[]>('/collaborators');
-      setCollaborators(data || []);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load collaborators';
-      showError('Error', errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  }, [showError]);
 
   useEffect(() => {
     fetchCollaborators();

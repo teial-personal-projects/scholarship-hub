@@ -21,9 +21,9 @@ import {
   VStack,
   Text,
 } from '@chakra-ui/react';
-import { apiPost, apiGet } from '../services/api';
-import type { CollaboratorResponse } from '@scholarship-hub/shared';
+import { apiPost } from '../services/api';
 import { useToastHelpers } from '../utils/toast';
+import { useCollaborators } from '../hooks/useCollaborators';
 
 interface AssignCollaboratorModalProps {
   isOpen: boolean;
@@ -41,9 +41,8 @@ const AssignCollaboratorModal: React.FC<AssignCollaboratorModalProps> = ({
   onSuccess,
 }) => {
   const { showSuccess, showError } = useToastHelpers();
+  const { collaborators, loading: loadingCollaborators, fetchCollaborators } = useCollaborators();
   const [isLoading, setIsLoading] = useState(false);
-  const [collaborators, setCollaborators] = useState<CollaboratorResponse[]>([]);
-  const [loadingCollaborators, setLoadingCollaborators] = useState(false);
 
   const [collaboratorId, setCollaboratorId] = useState('');
   const [collaborationType, setCollaborationType] = useState<'recommendation' | 'essayReview' | 'guidance'>('recommendation');
@@ -59,20 +58,7 @@ const AssignCollaboratorModal: React.FC<AssignCollaboratorModalProps> = ({
       setNotes('');
       setNextActionDueDate('');
     }
-  }, [isOpen, essayId]);
-
-  const fetchCollaborators = async () => {
-    try {
-      setLoadingCollaborators(true);
-      const data = await apiGet<CollaboratorResponse[]>('/collaborators');
-      setCollaborators(data || []);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load collaborators';
-      showError('Error', errorMessage);
-    } finally {
-      setLoadingCollaborators(false);
-    }
-  };
+  }, [isOpen, essayId, fetchCollaborators]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
