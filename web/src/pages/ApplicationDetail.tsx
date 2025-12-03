@@ -187,9 +187,52 @@ function ApplicationDetail() {
     try {
       const collabsData = await apiGet<CollaborationResponse[]>(`/applications/${id}/collaborations`);
       setCollaborations(collabsData || []);
+
+      // Fetch collaborator details for new collaborations
+      if (collabsData && collabsData.length > 0) {
+        const collaboratorMap = new Map(collaborators);
+        for (const collab of collabsData) {
+          if (!collaboratorMap.has(collab.collaboratorId)) {
+            try {
+              const collaboratorData = await apiGet<CollaboratorResponse>(`/collaborators/${collab.collaboratorId}`);
+              collaboratorMap.set(collab.collaboratorId, collaboratorData);
+            } catch (err) {
+              console.error(`Failed to fetch collaborator ${collab.collaboratorId}:`, err);
+            }
+          }
+        }
+        setCollaborators(collaboratorMap);
+      }
     } catch (err) {
       setCollaborations([]);
     }
+  };
+
+  // Check if resend invite button should be shown
+  const shouldShowResend = (collaboration: CollaborationResponse): boolean => {
+    if (collaboration.status !== 'invited' || !collaboration.invite) {
+      return false;
+    }
+
+    const invite = collaboration.invite;
+
+    // Show resend if delivery failed or bounced
+    if (invite.deliveryStatus === 'bounced' || invite.deliveryStatus === 'failed') {
+      return true;
+    }
+
+    // Show resend if invite was sent more than 3 days ago
+    if (invite.sentAt) {
+      const sentDate = new Date(invite.sentAt);
+      const threeDaysAgo = new Date();
+      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+
+      if (sentDate < threeDaysAgo) {
+        return true;
+      }
+    }
+
+    return false;
   };
 
   const getStatusColor = (status: string) => {
@@ -566,7 +609,7 @@ function ApplicationDetail() {
                                 Send Invite
                               </MenuItem>
                             )}
-                            {collab.status === 'invited' && (
+                            {shouldShowResend(collab) && (
                               <MenuItem onClick={() => handleSendInvite(collab)}>
                                 Resend Invite
                               </MenuItem>

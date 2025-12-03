@@ -75,6 +75,20 @@ export interface ApplicationResponse {
 }
 
 /**
+ * Collaboration Invite (from collaboration_invites table)
+ */
+export interface CollaborationInvite {
+  id: number;
+  inviteToken: string;
+  sentAt: string | null;
+  expiresAt: string;
+  deliveryStatus: 'pending' | 'sent' | 'delivered' | 'bounced' | 'failed';
+  openedAt?: string | null;
+  clickedAt?: string | null;
+  resendEmailId?: string | null;
+}
+
+/**
  * Collaboration (from GET /api/collaborations)
  */
 export interface CollaborationResponse {
@@ -106,6 +120,8 @@ export interface CollaborationResponse {
   sessionType?: 'initial' | 'followup' | 'final';
   meetingUrl?: string;
   scheduledFor?: string;
+  // Invitation data (most recent invite)
+  invite?: CollaborationInvite | null;
 }
 
 /**

@@ -64,16 +64,26 @@ const SendInviteDialog: React.FC<SendInviteDialogProps> = ({
   const handleSendNow = async () => {
     if (!collaboration) return;
 
+    // Determine if this is a resend operation
+    const isResend = collaboration.status === 'invited' && collaboration.invite;
+
     try {
       setIsLoading(true);
-      await apiPost(`/collaborations/${collaboration.id}/invite`, {});
 
-      showSuccess('Invitation Sent', `Invitation sent to ${collaboratorName || 'collaborator'}`);
+      if (isResend) {
+        // Call resend endpoint
+        await apiPost(`/collaborations/${collaboration.id}/invite/resend`, {});
+        showSuccess('Invitation Resent', `Invitation resent to ${collaboratorName || 'collaborator'}`);
+      } else {
+        // Call regular invite endpoint
+        await apiPost(`/collaborations/${collaboration.id}/invite`, {});
+        showSuccess('Invitation Sent', `Invitation sent to ${collaboratorName || 'collaborator'}`);
+      }
 
       if (onSuccess) onSuccess();
       onClose();
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to send invitation';
+      const errorMessage = err instanceof Error ? err.message : isResend ? 'Failed to resend invitation' : 'Failed to send invitation';
       showError('Error', errorMessage);
     } finally {
       setIsLoading(false);
@@ -118,11 +128,13 @@ const SendInviteDialog: React.FC<SendInviteDialogProps> = ({
 
   if (!collaboration) return null;
 
+  const isResend = collaboration.status === 'invited' && collaboration.invite;
+
   return (
     <Modal isOpen={isOpen} onClose={handleClose} size="md">
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>Send Collaboration Invitation</ModalHeader>
+        <ModalHeader>{isResend ? 'Resend' : 'Send'} Collaboration Invitation</ModalHeader>
         <ModalCloseButton />
 
         <ModalBody>
@@ -206,9 +218,9 @@ const SendInviteDialog: React.FC<SendInviteDialogProps> = ({
                   colorScheme="blue"
                   onClick={handleSendNow}
                   isLoading={isLoading}
-                  loadingText="Sending..."
+                  loadingText={isResend ? 'Resending...' : 'Sending...'}
                 >
-                  Send Now
+                  {isResend ? 'Resend Now' : 'Send Now'}
                 </Button>
               </>
             ) : (

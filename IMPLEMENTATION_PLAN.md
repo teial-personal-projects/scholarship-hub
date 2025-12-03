@@ -1720,14 +1720,15 @@ scholarship-hub/
     - Open confirmation dialog
     - After sending, update UI to show "Invited" status with timestamp
 
-### TODO 6.3.9: Backend - Email Invitations
-- [ ] **Frontend - Resend functionality:**
+### TODO 6.3.9: Frontend - Resend Invitations ✅
+- [✅] **Frontend - Resend functionality:**
   - On ApplicationDetail page, for collaborations with status 'invited':
     - Show "Resend Invite" button if:
       - Invite was sent more than 3 days ago, OR
       - Delivery status is 'bounced' or 'failed'
-    - Clicking opens confirmation: "Resend invitation to [collaborator name]?"
-    - On confirm, call `POST /api/collaborations/:id/invite/resend`
+    - Clicking opens SendInviteDialog with resend mode
+    - Dialog title and button text change to "Resend"
+    - Calls `POST /api/collaborations/:id/invite/resend`
     - Show success message: "Invitation resent successfully"
 
 ### TODO 6.3.10: Backend - Email Invitations

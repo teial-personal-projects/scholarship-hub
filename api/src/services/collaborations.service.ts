@@ -63,7 +63,7 @@ const verifyEssayOwnership = async (essayId: number, userId: number) => {
 };
 
 /**
- * Get all collaborations for a specific application
+ * Get all collaborations for a specific application (with invite data)
  */
 export const getCollaborationsByApplicationId = async (
   applicationId: number,
@@ -74,13 +74,38 @@ export const getCollaborationsByApplicationId = async (
 
   const { data, error } = await supabase
     .from('collaborations')
-    .select('*')
+    .select(`
+      *,
+      collaboration_invites(
+        id,
+        invite_token,
+        sent_at,
+        expires_at,
+        delivery_status,
+        opened_at,
+        clicked_at,
+        resend_email_id
+      )
+    `)
     .eq('application_id', applicationId)
     .order('created_at', { ascending: false });
 
   if (error) throw error;
 
-  return data || [];
+  // Flatten the invite data (get most recent invite if multiple exist)
+  const collaborations = (data || []).map((collab: any) => {
+    const { collaboration_invites, ...collabData } = collab;
+    const mostRecentInvite = collaboration_invites && collaboration_invites.length > 0
+      ? collaboration_invites[collaboration_invites.length - 1]
+      : null;
+
+    return {
+      ...collabData,
+      invite: mostRecentInvite,
+    };
+  });
+
+  return collaborations;
 };
 
 /**
