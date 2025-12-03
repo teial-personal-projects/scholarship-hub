@@ -1770,28 +1770,39 @@ scholarship-hub/
   - List collaborators assigned to this essay
   - "Add Reviewer" button
 
-### TODO 6.6: Frontend - Collaborator Dashboard
-- [ ] Create `web/src/pages/CollaboratorDashboard.tsx`:
+### TODO 6.6: Frontend - Collaborator Dashboard ✅
+- [✅] Create `web/src/pages/CollaboratorDashboard.tsx`:
   - Shows all collaborations assigned to the logged-in collaborator
-  - Grouped by type: Recommendations | Essay Reviews | Guidance
-  - Each shows: student name, application/essay, due date, status
-  - Actions:
-    - Mark as "in progress"
-    - Mark as "completed" or "submitted"
-    - Add notes/feedback
-    - View full details
+  - Grouped by tabs: All | Recommendations | Essay Reviews | Guidance
+  - Each shows: student ID, application ID, essay ID (if applicable), due date, status
+  - Table view with status badges
+  - "View Details" action button for each collaboration
+  - Route: `/collaborator/dashboard` (protected)
+  - Note: Requires backend endpoint `GET /api/collaborators/me/collaborations`
 
-### TODO 6.7: Frontend - Invite Flow
-- [ ] Create `web/src/pages/CollaboratorInvite.tsx`:
+### TODO 6.7: Frontend - Invite Flow ✅
+- [✅] Create `web/src/pages/CollaboratorInvite.tsx`:
+  - Public route accessible via `/invite/:token`
   - Collaborator receives email → clicks link → lands here
-  - Show invitation details (student, type of help needed, due date)
+  - Fetches and displays invitation details:
+    - Student information (name, email)
+    - Collaboration type with badge
+    - Application/scholarship name
+    - Due date (if set)
+    - Additional notes from student
+  - Checks if invitation is expired
+  - Shows authentication status
   - Options:
-    - Create account (if new user)
-    - Log in (if existing user)
-    - Accept or Decline
-- [ ] After acceptance:
-  - Redirect to CollaboratorDashboard
-  - Show the specific collaboration they accepted
+    - Accept invitation (requires login)
+    - Decline invitation
+    - If not logged in, redirects to login with return path
+  - After acceptance:
+    - Redirects to `/collaborator/dashboard`
+    - Shows success toast
+  - Note: Requires backend endpoints:
+    - `GET /api/invites/:token` - Get invite details
+    - `POST /api/invites/:token/accept` - Accept invitation
+    - `POST /api/invites/:token/decline` - Decline invitation
 
 ### TODO 6.8: Collaboration History
 - [ ] Log all actions: invited, reminder_sent, viewed, accepted, declined, in_progress, submitted, comment_added

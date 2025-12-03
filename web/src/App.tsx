@@ -6,6 +6,8 @@ import Applications from './pages/Applications';
 import ApplicationDetail from './pages/ApplicationDetail';
 import ApplicationForm from './components/ApplicationForm';
 import Collaborators from './pages/Collaborators';
+import CollaboratorDashboard from './pages/CollaboratorDashboard';
+import CollaboratorInvite from './pages/CollaboratorInvite';
 import Search from './pages/Search';
 import Profile from './pages/Profile';
 import ForgotPassword from './pages/ForgotPassword';
@@ -25,6 +27,9 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+
+          {/* Public invite route - no auth required to view */}
+          <Route path="/invite/:token" element={<CollaboratorInvite />} />
 
           {/* Protected routes */}
           <Route
@@ -88,6 +93,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/collaborator/dashboard"
+            element={
+              <ProtectedRoute>
+                <CollaboratorDashboard />
               </ProtectedRoute>
             }
           />
