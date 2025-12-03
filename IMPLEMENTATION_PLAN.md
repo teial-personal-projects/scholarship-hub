@@ -1883,12 +1883,24 @@ scholarship-hub/
     - `api/src/services/reminders.service.ts` - Placeholder service (to be implemented in 6.9.2)
   - This endpoint will be called by GitHub Actions to process reminders
 
-### TODO 6.9.2: Backend - Create reminder service
-- [ ] Create `src/services/reminders.service.ts`:
-  - Query for upcoming due dates (applications and collaborations)
-  - Query for overdue items
-  - Generate appropriate reminder emails
-  - Track last reminder sent to avoid spam
+### TODO 6.9.2: Backend - Create reminder service ✅ COMPLETED
+- [✅] Create `src/services/reminders.service.ts`:
+  - ✅ Query for upcoming due dates (applications and collaborations)
+  - ✅ Query for overdue items
+  - ✅ Reminder configuration with customizable intervals
+  - ✅ Duplicate reminder prevention logic (24-hour minimum between reminders)
+- **Features implemented:**
+  - `processApplicationReminders()` - Finds applications with upcoming/overdue due dates
+  - `processCollaborationReminders()` - Finds collaborations with upcoming/overdue action dates
+  - `shouldSendReminder()` - Logic to determine if reminder should be sent based on intervals
+  - `ReminderConfig` interface - Configurable intervals for before/after due dates
+  - Default configuration: 7, 3, 1 days before due date; 1, 3, 7 days overdue for applications
+  - Excludes already submitted/completed items from reminders
+  - Comprehensive error handling and logging
+- **TODO items for future:**
+  - TODO 6.9.3: Integrate with email service to actually send emails
+  - TODO 6.9.7: Add `last_reminder_sent_at` field to applications/collaborations tables for better tracking
+  - Log reminders in `collaboration_history` table when sent
 
 ### TODO 6.9.3: Backend - Create email templates
 - [ ] **Extend existing `api/src/services/email.service.ts`:**
