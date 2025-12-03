@@ -155,7 +155,11 @@ async function processApplicationReminders(): Promise<number> {
             console.log(
               `[reminders.service] Application reminder sent for "${app.scholarship_name}" (${daysDiff} days, Email ID: ${emailSent})`
             );
-            // TODO: Log reminder in collaboration_history or track in applications table
+            // Note: Application reminders are not logged to collaboration_history since that table
+            // is specific to collaborations. To track application reminders, consider:
+            // - Adding a last_reminder_sent_at field to applications table (TODO 6.9.7)
+            // - Creating a separate application_history table
+            // - Using a general notifications/events table
             count++;
           } else {
             console.warn(
@@ -278,7 +282,28 @@ async function processCollaborationReminders(): Promise<number> {
             console.log(
               `[reminders.service] Collaboration reminder sent for ${collab.collaboration_type} (${daysDiff} days, Email ID: ${emailSent})`
             );
-            // TODO: Log reminder in collaboration_history table
+
+            // Log reminder in collaboration_history table
+            try {
+              const isOverdue = daysDiff < 0;
+              const details = isOverdue
+                ? `Overdue reminder sent (${Math.abs(daysDiff)} days overdue). Email ID: ${emailSent}`
+                : `Due soon reminder sent (${daysDiff} days remaining). Email ID: ${emailSent}`;
+
+              await supabase
+                .from('collaboration_history')
+                .insert({
+                  collaboration_id: collab.id,
+                  action: 'reminder_sent',
+                  details,
+                });
+
+              console.log(`[reminders.service] Logged reminder to collaboration_history for collaboration ${collab.id}`);
+            } catch (historyError) {
+              console.error(`[reminders.service] Failed to log reminder to collaboration_history:`, historyError);
+              // Don't fail the reminder process if logging fails
+            }
+
             count++;
           } else {
             console.warn(

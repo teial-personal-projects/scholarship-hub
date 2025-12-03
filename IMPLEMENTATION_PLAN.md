@@ -1925,8 +1925,8 @@ scholarship-hub/
   - Returns Resend email ID for tracking (null if email service not configured)
 - **Note**: "Collaboration Pending" reminder type not implemented as it's covered by the invitation system
 
-### TODO 6.9.4: Backend - Implement reminder schedule logic
-- [ ] Create reminder configuration interface:
+### TODO 6.9.4: Backend - Implement reminder schedule logic ✅ COMPLETED
+- ✅ Created reminder configuration interface:
   ```typescript
   interface ReminderConfig {
     type: 'application' | 'collaboration';
@@ -1934,15 +1934,36 @@ scholarship-hub/
     overdueIntervals: number[]; // Days after due date (e.g., [1, 3, 7])
   }
   ```
-- [ ] Implement logic to check if reminder should be sent based on intervals
-- [ ] Implement logic to prevent duplicate reminders
+- ✅ Implemented logic to check if reminder should be sent based on intervals
+  - `shouldSendReminder()` function checks if current date matches configured intervals
+  - Supports both upcoming (positive days) and overdue (negative days) reminders
+- ✅ Implemented logic to prevent duplicate reminders
+  - 24-hour minimum between reminders
+  - Checks `lastReminderSent` timestamp to prevent spam
+- **Default Configuration:**
+  - Applications: [7, 3, 1] days before, [1, 3, 7] days overdue
+  - Collaborations: [7, 3, 1] days before, [1, 3] days overdue
+- **Note:** This was implemented in TODO 6.9.2
 
-### TODO 6.9.5: Backend - Create scheduled job/cron endpoint
-- [ ] Create `POST /api/cron/send-reminders` endpoint (protected with secret key)
-- [ ] Check all applications with upcoming due dates
-- [ ] Check all collaborations with upcoming `next_action_due_date`
-- [ ] Send appropriate emails based on schedule logic
-- [ ] Log reminder in `collaboration_history` table
+### TODO 6.9.5: Backend - Create scheduled job/cron endpoint ✅ COMPLETED
+- ✅ Created `POST /api/cron/send-reminders` endpoint (protected with secret key)
+  - Implemented in TODO 6.9.1 (`api/src/routes/cron.routes.ts`, `api/src/controllers/cron.controller.ts`)
+  - Protected with `CRON_SECRET` via Bearer token authentication
+- ✅ Check all applications with upcoming due dates
+  - `processApplicationReminders()` queries applications in reminder window
+  - Excludes submitted/awarded/not awarded applications
+- ✅ Check all collaborations with upcoming `next_action_due_date`
+  - `processCollaborationReminders()` queries collaborations in reminder window
+  - Only includes invited/accepted/in_progress collaborations
+- ✅ Send appropriate emails based on schedule logic
+  - Integrated with email service in TODO 6.9.3
+  - Sends different templates for due soon vs overdue
+- ✅ Log reminders in `collaboration_history` table
+  - Collaboration reminders logged with action: 'reminder_sent'
+  - Includes details about days remaining/overdue and Resend email ID
+  - Application reminders: Not logged to collaboration_history (table is collaboration-specific)
+    - Consider adding `last_reminder_sent_at` field to applications table (see TODO 6.9.7)
+- **Returns:** ReminderStats with counts of application reminders, collaboration reminders, errors, and total processed
 
 ### TODO 6.9.6: Backend - Add reminder preferences (optional)
 - [ ] Allow users to configure reminder intervals
