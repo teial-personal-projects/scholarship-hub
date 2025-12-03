@@ -1731,13 +1731,15 @@ scholarship-hub/
     - Calls `POST /api/collaborations/:id/invite/resend`
     - Show success message: "Invitation resent successfully"
 
-### TODO 6.3.10: Backend - Email Invitations
-- [ ] **Testing:**
+### TODO 6.3.10: Testing - Email Invitations ✅
+- [✅] **Testing documentation created:**
+  - See `TESTING_INVITATIONS.md` for comprehensive testing guide
   - Test sending invitation (check email received)
   - Test webhook delivery (use Resend's webhook testing tool)
-  - Test resend functionality
+  - Test resend functionality (after 3 days or on bounce/failure)
   - Test expired token (should not work after 7 days)
-  - Test accepting invitation (see TODO 6.7)
+  - Test schedule for later functionality
+  - Test accepting invitation (requires TODO 6.7)
 
 ### TODO 6.4: Frontend - Collaborator Management
 - [ ] Create `web/src/pages/Collaborators.tsx`:
