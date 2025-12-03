@@ -1,0 +1,232 @@
+/**
+ * CollaborationHistory Component
+ * Displays timeline of collaboration history actions
+ */
+
+import React, { useEffect, useState } from 'react';
+import {
+  Box,
+  VStack,
+  HStack,
+  Text,
+  Badge,
+  Spinner,
+  Divider,
+  Icon,
+} from '@chakra-ui/react';
+import { apiGet } from '../services/api';
+import { useToastHelpers } from '../utils/toast';
+
+interface HistoryEntry {
+  id: number;
+  collaborationId: number;
+  action: string;
+  details?: string | null;
+  createdAt: string;
+}
+
+interface CollaborationHistoryProps {
+  collaborationId: number;
+}
+
+const CollaborationHistory: React.FC<CollaborationHistoryProps> = ({ collaborationId }) => {
+  const { showError } = useToastHelpers();
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchHistory();
+  }, [collaborationId]);
+
+  const fetchHistory = async () => {
+    try {
+      setLoading(true);
+      const data = await apiGet<HistoryEntry[]>(`/collaborations/${collaborationId}/history`);
+      setHistory(data || []);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load history';
+      showError('Error', errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getActionLabel = (action: string) => {
+    switch (action) {
+      case 'invited':
+        return 'Invitation Sent';
+      case 'reminder_sent':
+        return 'Reminder Sent';
+      case 'viewed':
+        return 'Invitation Viewed';
+      case 'accepted':
+        return 'Invitation Accepted';
+      case 'declined':
+        return 'Invitation Declined';
+      case 'in_progress':
+        return 'Marked In Progress';
+      case 'submitted':
+        return 'Submitted';
+      case 'completed':
+        return 'Marked Completed';
+      case 'comment_added':
+        return 'Comment Added';
+      default:
+        return action;
+    }
+  };
+
+  const getActionColor = (action: string) => {
+    switch (action) {
+      case 'accepted':
+      case 'submitted':
+      case 'completed':
+        return 'green';
+      case 'in_progress':
+        return 'blue';
+      case 'invited':
+      case 'reminder_sent':
+        return 'purple';
+      case 'viewed':
+        return 'cyan';
+      case 'declined':
+        return 'red';
+      case 'comment_added':
+        return 'orange';
+      default:
+        return 'gray';
+    }
+  };
+
+  const getActionIcon = (action: string) => {
+    switch (action) {
+      case 'invited':
+        return '📧';
+      case 'reminder_sent':
+        return '🔔';
+      case 'viewed':
+        return '👁️';
+      case 'accepted':
+        return '✅';
+      case 'declined':
+        return '❌';
+      case 'in_progress':
+        return '🚀';
+      case 'submitted':
+      case 'completed':
+        return '🎉';
+      case 'comment_added':
+        return '💬';
+      default:
+        return '📝';
+    }
+  };
+
+  const formatTimestamp = (timestamp: string) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
+    });
+  };
+
+  if (loading) {
+    return (
+      <Box textAlign="center" py={4}>
+        <Spinner size="md" />
+        <Text fontSize="sm" color="gray.500" mt={2}>
+          Loading history...
+        </Text>
+      </Box>
+    );
+  }
+
+  if (history.length === 0) {
+    return (
+      <Text fontSize="sm" color="gray.500" textAlign="center" py={4}>
+        No history available
+      </Text>
+    );
+  }
+
+  return (
+    <VStack align="stretch" spacing={0}>
+      {history.map((entry, index) => (
+        <Box key={entry.id}>
+          <HStack align="flex-start" spacing={3} py={3}>
+            {/* Icon/Timeline Marker */}
+            <Box position="relative">
+              <Box
+                fontSize="xl"
+                width="40px"
+                height="40px"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                bg={`${getActionColor(entry.action)}.50`}
+                borderRadius="full"
+                border="2px solid"
+                borderColor={`${getActionColor(entry.action)}.200`}
+              >
+                {getActionIcon(entry.action)}
+              </Box>
+              {/* Timeline Line */}
+              {index < history.length - 1 && (
+                <Box
+                  position="absolute"
+                  left="50%"
+                  top="45px"
+                  width="2px"
+                  height="calc(100% + 10px)"
+                  bg="gray.200"
+                  transform="translateX(-50%)"
+                />
+              )}
+            </Box>
+
+            {/* Content */}
+            <Box flex="1">
+              <HStack justify="space-between" align="flex-start" mb={1}>
+                <Badge colorScheme={getActionColor(entry.action)} fontSize="xs">
+                  {getActionLabel(entry.action)}
+                </Badge>
+                <Text fontSize="xs" color="gray.500">
+                  {formatTimestamp(entry.createdAt)}
+                </Text>
+              </HStack>
+              {entry.details && (
+                <Text fontSize="sm" color="gray.600" mt={1}>
+                  {entry.details}
+                </Text>
+              )}
+              <Text fontSize="xs" color="gray.400" mt={1}>
+                {new Date(entry.createdAt).toLocaleString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric',
+                  hour: 'numeric',
+                  minute: '2-digit',
+                })}
+              </Text>
+            </Box>
+          </HStack>
+          {index < history.length - 1 && <Divider />}
+        </Box>
+      ))}
+    </VStack>
+  );
+};
+
+export default CollaborationHistory;

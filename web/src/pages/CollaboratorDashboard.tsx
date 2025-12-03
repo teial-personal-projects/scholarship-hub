@@ -24,15 +24,27 @@ import {
   Button,
   Spinner,
   Box,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalCloseButton,
+  useDisclosure,
 } from '@chakra-ui/react';
 import { apiGet } from '../services/api';
 import type { CollaborationResponse } from '@scholarship-hub/shared';
 import { useToastHelpers } from '../utils/toast';
+import CollaborationHistory from '../components/CollaborationHistory';
 
 function CollaboratorDashboard() {
   const { showError } = useToastHelpers();
   const [collaborations, setCollaborations] = useState<CollaborationResponse[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // History modal state
+  const { isOpen: isHistoryOpen, onOpen: onHistoryOpen, onClose: onHistoryClose } = useDisclosure();
+  const [historyCollaborationId, setHistoryCollaborationId] = useState<number | null>(null);
 
   useEffect(() => {
     fetchCollaborations();
@@ -86,6 +98,12 @@ function CollaboratorDashboard() {
     }
   };
 
+  // Handle viewing collaboration history
+  const handleViewHistory = (collaborationId: number) => {
+    setHistoryCollaborationId(collaborationId);
+    onHistoryOpen();
+  };
+
   const renderCollaborationsTable = (collaborationsList: CollaborationResponse[]) => {
     if (collaborationsList.length === 0) {
       return <Text color="gray.500">No collaborations in this category</Text>;
@@ -131,7 +149,12 @@ function CollaboratorDashboard() {
                 )}
               </Td>
               <Td>
-                <Button size="sm" colorScheme="blue" variant="outline">
+                <Button
+                  size="sm"
+                  colorScheme="blue"
+                  variant="outline"
+                  onClick={() => handleViewHistory(collab.id)}
+                >
                   View Details
                 </Button>
               </Td>
@@ -189,6 +212,20 @@ function CollaboratorDashboard() {
           </TabPanels>
         </Tabs>
       </Stack>
+
+      {/* Collaboration History Modal */}
+      <Modal isOpen={isHistoryOpen} onClose={onHistoryClose} size="lg">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Collaboration History</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody pb={6}>
+            {historyCollaborationId && (
+              <CollaborationHistory collaborationId={historyCollaborationId} />
+            )}
+          </ModalBody>
+        </ModalContent>
+      </Modal>
     </Container>
   );
 }

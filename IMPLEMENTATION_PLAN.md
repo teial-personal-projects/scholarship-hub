@@ -1804,12 +1804,16 @@ scholarship-hub/
     - `POST /api/invites/:token/accept` - Accept invitation
     - `POST /api/invites/:token/decline` - Decline invitation
 
-### TODO 6.8: Collaboration History
-- [ ] Log all actions: invited, reminder_sent, viewed, accepted, declined, in_progress, submitted, comment_added
-- [ ] Display history timeline on:
+### TODO 6.8: Collaboration History ✅ COMPLETED
+- [x] Log all actions: invited, reminder_sent, viewed, accepted, declined, in_progress, submitted, comment_added
+- [x] Display history timeline on:
   - ApplicationDetail page (for students)
   - CollaboratorDashboard (for collaborators)
-- [ ] Show: action, timestamp, details (if any)
+- [x] Show: action, timestamp, details (if any)
+- Note: Backend endpoint required: `GET /api/collaborations/:id/history`
+- Components created:
+  - `CollaborationHistory.tsx` - Timeline component with icons, badges, and relative timestamps
+  - Integrated into both ApplicationDetail and CollaboratorDashboard with modal dialogs
 
 ### TODO 6.9: Automated Reminders & Notifications
 - [ ] Backend - Set up email service:

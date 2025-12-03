@@ -36,11 +36,18 @@ import {
   AlertDialogContent,
   AlertDialogOverlay,
   useToast,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalCloseButton,
 } from '@chakra-ui/react';
 import { apiGet, apiDelete } from '../services/api';
 import type { ApplicationResponse, EssayResponse, CollaborationResponse, CollaboratorResponse } from '@scholarship-hub/shared';
 import EssayForm from '../components/EssayForm';
 import SendInviteDialog from '../components/SendInviteDialog';
+import CollaborationHistory from '../components/CollaborationHistory';
 import { useRef } from 'react';
 import { useToastHelpers } from '../utils/toast';
 
@@ -67,6 +74,10 @@ function ApplicationDetail() {
   // Collaboration invitation
   const { isOpen: isInviteDialogOpen, onOpen: onInviteDialogOpen, onClose: onInviteDialogClose } = useDisclosure();
   const [selectedCollaboration, setSelectedCollaboration] = useState<CollaborationResponse | null>(null);
+
+  // Collaboration history
+  const { isOpen: isHistoryOpen, onOpen: onHistoryOpen, onClose: onHistoryClose } = useDisclosure();
+  const [historyCollaborationId, setHistoryCollaborationId] = useState<number | null>(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -233,6 +244,12 @@ function ApplicationDetail() {
     }
 
     return false;
+  };
+
+  // Handle viewing collaboration history
+  const handleViewHistory = (collaborationId: number) => {
+    setHistoryCollaborationId(collaborationId);
+    onHistoryOpen();
   };
 
   const getStatusColor = (status: string) => {
@@ -603,7 +620,7 @@ function ApplicationDetail() {
                             size="sm"
                           />
                           <MenuList>
-                            <MenuItem>View Details</MenuItem>
+                            <MenuItem onClick={() => handleViewHistory(collab.id)}>View Details</MenuItem>
                             {(collab.status === 'pending' || collab.status === 'not_invited') && (
                               <MenuItem onClick={() => handleSendInvite(collab)}>
                                 Send Invite
@@ -677,6 +694,20 @@ function ApplicationDetail() {
         applicationName={application?.scholarshipName}
         onSuccess={handleInviteSuccess}
       />
+
+      {/* Collaboration History Modal */}
+      <Modal isOpen={isHistoryOpen} onClose={onHistoryClose} size="lg">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Collaboration History</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody pb={6}>
+            {historyCollaborationId && (
+              <CollaborationHistory collaborationId={historyCollaborationId} />
+            )}
+          </ModalBody>
+        </ModalContent>
+      </Modal>
     </Container>
   );
 }
