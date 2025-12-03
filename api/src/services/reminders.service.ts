@@ -94,7 +94,7 @@ async function processApplicationReminders(): Promise<number> {
 
     // Query applications with due dates in the reminder window
     // Exclude already submitted applications
-    // Include user notification preferences
+    // Include user notification preferences and last reminder timestamp
     const { data: applications, error } = await supabase
       .from('applications')
       .select(
@@ -104,6 +104,7 @@ async function processApplicationReminders(): Promise<number> {
         scholarship_name,
         due_date,
         status,
+        last_reminder_sent_at,
         user_profiles!inner (
           id,
           first_name,
@@ -150,10 +151,13 @@ async function processApplicationReminders(): Promise<number> {
           intervals = userProfile.reminder_intervals.application;
         }
 
+        // Get last reminder timestamp
+        const lastReminderSent = app.last_reminder_sent_at
+          ? new Date(app.last_reminder_sent_at)
+          : null;
+
         // Check if we should send a reminder
-        // TODO: Query last reminder from collaboration_history or add last_reminder_sent_at field
-        // For now, we'll send reminders based on intervals only
-        if (shouldSendReminder(dueDate, null, intervals)) {
+        if (shouldSendReminder(dueDate, lastReminderSent, intervals)) {
           // Send reminder email
           const userProfile = app.user_profiles as any;
           const emailSent = await emailService.sendApplicationReminder({
@@ -169,11 +173,20 @@ async function processApplicationReminders(): Promise<number> {
             console.log(
               `[reminders.service] Application reminder sent for "${app.scholarship_name}" (${daysDiff} days, Email ID: ${emailSent})`
             );
-            // Note: Application reminders are not logged to collaboration_history since that table
-            // is specific to collaborations. To track application reminders, consider:
-            // - Adding a last_reminder_sent_at field to applications table (TODO 6.9.7)
-            // - Creating a separate application_history table
-            // - Using a general notifications/events table
+
+            // Update last_reminder_sent_at timestamp
+            try {
+              await supabase
+                .from('applications')
+                .update({ last_reminder_sent_at: new Date().toISOString() })
+                .eq('id', app.id);
+
+              console.log(`[reminders.service] Updated last_reminder_sent_at for application ${app.id}`);
+            } catch (updateError) {
+              console.error(`[reminders.service] Failed to update last_reminder_sent_at:`, updateError);
+              // Don't fail the reminder process if updating timestamp fails
+            }
+
             count++;
           } else {
             console.warn(
@@ -217,7 +230,7 @@ async function processCollaborationReminders(): Promise<number> {
 
     // Query collaborations with action due dates in the reminder window
     // Only include collaborations that are in progress or invited
-    // Include user notification preferences (from the student who owns the collaboration)
+    // Include user notification preferences and last reminder timestamp
     const { data: collaborations, error } = await supabase
       .from('collaborations')
       .select(
@@ -230,6 +243,7 @@ async function processCollaborationReminders(): Promise<number> {
         status,
         next_action_due_date,
         next_action_description,
+        last_reminder_sent_at,
         collaborators!inner (
           id,
           first_name,
@@ -288,9 +302,13 @@ async function processCollaborationReminders(): Promise<number> {
           intervals = student.reminder_intervals.collaboration;
         }
 
+        // Get last reminder timestamp
+        const lastReminderSent = collab.last_reminder_sent_at
+          ? new Date(collab.last_reminder_sent_at)
+          : null;
+
         // Check if we should send a reminder
-        // TODO: Query last reminder from collaboration_history
-        if (shouldSendReminder(dueDate, null, intervals)) {
+        if (shouldSendReminder(dueDate, lastReminderSent, intervals)) {
           // Send reminder email to collaborator
           const collaborator = collab.collaborators as any;
           const application = collab.applications as any;
@@ -311,6 +329,19 @@ async function processCollaborationReminders(): Promise<number> {
             console.log(
               `[reminders.service] Collaboration reminder sent for ${collab.collaboration_type} (${daysDiff} days, Email ID: ${emailSent})`
             );
+
+            // Update last_reminder_sent_at timestamp
+            try {
+              await supabase
+                .from('collaborations')
+                .update({ last_reminder_sent_at: new Date().toISOString() })
+                .eq('id', collab.id);
+
+              console.log(`[reminders.service] Updated last_reminder_sent_at for collaboration ${collab.id}`);
+            } catch (updateError) {
+              console.error(`[reminders.service] Failed to update last_reminder_sent_at:`, updateError);
+              // Don't fail the reminder process if updating timestamp fails
+            }
 
             // Log reminder in collaboration_history table
             try {
