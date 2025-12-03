@@ -1741,18 +1741,25 @@ scholarship-hub/
   - Test schedule for later functionality
   - Test accepting invitation (requires TODO 6.7)
 
-### TODO 6.4: Frontend - Collaborator Management
-- [ ] Create `web/src/pages/Collaborators.tsx`:
-  - Tabbed view: Recommenders | Essay Editors | Counselors
-  - List all collaborators grouped by type
-  - Add collaborator button (opens form with type selector)
-- [ ] Create `web/src/components/CollaboratorForm.tsx`:
-  - Fields: firstName, lastName, email, relationship, phone
-  - Validation: email required, type required
-- [ ] Create `web/src/components/AssignCollaboratorModal.tsx`:
+### TODO 6.4: Frontend - Collaborator Management ✅
+- [✅] Create `web/src/pages/Collaborators.tsx`:
+  - Tabbed view: All | Recommenders | Essay Editors | Counselors | Others
+  - List all collaborators grouped by type (based on relationship field)
+  - Add collaborator button (opens CollaboratorForm modal)
+  - Edit and delete functionality with confirmation
+  - Responsive table layout
+- [✅] Create `web/src/components/CollaboratorForm.tsx`:
+  - Modal-based form for create/edit
+  - Fields: firstName, lastName, emailAddress, relationship, phoneNumber
+  - Validation: firstName, lastName, emailAddress required
+  - Email format validation
+  - Success/error toast notifications
+- [✅] Create `web/src/components/AssignCollaboratorModal.tsx`:
   - Assign existing collaborator to application or essay
   - Select collaboration type (recommendation, essayReview, guidance)
   - Set due date and add notes
+  - Fetches collaborators list dynamically
+  - Validates essayId requirement for essay reviews
 
 ### TODO 6.5: Frontend - Student View of Collaborations
 - [ ] On `ApplicationDetail` page:
