@@ -1587,6 +1587,23 @@ scholarship-hub/
   - `DELETE /api/collaborations/:id` - Remove collaboration
 
 ### TODO 6.3: Backend - Email Invitations
+- **Alternatives Considered:**
+  - **Supabase Auth Email** (already using Supabase)
+    - Pros: Already in our stack, no additional service needed, integrated with authentication
+    - Cons: Limited customization, primarily for auth-related emails, less flexible for collaboration invites, not ideal for custom email templates
+  - **SendGrid**
+    - Pros: Industry standard, very reliable, excellent deliverability, extensive features, good documentation
+    - Cons: Free tier limited to 100 emails/day (3,000/month), more complex setup and API, no React-based templates, older API design
+- **Why Resend was preferred:**
+  - Free tier covers collaboration invites (3,000/month) - same as SendGrid but simpler
+  - Simple integration with Node.js
+  - React-based templates fit your stack
+  - Good deliverability
+  - Affordable scaling ($20/month for 50k emails)
+  - Modern API and TypeScript support
+  - Cleaner, more developer-friendly API compared to SendGrid
+  - Better developer experience with React email templates
+
 - [✅] **Set up Resend email service:**
   - Create account at https://resend.com
   - Get API key from dashboard
@@ -1818,9 +1835,45 @@ scholarship-hub/
 ### TODO 6.9: Automated Reminders & Notifications
 
 ### TODO 6.9.1: Backend - Set up email service
-- [ ] Use Supabase Edge Functions or cron service (GitHub Actions, Vercel Cron, etc.)
-- [ ] Or use external scheduler (Railway Cron, EasyCron)
-- [ ] Set up email provider (Supabase built-in, SendGrid, Resend, or AWS SES)
+- [ ] **Email Provider: Resend (already configured)**
+  - ✅ Resend is already set up for collaboration invitations
+  - Extend existing `api/src/services/email.service.ts` to support reminder emails
+  - Reuse existing Resend client and configuration
+  - No additional email provider setup needed
+
+- [ ] **Scheduler: GitHub Actions (recommended)**
+  - **Alternatives Considered:**
+    - **Supabase pg_cron or Edge Functions** (already using Supabase)
+      - Pros: Already in our stack, no additional service, database-level scheduling
+      - Cons: pg_cron requires enabling extension and more complex setup, Edge Functions have execution limits and may require paid plan for frequent runs
+    - **Cloud provider cron services** (AWS EventBridge, Google Cloud Scheduler, Azure Logic Apps)
+      - Pros: Enterprise-grade, very reliable
+      - Cons: Additional cloud account/service needed, more complex setup, potential costs
+    - **Dedicated cron services** (EasyCron, Cronitor, Cron-job.org)
+      - Pros: Simple, purpose-built for scheduling
+      - Cons: Additional service to manage, subscription costs ($5-20/month), less integrated with codebase
+  - **Why GitHub Actions was preferred:**
+    - Free for public repositories and generous free tier for private repos (2,000 minutes/month)
+    - Built into GitHub (no separate CI/CD service needed)
+    - Easy to set up with YAML workflow files
+    - Native support for scheduled cron jobs
+    - No infrastructure to manage
+    - Good integration with GitHub ecosystem and secrets management
+    - Can manually trigger workflows for testing via `workflow_dispatch`
+    - Version-controlled workflow files (part of the repository)
+    - No additional costs for typical reminder scheduling needs
+  - Create `.github/workflows/send-reminders.yml`
+  - Configure to run daily (or multiple times per day)
+  - Example schedule: `cron: '0 12 * * *'` (daily at noon UTC)
+  - Include `workflow_dispatch` for manual triggering
+  - Call `POST /api/cron/send-reminders` endpoint with secret token
+  - Store `CRON_SECRET` in GitHub Secrets
+
+- [ ] **Create protected cron endpoint:**
+  - `POST /api/cron/send-reminders`
+  - Protect with secret token (not user authentication)
+  - Add `CRON_SECRET` to environment variables
+  - This endpoint will be called by the scheduler to process reminders
 
 ### TODO 6.9.2: Backend - Create reminder service
 - [ ] Create `src/services/reminders.service.ts`:
@@ -1830,6 +1883,10 @@ scholarship-hub/
   - Track last reminder sent to avoid spam
 
 ### TODO 6.9.3: Backend - Create email templates
+- [ ] **Extend existing `api/src/services/email.service.ts`:**
+  - Add reminder email template functions
+  - Reuse existing Resend client (no new setup needed)
+  - Follow same pattern as `sendCollaborationInvite` function
 - [ ] **Student - Application Due Soon**: "Your application for [scholarship] is due in [X] days"
 - [ ] **Student - Application Overdue**: "Your application for [scholarship] was due [X] days ago"
 - [ ] **Student - Collaboration Pending**: "[Collaborator] hasn't responded to your collaboration request"
@@ -1882,24 +1939,13 @@ scholarship-hub/
 - [ ] Test reminder preferences (if implemented)
 
 ### TODO 6.9.10: Setup scheduled execution
-- [ ] Configure cron job to run daily (or multiple times per day)
-- [ ] Example with GitHub Actions:
-  ```yaml
-  name: Send Reminders
-  on:
-    schedule:
-      - cron: '0 12 * * *'  # Run daily at noon UTC
-    workflow_dispatch:  # Allow manual trigger
-  jobs:
-    send-reminders:
-      runs-on: ubuntu-latest
-      steps:
-        - run: |
-            curl -X POST https://your-api.com/api/cron/send-reminders \
-              -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
-  ```
-- [ ] Test cron job execution
+- [ ] **Note:** GitHub Actions workflow file creation is covered in section 6.9.1
+- [ ] Test cron job execution (manually trigger via `workflow_dispatch` in GitHub Actions)
+- [ ] Verify reminders are sent correctly
+- [ ] Verify reminder emails are received
 - [ ] Set up monitoring/alerting for failed jobs
+- [ ] Monitor GitHub Actions workflow runs and logs
+- [ ] Set up notifications for workflow failures (GitHub Actions notifications or email alerts)
 
 **Milestone**: Full unified collaborator system with automated reminders - students and collaborators receive timely notifications about upcoming and overdue deadlines
 
