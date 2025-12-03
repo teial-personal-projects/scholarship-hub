@@ -38,8 +38,9 @@ import {
   AlertDialogOverlay,
 } from '@chakra-ui/react';
 import { apiGet, apiDelete } from '../services/api';
-import type { ApplicationResponse, EssayResponse, CollaborationResponse } from '@scholarship-hub/shared';
+import type { ApplicationResponse, EssayResponse, CollaborationResponse, CollaboratorResponse } from '@scholarship-hub/shared';
 import EssayForm from '../components/EssayForm';
+import SendInviteDialog from '../components/SendInviteDialog';
 import { useRef } from 'react';
 
 function ApplicationDetail() {
@@ -50,6 +51,7 @@ function ApplicationDetail() {
   const [application, setApplication] = useState<ApplicationResponse | null>(null);
   const [essays, setEssays] = useState<EssayResponse[]>([]);
   const [collaborations, setCollaborations] = useState<CollaborationResponse[]>([]);
+  const [collaborators, setCollaborators] = useState<Map<number, CollaboratorResponse>>(new Map());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -59,6 +61,10 @@ function ApplicationDetail() {
   const [deleteEssayId, setDeleteEssayId] = useState<number | null>(null);
   const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();
   const cancelRef = useRef<HTMLButtonElement>(null);
+
+  // Collaboration invitation
+  const { isOpen: isInviteDialogOpen, onOpen: onInviteDialogOpen, onClose: onInviteDialogClose } = useDisclosure();
+  const [selectedCollaboration, setSelectedCollaboration] = useState<CollaborationResponse | null>(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -85,6 +91,23 @@ function ApplicationDetail() {
         try {
           const collabsData = await apiGet<CollaborationResponse[]>(`/applications/${id}/collaborations`);
           setCollaborations(collabsData || []);
+
+          // Fetch collaborator details for each collaboration
+          if (collabsData && collabsData.length > 0) {
+            const collaboratorMap = new Map<number, CollaboratorResponse>();
+            for (const collab of collabsData) {
+              if (!collaboratorMap.has(collab.collaboratorId)) {
+                try {
+                  const collaboratorData = await apiGet<CollaboratorResponse>(`/collaborators/${collab.collaboratorId}`);
+                  collaboratorMap.set(collab.collaboratorId, collaboratorData);
+                } catch (err) {
+                  // If collaborator fetch fails, continue with others
+                  console.error(`Failed to fetch collaborator ${collab.collaboratorId}:`, err);
+                }
+              }
+            }
+            setCollaborators(collaboratorMap);
+          }
         } catch (err) {
           // If no collaborations exist, that's okay
           setCollaborations([]);
@@ -164,6 +187,24 @@ function ApplicationDetail() {
     } catch (err) {
       // If no essays exist, that's okay
       setEssays([]);
+    }
+  };
+
+  // Collaboration invitation handlers
+  const handleSendInvite = (collaboration: CollaborationResponse) => {
+    setSelectedCollaboration(collaboration);
+    onInviteDialogOpen();
+  };
+
+  const handleInviteSuccess = async () => {
+    if (!id) return;
+
+    // Refresh collaborations list after sending invite
+    try {
+      const collabsData = await apiGet<CollaborationResponse[]>(`/applications/${id}/collaborations`);
+      setCollaborations(collabsData || []);
+    } catch (err) {
+      setCollaborations([]);
     }
   };
 
@@ -536,7 +577,16 @@ function ApplicationDetail() {
                           />
                           <MenuList>
                             <MenuItem>View Details</MenuItem>
-                            <MenuItem>Send Reminder</MenuItem>
+                            {(collab.status === 'pending' || collab.status === 'not_invited') && (
+                              <MenuItem onClick={() => handleSendInvite(collab)}>
+                                Send Invite
+                              </MenuItem>
+                            )}
+                            {collab.status === 'invited' && (
+                              <MenuItem onClick={() => handleSendInvite(collab)}>
+                                Resend Invite
+                              </MenuItem>
+                            )}
                             <MenuItem color="red.500">Remove</MenuItem>
                           </MenuList>
                         </Menu>
@@ -586,6 +636,20 @@ function ApplicationDetail() {
           </AlertDialogContent>
         </AlertDialogOverlay>
       </AlertDialog>
+
+      {/* Send Invite Dialog */}
+      <SendInviteDialog
+        isOpen={isInviteDialogOpen}
+        onClose={onInviteDialogClose}
+        collaboration={selectedCollaboration}
+        collaboratorName={
+          selectedCollaboration && collaborators.has(selectedCollaboration.collaboratorId)
+            ? `${collaborators.get(selectedCollaboration.collaboratorId)!.firstName} ${collaborators.get(selectedCollaboration.collaboratorId)!.lastName}`
+            : undefined
+        }
+        applicationName={application?.scholarshipName}
+        onSuccess={handleInviteSuccess}
+      />
     </Container>
   );
 }

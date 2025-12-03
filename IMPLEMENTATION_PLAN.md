@@ -1705,8 +1705,8 @@ scholarship-hub/
 ### TODO 6.3.7.1 Backend - Test webhook
   - [ ] Test webhook using Resend's webhook testing tool or send a test email
 
-### TODO 6.3.8: Backend - Email Invitations
-- [ ] **Frontend - Confirmation dialog:**
+### TODO 6.3.8: Frontend - Email Invitations ✅
+- [✅] **Frontend - Confirmation dialog:**
   - Create `web/src/components/SendInviteDialog.tsx`:
     - Show collaboration details (collaborator name, type, application)
     - Options:
