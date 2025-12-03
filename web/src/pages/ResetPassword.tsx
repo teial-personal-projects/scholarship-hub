@@ -11,51 +11,34 @@ import {
   Input,
   Stack,
   Text,
-  useToast,
   Link as ChakraLink,
 } from '@chakra-ui/react';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useToastHelpers } from '../utils/toast';
 
 function ResetPassword() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { updatePassword, session, loading } = useAuth();
-  const toast = useToast();
+  const { showSuccess, showError } = useToastHelpers();
   const navigate = useNavigate();
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (password !== confirmPassword) {
-      toast({
-        title: 'Passwords do not match',
-        status: 'error',
-        duration: 4000,
-        isClosable: true,
-      });
+      showError('Passwords do not match', '', 4000);
       return;
     }
 
     setIsSubmitting(true);
     try {
       await updatePassword(password);
-      toast({
-        title: 'Password updated',
-        description: 'You can now sign in with your new password.',
-        status: 'success',
-        duration: 4000,
-        isClosable: true,
-      });
+      showSuccess('Password updated', 'You can now sign in with your new password.', 4000);
       navigate('/login');
     } catch (error) {
-      toast({
-        title: 'Failed to update password',
-        description: error instanceof Error ? error.message : 'Please try again.',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
+      showError('Failed to update password', error instanceof Error ? error.message : 'Please try again.');
     } finally {
       setIsSubmitting(false);
     }

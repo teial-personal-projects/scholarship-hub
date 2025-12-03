@@ -9,7 +9,6 @@ import {
   Input,
   Stack,
   Text,
-  useToast,
   Card,
   CardBody,
   CardHeader,
@@ -28,6 +27,7 @@ import {
 } from '@chakra-ui/react';
 import { apiGet, apiPatch } from '../services/api';
 import type { UserProfile } from '@scholarship-hub/shared';
+import { useToastHelpers } from '../utils/toast';
 
 // Constants
 const TARGET_TYPES = ['Merit', 'Need', 'Both'];
@@ -100,7 +100,7 @@ const SUBJECT_AREAS = [
 ];
 
 function Profile() {
-  const toast = useToast();
+  const { showSuccess, showError } = useToastHelpers();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [emailAddress, setEmailAddress] = useState('');
@@ -148,20 +148,14 @@ function Profile() {
           setAcademicLevel(prefs.academicLevel || '');
         }
       } catch (error) {
-        toast({
-          title: 'Error',
-          description: error instanceof Error ? error.message : 'Failed to load profile',
-          status: 'error',
-          duration: 5000,
-          isClosable: true,
-        });
+        showError('Error', error instanceof Error ? error.message : 'Failed to load profile');
       } finally {
         setLoading(false);
       }
     }
 
     fetchProfile();
-  }, [toast]);
+  }, [showError]);
 
   const handleAddSubjectArea = () => {
     if (newSubjectArea && !subjectAreas.includes(newSubjectArea)) {
@@ -198,21 +192,9 @@ function Profile() {
         academicLevel: academicLevel || null,
       });
 
-      toast({
-        title: 'Profile updated',
-        description: 'Your profile and preferences have been saved successfully.',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      });
+      showSuccess('Profile updated', 'Your profile and preferences have been saved successfully.', 3000);
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to update profile',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
+      showError('Error', error instanceof Error ? error.message : 'Failed to update profile');
     } finally {
       setSaving(false);
     }

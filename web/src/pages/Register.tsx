@@ -10,7 +10,6 @@ import {
   Input,
   Stack,
   Text,
-  useToast,
   Link as ChakraLink,
   Card,
   CardBody,
@@ -18,6 +17,7 @@ import {
 } from '@chakra-ui/react';
 import { Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useToastHelpers } from '../utils/toast';
 
 function Register() {
   const [email, setEmail] = useState('');
@@ -27,7 +27,7 @@ function Register() {
   const [isLoading, setIsLoading] = useState(false);
   const { signUp } = useAuth();
   const navigate = useNavigate();
-  const toast = useToast();
+  const { showSuccess, showError } = useToastHelpers();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,22 +35,10 @@ function Register() {
 
     try {
       await signUp(email, password, firstName, lastName);
-      toast({
-        title: 'Account created',
-        description: 'Your account has been created successfully. Please sign in.',
-        status: 'success',
-        duration: 5000,
-        isClosable: true,
-      });
+      showSuccess('Account created', 'Your account has been created successfully. Please sign in.');
       navigate('/login');
     } catch (error) {
-      toast({
-        title: 'Registration failed',
-        description: error instanceof Error ? error.message : 'Failed to create account',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
+      showError('Registration failed', error instanceof Error ? error.message : 'Failed to create account');
     } finally {
       setIsLoading(false);
     }

@@ -12,7 +12,6 @@ import {
   CardBody,
   CardHeader,
   Spinner,
-  useToast,
   Table,
   Thead,
   Tbody,
@@ -28,11 +27,12 @@ import { apiGet } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import DashboardReminders from '../components/DashboardReminders';
 import type { UserProfile, ApplicationResponse } from '@scholarship-hub/shared';
+import { useToastHelpers } from '../utils/toast';
 
 function Dashboard() {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const toast = useToast();
+  const { showError } = useToastHelpers();
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [applications, setApplications] = useState<ApplicationResponse[]>([]);
@@ -62,20 +62,14 @@ function Dashboard() {
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to load dashboard data';
         setError(errorMessage);
-        toast({
-          title: 'Error',
-          description: errorMessage,
-          status: 'error',
-          duration: 5000,
-          isClosable: true,
-        });
+        showError('Error', errorMessage);
       } finally {
         setLoading(false);
       }
     }
 
     fetchData();
-  }, [user, toast]);
+  }, [user, showError]);
 
   // Pagination calculations (must be before early returns)
   const totalPages = Math.ceil(applications.length / itemsPerPage);

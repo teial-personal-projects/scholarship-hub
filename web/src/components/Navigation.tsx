@@ -10,9 +10,9 @@ import {
   MenuItem,
   Avatar,
   Divider,
-  useToast,
 } from '@chakra-ui/react';
 import { useAuth } from '../contexts/AuthContext';
+import { useToastHelpers } from '../utils/toast';
 
 /**
  * Main Navigation component
@@ -22,27 +22,15 @@ export function Navigation() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
-  const toast = useToast();
+  const { showSuccess, showError } = useToastHelpers();
 
   const handleLogout = async () => {
     try {
       await signOut();
-      toast({
-        title: 'Logged out',
-        description: 'You have been successfully logged out.',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      });
+      showSuccess('Logged out', 'You have been successfully logged out.', 3000);
       navigate('/login');
     } catch (error) {
-      toast({
-        title: 'Logout failed',
-        description: error instanceof Error ? error.message : 'Failed to log out',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
+      showError('Logout failed', error instanceof Error ? error.message : 'Failed to log out');
     }
   };
 

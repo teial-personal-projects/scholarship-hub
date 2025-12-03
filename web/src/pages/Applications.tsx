@@ -12,7 +12,6 @@ import {
   CardBody,
   CardHeader,
   Spinner,
-  useToast,
   Table,
   Thead,
   Tbody,
@@ -39,11 +38,12 @@ import {
 import { apiGet, apiDelete } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import type { ApplicationResponse } from '@scholarship-hub/shared';
+import { useToastHelpers } from '../utils/toast';
 
 function Applications() {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const toast = useToast();
+  const { showSuccess, showError } = useToastHelpers();
   const cancelRef = useRef<HTMLButtonElement>(null);
 
   const [applications, setApplications] = useState<ApplicationResponse[]>([]);
@@ -71,20 +71,14 @@ function Applications() {
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to load applications';
         setError(errorMessage);
-        toast({
-          title: 'Error',
-          description: errorMessage,
-          status: 'error',
-          duration: 5000,
-          isClosable: true,
-        });
+        showError('Error', errorMessage);
       } finally {
         setLoading(false);
       }
     }
 
     fetchApplications();
-  }, [user, toast]);
+  }, [user, showError]);
 
   // Filter applications
   const filteredApplications = useMemo(() => {
@@ -125,24 +119,12 @@ function Applications() {
     try {
       await apiDelete(`/applications/${deleteId}`);
       setApplications(applications.filter(app => app.id !== deleteId));
-      toast({
-        title: 'Success',
-        description: 'Application deleted successfully',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      });
+      showSuccess('Success', 'Application deleted successfully', 3000);
       onClose();
       setDeleteId(null);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to delete application';
-      toast({
-        title: 'Error',
-        description: errorMessage,
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
+      showError('Error', errorMessage);
     }
   };
 

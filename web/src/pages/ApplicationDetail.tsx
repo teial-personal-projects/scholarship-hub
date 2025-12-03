@@ -12,7 +12,6 @@ import {
   CardBody,
   CardHeader,
   Spinner,
-  useToast,
   Badge,
   Flex,
   Divider,
@@ -36,17 +35,20 @@ import {
   AlertDialogHeader,
   AlertDialogContent,
   AlertDialogOverlay,
+  useToast,
 } from '@chakra-ui/react';
 import { apiGet, apiDelete } from '../services/api';
 import type { ApplicationResponse, EssayResponse, CollaborationResponse, CollaboratorResponse } from '@scholarship-hub/shared';
 import EssayForm from '../components/EssayForm';
 import SendInviteDialog from '../components/SendInviteDialog';
 import { useRef } from 'react';
+import { useToastHelpers } from '../utils/toast';
 
 function ApplicationDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const toast = useToast();
+  const { showSuccess, showError } = useToastHelpers();
+  const toast = useToast(); // Keep for info toast
 
   const [application, setApplication] = useState<ApplicationResponse | null>(null);
   const [essays, setEssays] = useState<EssayResponse[]>([]);
@@ -115,20 +117,14 @@ function ApplicationDetail() {
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to load application';
         setError(errorMessage);
-        toast({
-          title: 'Error',
-          description: errorMessage,
-          status: 'error',
-          duration: 5000,
-          isClosable: true,
-        });
+        showError('Error', errorMessage);
       } finally {
         setLoading(false);
       }
     }
 
     fetchData();
-  }, [id, toast]);
+  }, [id, showError]);
 
   // Essay management handlers
   const handleAddEssay = () => {
@@ -151,26 +147,14 @@ function ApplicationDetail() {
 
     try {
       await apiDelete(`/essays/${deleteEssayId}`);
-      toast({
-        title: 'Success',
-        description: 'Essay deleted successfully',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      });
+      showSuccess('Success', 'Essay deleted successfully', 3000);
 
       // Refresh essays list
       const essaysData = await apiGet<EssayResponse[]>(`/applications/${id}/essays`);
       setEssays(essaysData || []);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to delete essay';
-      toast({
-        title: 'Error',
-        description: errorMessage,
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
+      showError('Error', errorMessage);
     } finally {
       setDeleteEssayId(null);
       onDeleteClose();

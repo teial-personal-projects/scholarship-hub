@@ -20,11 +20,11 @@ import {
   FormControl,
   FormLabel,
   Input,
-  useToast,
   Divider,
 } from '@chakra-ui/react';
 import { apiPost } from '../services/api';
 import type { CollaborationResponse } from '@scholarship-hub/shared';
+import { useToastHelpers } from '../utils/toast';
 
 interface SendInviteDialogProps {
   isOpen: boolean;
@@ -43,7 +43,7 @@ const SendInviteDialog: React.FC<SendInviteDialogProps> = ({
   applicationName,
   onSuccess,
 }) => {
-  const toast = useToast();
+  const { showSuccess, showError } = useToastHelpers();
   const [isLoading, setIsLoading] = useState(false);
   const [showSchedule, setShowSchedule] = useState(false);
   const [scheduledFor, setScheduledFor] = useState('');
@@ -68,25 +68,13 @@ const SendInviteDialog: React.FC<SendInviteDialogProps> = ({
       setIsLoading(true);
       await apiPost(`/collaborations/${collaboration.id}/invite`, {});
 
-      toast({
-        title: 'Invitation Sent',
-        description: `Invitation sent to ${collaboratorName || 'collaborator'}`,
-        status: 'success',
-        duration: 5000,
-        isClosable: true,
-      });
+      showSuccess('Invitation Sent', `Invitation sent to ${collaboratorName || 'collaborator'}`);
 
       if (onSuccess) onSuccess();
       onClose();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to send invitation';
-      toast({
-        title: 'Error',
-        description: errorMessage,
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
+      showError('Error', errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -98,13 +86,7 @@ const SendInviteDialog: React.FC<SendInviteDialogProps> = ({
     // Validate scheduled date is in the future
     const scheduledDate = new Date(scheduledFor);
     if (scheduledDate < new Date()) {
-      toast({
-        title: 'Invalid Date',
-        description: 'Please select a future date and time',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
+      showError('Invalid Date', 'Please select a future date and time', 3000);
       return;
     }
 
@@ -114,13 +96,7 @@ const SendInviteDialog: React.FC<SendInviteDialogProps> = ({
         scheduledFor: scheduledDate.toISOString(),
       });
 
-      toast({
-        title: 'Invitation Scheduled',
-        description: `Invitation scheduled for ${scheduledDate.toLocaleString()}`,
-        status: 'success',
-        duration: 5000,
-        isClosable: true,
-      });
+      showSuccess('Invitation Scheduled', `Invitation scheduled for ${scheduledDate.toLocaleString()}`);
 
       if (onSuccess) onSuccess();
       onClose();
@@ -128,13 +104,7 @@ const SendInviteDialog: React.FC<SendInviteDialogProps> = ({
       setScheduledFor('');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to schedule invitation';
-      toast({
-        title: 'Error',
-        description: errorMessage,
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
+      showError('Error', errorMessage);
     } finally {
       setIsLoading(false);
     }

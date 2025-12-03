@@ -10,13 +10,13 @@ import {
   Input,
   Stack,
   Text,
-  useToast,
   Link as ChakraLink,
   Card,
   CardBody,
 } from '@chakra-ui/react';
 import { Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useToastHelpers } from '../utils/toast';
 
 function Login() {
   const [email, setEmail] = useState('');
@@ -24,7 +24,7 @@ function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const { signIn } = useAuth();
   const navigate = useNavigate();
-  const toast = useToast();
+  const { showSuccess, showError } = useToastHelpers();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,22 +32,10 @@ function Login() {
 
     try {
       await signIn(email, password);
-      toast({
-        title: 'Login successful',
-        description: 'Welcome back!',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      });
+      showSuccess('Login successful', 'Welcome back!', 3000);
       navigate('/dashboard');
     } catch (error) {
-      toast({
-        title: 'Login failed',
-        description: error instanceof Error ? error.message : 'Invalid email or password',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
+      showError('Login failed', error instanceof Error ? error.message : 'Invalid email or password');
     } finally {
       setIsLoading(false);
     }

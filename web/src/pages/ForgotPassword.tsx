@@ -11,17 +11,17 @@ import {
   Input,
   Stack,
   Text,
-  useToast,
   Link as ChakraLink,
 } from '@chakra-ui/react';
 import { Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useToastHelpers } from '../utils/toast';
 
 function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { requestPasswordReset } = useAuth();
-  const toast = useToast();
+  const { showSuccess, showError } = useToastHelpers();
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -29,21 +29,9 @@ function ForgotPassword() {
 
     try {
       await requestPasswordReset(email);
-      toast({
-        title: 'Reset email sent',
-        description: 'Check your inbox for a password reset link.',
-        status: 'success',
-        duration: 5000,
-        isClosable: true,
-      });
+      showSuccess('Reset email sent', 'Check your inbox for a password reset link.');
     } catch (error) {
-      toast({
-        title: 'Failed to send reset email',
-        description: error instanceof Error ? error.message : 'Please try again later.',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
+      showError('Failed to send reset email', error instanceof Error ? error.message : 'Please try again later.');
     } finally {
       setIsSubmitting(false);
     }

@@ -10,7 +10,6 @@ import {
   Textarea,
   Stack,
   Heading,
-  useToast,
   Card,
   CardBody,
   CardHeader,
@@ -25,11 +24,12 @@ import {
 import { apiGet, apiPost, apiPatch } from '../services/api';
 import type { ApplicationResponse } from '@scholarship-hub/shared';
 import { APPLICATION_STATUSES, TARGET_TYPES } from '@scholarship-hub/shared';
+import { useToastHelpers } from '../utils/toast';
 
 function ApplicationForm() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const toast = useToast();
+  const { showSuccess, showError } = useToastHelpers();
   const isEditMode = !!id;
 
   const [loading, setLoading] = useState(isEditMode);
@@ -87,44 +87,26 @@ function ApplicationForm() {
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to load application';
         setError(errorMessage);
-        toast({
-          title: 'Error',
-          description: errorMessage,
-          status: 'error',
-          duration: 5000,
-          isClosable: true,
-        });
+        showError('Error', errorMessage);
       } finally {
         setLoading(false);
       }
     }
 
     fetchApplication();
-  }, [id, isEditMode, toast]);
+  }, [id, isEditMode, showError]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Validation
     if (!scholarshipName.trim()) {
-      toast({
-        title: 'Validation Error',
-        description: 'Scholarship name is required',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
+      showError('Validation Error', 'Scholarship name is required', 3000);
       return;
     }
 
     if (!dueDate) {
-      toast({
-        title: 'Validation Error',
-        description: 'Due date is required',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
+      showError('Validation Error', 'Due date is required', 3000);
       return;
     }
 
@@ -155,35 +137,17 @@ function ApplicationForm() {
 
       if (isEditMode) {
         await apiPatch(`/applications/${id}`, payload);
-        toast({
-          title: 'Success',
-          description: 'Application updated successfully',
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
-        });
+        showSuccess('Success', 'Application updated successfully', 3000);
         navigate(`/applications/${id}`);
       } else {
         const created = await apiPost<ApplicationResponse>('/applications', payload);
-        toast({
-          title: 'Success',
-          description: 'Application created successfully',
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
-        });
+        showSuccess('Success', 'Application created successfully', 3000);
         navigate(`/applications/${created.id}`);
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to save application';
       setError(errorMessage);
-      toast({
-        title: 'Error',
-        description: errorMessage,
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
+      showError('Error', errorMessage);
     } finally {
       setSubmitting(false);
     }

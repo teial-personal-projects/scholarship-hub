@@ -14,11 +14,11 @@ import {
   NumberInput,
   NumberInputField,
   Stack,
-  useToast,
   FormHelperText,
 } from '@chakra-ui/react';
 import { apiPost, apiPatch } from '../services/api';
 import type { EssayResponse } from '@scholarship-hub/shared';
+import { useToastHelpers } from '../utils/toast';
 
 interface EssayFormProps {
   isOpen: boolean;
@@ -29,7 +29,7 @@ interface EssayFormProps {
 }
 
 function EssayForm({ isOpen, onClose, applicationId, essay, onSuccess }: EssayFormProps) {
-  const toast = useToast();
+  const { showSuccess, showError } = useToastHelpers();
   const isEditMode = !!essay;
 
   const [submitting, setSubmitting] = useState(false);
@@ -64,35 +64,17 @@ function EssayForm({ isOpen, onClose, applicationId, essay, onSuccess }: EssayFo
 
       if (isEditMode && essay) {
         await apiPatch(`/essays/${essay.id}`, payload);
-        toast({
-          title: 'Success',
-          description: 'Essay updated successfully',
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
-        });
+        showSuccess('Success', 'Essay updated successfully', 3000);
       } else {
         await apiPost(`/applications/${applicationId}/essays`, payload);
-        toast({
-          title: 'Success',
-          description: 'Essay created successfully',
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
-        });
+        showSuccess('Success', 'Essay created successfully', 3000);
       }
 
       onSuccess();
       onClose();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to save essay';
-      toast({
-        title: 'Error',
-        description: errorMessage,
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
+      showError('Error', errorMessage);
     } finally {
       setSubmitting(false);
     }
