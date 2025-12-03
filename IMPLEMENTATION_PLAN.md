@@ -1841,17 +1841,12 @@ scholarship-hub/
   - Reuse existing Resend client and configuration
   - No additional email provider setup needed
 
-- [ ] **Scheduler: GitHub Actions (recommended)**
+- [✅] **Scheduler: GitHub Actions (recommended)**
   - **Alternatives Considered:**
     - **Supabase pg_cron or Edge Functions** (already using Supabase)
       - Pros: Already in our stack, no additional service, database-level scheduling
       - Cons: pg_cron requires enabling extension and more complex setup, Edge Functions have execution limits and may require paid plan for frequent runs
-    - **Cloud provider cron services** (AWS EventBridge, Google Cloud Scheduler, Azure Logic Apps)
-      - Pros: Enterprise-grade, very reliable
-      - Cons: Additional cloud account/service needed, more complex setup, potential costs
-    - **Dedicated cron services** (EasyCron, Cronitor, Cron-job.org)
-      - Pros: Simple, purpose-built for scheduling
-      - Cons: Additional service to manage, subscription costs ($5-20/month), less integrated with codebase
+    - **Cloud provider cron services** (AWS EventBridge, Google Cloud 
   - **Why GitHub Actions was preferred:**
     - Free for public repositories and generous free tier for private repos (2,000 minutes/month)
     - Built into GitHub (no separate CI/CD service needed)
@@ -1868,6 +1863,13 @@ scholarship-hub/
   - Include `workflow_dispatch` for manual triggering
   - Call `POST /api/cron/send-reminders` endpoint with secret token
   - Store `CRON_SECRET` in GitHub Secrets
+     - https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets
+     - Generate a secure secret using one of these methods (minimum 32 characters):
+      - Node.js: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`
+      - OpenSSL: `openssl rand -hex 32`
+    - In GitHub repository: Settings → Secrets and variables → Actions → New repository secret
+    - Name: `CRON_SECRET`
+    - Value: (paste the generated secret)
 
 - [ ] **Create protected cron endpoint:**
   - `POST /api/cron/send-reminders`
