@@ -1872,7 +1872,7 @@ scholarship-hub/
     - Value: (paste the generated secret)
     - Also add `API_URL` secret with your API base URL
 
-- [x] **Create protected cron endpoint:**
+- [✅] **Create protected cron endpoint:**
   - ✅ Created `POST /api/cron/send-reminders` endpoint
   - ✅ Protected with secret token verification (Bearer token in Authorization header)
   - ✅ Added `CRON_SECRET` to environment variables (api/.env.example)
