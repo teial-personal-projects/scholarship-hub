@@ -4,9 +4,12 @@ name: Send Automated Reminders
 # Cron syntax: minute hour day-of-month month day-of-week
 # Adjust the schedule as needed for your timezone and reminder frequency
 on:
-  schedule:
-    # Runs every day at 12:00 PM UTC (noon)
-    - cron: '0 12 * * *'
+  # DISABLED: Schedule the reminder job to run daily at noon UTC (7 AM EST / 4 AM PST)
+  # Cron syntax: minute hour day-of-month month day-of-week
+  # Adjust the schedule as needed for your timezone and reminder frequency
+  # schedule:
+  #   # Runs every day at 12:00 PM UTC (noon)
+  #   - cron: '0 12 * * *'
 
   # Allow manual triggering for testing with environment selection
   workflow_dispatch:
