@@ -122,6 +122,10 @@ function Profile() {
   const [recommendationRequired, setRecommendationRequired] = useState(false);
   const [academicLevel, setAcademicLevel] = useState<string>('');
 
+  // Notification preferences
+  const [applicationRemindersEnabled, setApplicationRemindersEnabled] = useState(true);
+  const [collaborationRemindersEnabled, setCollaborationRemindersEnabled] = useState(true);
+
   useEffect(() => {
     async function fetchProfile() {
       try {
@@ -147,6 +151,10 @@ function Profile() {
           setRecommendationRequired(prefs.recommendationRequired || false);
           setAcademicLevel(prefs.academicLevel || '');
         }
+
+        // Set notification preferences
+        setApplicationRemindersEnabled(profileData.applicationRemindersEnabled ?? true);
+        setCollaborationRemindersEnabled(profileData.collaborationRemindersEnabled ?? true);
       } catch (error) {
         showError('Error', error instanceof Error ? error.message : 'Failed to load profile');
       } finally {
@@ -177,6 +185,8 @@ function Profile() {
         firstName: firstName || null,
         lastName: lastName || null,
         phoneNumber: phoneNumber || null,
+        applicationRemindersEnabled,
+        collaborationRemindersEnabled,
       });
 
       // Update search preferences
@@ -404,6 +414,47 @@ function Profile() {
                   Recommendation Required
                 </Checkbox>
               </Stack>
+            </Stack>
+          </CardBody>
+        </Card>
+
+        {/* Notification Preferences */}
+        <Card>
+          <CardHeader>
+            <Heading size="md">Notification Preferences</Heading>
+            <Text fontSize="sm" color="gray.500" mt="1">
+              Control when you receive reminder emails
+            </Text>
+          </CardHeader>
+          <CardBody>
+            <Stack spacing="4">
+              <FormControl display="flex" alignItems="center">
+                <Box flex="1">
+                  <FormLabel mb="0">Application Reminders</FormLabel>
+                  <Text fontSize="sm" color="gray.500">
+                    Receive email reminders for upcoming scholarship application deadlines
+                  </Text>
+                </Box>
+                <Checkbox
+                  isChecked={applicationRemindersEnabled}
+                  onChange={(e) => setApplicationRemindersEnabled(e.target.checked)}
+                  size="lg"
+                />
+              </FormControl>
+
+              <FormControl display="flex" alignItems="center">
+                <Box flex="1">
+                  <FormLabel mb="0">Collaboration Reminders</FormLabel>
+                  <Text fontSize="sm" color="gray.500">
+                    Receive email reminders for collaboration tasks and deadlines
+                  </Text>
+                </Box>
+                <Checkbox
+                  isChecked={collaborationRemindersEnabled}
+                  onChange={(e) => setCollaborationRemindersEnabled(e.target.checked)}
+                  size="lg"
+                />
+              </FormControl>
             </Stack>
           </CardBody>
         </Card>

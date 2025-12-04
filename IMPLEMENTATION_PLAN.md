@@ -2012,11 +2012,13 @@ scholarship-hub/
   - Collaborations: Both `last_reminder_sent_at` field AND `collaboration_history` entry
   - Provides both quick timestamp lookup and detailed history trail
 
-### TODO 6.9.8: Frontend - Notification preferences UI (optional)
-- [ ] Create settings page to configure reminder preferences
-- [ ] Toggle reminders on/off
-- [ ] Set custom reminder intervals
-- [ ] Display current preferences
+### TODO 6.9.8: Frontend - Notification preferences UI ✅ COMPLETED
+- ✅ Added notification preferences section to Profile page (`web/src/pages/Profile.tsx`)
+- ✅ Toggle for application reminders (`application_reminders_enabled`)
+- ✅ Toggle for collaboration reminders (`collaboration_reminders_enabled`)
+- ✅ Preferences saved via existing `/users/me` PATCH endpoint
+- ✅ Preferences loaded from `user_profiles` table (fields added in migration 008)
+- **Note:** Custom reminder intervals use default values from `reminder_intervals` JSONB field (default: `[7, 3, 1]` days). Advanced UI for customizing intervals can be added in future if needed.
 
 ### TODO 6.9.9: Testing
 - [ ] Test reminder logic with various due date scenarios
