@@ -64,7 +64,7 @@ export const createCollaborator = async (
     user_id: userId,
     first_name: collaboratorData.firstName,
     last_name: collaboratorData.lastName,
-    email: collaboratorData.emailAddress,
+    email_address: collaboratorData.emailAddress,
   };
 
   if (collaboratorData.relationship !== undefined) dbData.relationship = collaboratorData.relationship;
@@ -103,7 +103,7 @@ export const updateCollaborator = async (
 
   if (updates.firstName !== undefined) dbUpdates.first_name = updates.firstName;
   if (updates.lastName !== undefined) dbUpdates.last_name = updates.lastName;
-  if (updates.emailAddress !== undefined) dbUpdates.email = updates.emailAddress;
+  if (updates.emailAddress !== undefined) dbUpdates.email_address = updates.emailAddress;
   if (updates.relationship !== undefined) dbUpdates.relationship = updates.relationship;
   if (updates.phoneNumber !== undefined) dbUpdates.phone_number = updates.phoneNumber;
 
