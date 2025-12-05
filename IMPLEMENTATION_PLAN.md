@@ -1778,14 +1778,21 @@ scholarship-hub/
   - Fetches collaborators list dynamically
   - Validates essayId requirement for essay reviews
 
-### TODO 6.5: Frontend - Student View of Collaborations
-- [ ] On `ApplicationDetail` page:
-  - Section: "Recommendations" - show all recommendation collaborations
-  - Section: "Essay Reviews" - show all essay review collaborations
-  - Each shows: collaborator name, status, due date, actions (remind, view history)
-- [ ] On Essay detail view:
-  - List collaborators assigned to this essay
-  - "Add Reviewer" button
+### TODO 6.5: Frontend - Student View of Collaborations ✅ COMPLETED
+- ✅ Created `AddCollaborationModal` component (`web/src/components/AddCollaborationModal.tsx`):
+  - Select from saved collaborators
+  - Choose collaboration type (recommendation, essay review, guidance)
+  - Type-specific fields (essay selection for reviews, portal URL for recommendations, session details for guidance)
+  - Optional due date and notes
+- ✅ Updated `ApplicationDetail` page (`web/src/pages/ApplicationDetail.tsx`):
+  - Added "Add Collaborator" button that opens the modal
+  - Organized collaborations into three sections:
+    - **Recommendations** - Shows collaborator name, status, due date, actions
+    - **Essay Reviews** - Shows collaborator name, essay title, status, due date, actions
+    - **Guidance & Counseling** - Shows collaborator name, status, due date, actions
+  - Each collaboration includes actions: View Details, Send Invite, Resend Invite, Remove
+  - Automatically refreshes collaboration list after adding new collaborations
+- **Note**: Essay detail view "Add Reviewer" button can be added in future if needed (currently can add essay reviewers from ApplicationDetail page)
 
 ### TODO 6.6: Frontend - Collaborator Dashboard ✅
 - [✅] Create `web/src/pages/CollaboratorDashboard.tsx`:

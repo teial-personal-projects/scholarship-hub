@@ -48,6 +48,7 @@ import type { ApplicationResponse, EssayResponse, CollaborationResponse, Collabo
 import EssayForm from '../components/EssayForm';
 import SendInviteDialog from '../components/SendInviteDialog';
 import CollaborationHistory from '../components/CollaborationHistory';
+import AddCollaborationModal from '../components/AddCollaborationModal';
 import { useRef } from 'react';
 import { useToastHelpers } from '../utils/toast';
 
@@ -78,6 +79,9 @@ function ApplicationDetail() {
   // Collaboration history
   const { isOpen: isHistoryOpen, onOpen: onHistoryOpen, onClose: onHistoryClose } = useDisclosure();
   const [historyCollaborationId, setHistoryCollaborationId] = useState<number | null>(null);
+
+  // Add collaboration modal
+  const { isOpen: isAddCollabOpen, onOpen: onAddCollabOpen, onClose: onAddCollabClose } = useDisclosure();
 
   useEffect(() => {
     async function fetchData() {
@@ -250,6 +254,35 @@ function ApplicationDetail() {
   const handleViewHistory = (collaborationId: number) => {
     setHistoryCollaborationId(collaborationId);
     onHistoryOpen();
+  };
+
+  // Handle adding collaboration success
+  const handleCollaborationSuccess = async () => {
+    if (!id) return;
+
+    // Refresh collaborations list after adding
+    try {
+      const collabsData = await apiGet<CollaborationResponse[]>(`/applications/${id}/collaborations`);
+      setCollaborations(collabsData || []);
+
+      // Fetch collaborator details for new collaborations
+      if (collabsData && collabsData.length > 0) {
+        const collaboratorMap = new Map(collaborators);
+        for (const collab of collabsData) {
+          if (!collaboratorMap.has(collab.collaboratorId)) {
+            try {
+              const collaboratorData = await apiGet<CollaboratorResponse>(`/collaborators/${collab.collaboratorId}`);
+              collaboratorMap.set(collab.collaboratorId, collaboratorData);
+            } catch (err) {
+              console.error(`Failed to fetch collaborator ${collab.collaboratorId}:`, err);
+            }
+          }
+        }
+        setCollaborators(collaboratorMap);
+      }
+    } catch (err) {
+      setCollaborations([]);
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -573,12 +606,7 @@ function ApplicationDetail() {
               <Button
                 size="sm"
                 colorScheme="blue"
-                onClick={() => toast({
-                  title: 'Coming Soon',
-                  description: 'Collaboration management will be available in the next update',
-                  status: 'info',
-                  duration: 3000,
-                })}
+                onClick={onAddCollabOpen}
               >
                 Add Collaborator
               </Button>
@@ -586,59 +614,219 @@ function ApplicationDetail() {
           </CardHeader>
           <CardBody>
             {collaborations.length === 0 ? (
-              <Text color="gray.500">No collaborations added yet</Text>
+              <Text color="gray.500">No collaborations added yet. Click "Add Collaborator" to get started.</Text>
             ) : (
-              <Table variant="simple">
-                <Thead>
-                  <Tr>
-                    <Th>Type</Th>
-                    <Th>Status</Th>
-                    <Th>Due Date</Th>
-                    <Th>Actions</Th>
-                  </Tr>
-                </Thead>
-                <Tbody>
-                  {collaborations.map((collab) => (
-                    <Tr key={collab.id}>
-                      <Td>{getCollaborationTypeLabel(collab.collaborationType)}</Td>
-                      <Td>
-                        <Badge colorScheme={getCollaborationStatusColor(collab.status)}>
-                          {collab.status}
-                        </Badge>
-                      </Td>
-                      <Td>
-                        {collab.nextActionDueDate
-                          ? new Date(collab.nextActionDueDate).toLocaleDateString()
-                          : '-'}
-                      </Td>
-                      <Td>
-                        <Menu>
-                          <MenuButton
-                            as={IconButton}
-                            icon={<Text>⋮</Text>}
-                            variant="ghost"
-                            size="sm"
-                          />
-                          <MenuList>
-                            <MenuItem onClick={() => handleViewHistory(collab.id)}>View Details</MenuItem>
-                            {(collab.status === 'pending' || collab.status === 'not_invited') && (
-                              <MenuItem onClick={() => handleSendInvite(collab)}>
-                                Send Invite
-                              </MenuItem>
-                            )}
-                            {shouldShowResend(collab) && (
-                              <MenuItem onClick={() => handleSendInvite(collab)}>
-                                Resend Invite
-                              </MenuItem>
-                            )}
-                            <MenuItem color="red.500">Remove</MenuItem>
-                          </MenuList>
-                        </Menu>
-                      </Td>
-                    </Tr>
-                  ))}
-                </Tbody>
-              </Table>
+              <Stack spacing="6">
+                {/* Recommendations Section */}
+                {collaborations.filter((c) => c.collaborationType === 'recommendation').length > 0 && (
+                  <Box>
+                    <Heading size="sm" mb="3">
+                      Recommendations ({collaborations.filter((c) => c.collaborationType === 'recommendation').length})
+                    </Heading>
+                    <Table variant="simple" size="sm">
+                      <Thead>
+                        <Tr>
+                          <Th>Collaborator</Th>
+                          <Th>Status</Th>
+                          <Th>Due Date</Th>
+                          <Th>Actions</Th>
+                        </Tr>
+                      </Thead>
+                      <Tbody>
+                        {collaborations
+                          .filter((c) => c.collaborationType === 'recommendation')
+                          .map((collab) => {
+                            const collaborator = collaborators.get(collab.collaboratorId);
+                            return (
+                              <Tr key={collab.id}>
+                                <Td>
+                                  {collaborator ? `${collaborator.name}` : 'Loading...'}
+                                </Td>
+                                <Td>
+                                  <Badge colorScheme={getCollaborationStatusColor(collab.status)}>
+                                    {collab.status}
+                                  </Badge>
+                                </Td>
+                                <Td>
+                                  {collab.nextActionDueDate
+                                    ? new Date(collab.nextActionDueDate).toLocaleDateString()
+                                    : '-'}
+                                </Td>
+                                <Td>
+                                  <Menu>
+                                    <MenuButton
+                                      as={IconButton}
+                                      icon={<Text>⋮</Text>}
+                                      variant="ghost"
+                                      size="sm"
+                                    />
+                                    <MenuList>
+                                      <MenuItem onClick={() => handleViewHistory(collab.id)}>
+                                        View Details
+                                      </MenuItem>
+                                      {(collab.status === 'pending' || collab.status === 'not_invited') && (
+                                        <MenuItem onClick={() => handleSendInvite(collab)}>
+                                          Send Invite
+                                        </MenuItem>
+                                      )}
+                                      {shouldShowResend(collab) && (
+                                        <MenuItem onClick={() => handleSendInvite(collab)}>
+                                          Resend Invite
+                                        </MenuItem>
+                                      )}
+                                      <MenuItem color="red.500">Remove</MenuItem>
+                                    </MenuList>
+                                  </Menu>
+                                </Td>
+                              </Tr>
+                            );
+                          })}
+                      </Tbody>
+                    </Table>
+                  </Box>
+                )}
+
+                {/* Essay Reviews Section */}
+                {collaborations.filter((c) => c.collaborationType === 'essayReview').length > 0 && (
+                  <Box>
+                    <Heading size="sm" mb="3">
+                      Essay Reviews ({collaborations.filter((c) => c.collaborationType === 'essayReview').length})
+                    </Heading>
+                    <Table variant="simple" size="sm">
+                      <Thead>
+                        <Tr>
+                          <Th>Collaborator</Th>
+                          <Th>Essay</Th>
+                          <Th>Status</Th>
+                          <Th>Due Date</Th>
+                          <Th>Actions</Th>
+                        </Tr>
+                      </Thead>
+                      <Tbody>
+                        {collaborations
+                          .filter((c) => c.collaborationType === 'essayReview')
+                          .map((collab) => {
+                            const collaborator = collaborators.get(collab.collaboratorId);
+                            const essay = essays.find((e) => e.id === collab.essayId);
+                            return (
+                              <Tr key={collab.id}>
+                                <Td>
+                                  {collaborator ? `${collaborator.name}` : 'Loading...'}
+                                </Td>
+                                <Td>{essay?.title || 'Unknown Essay'}</Td>
+                                <Td>
+                                  <Badge colorScheme={getCollaborationStatusColor(collab.status)}>
+                                    {collab.status}
+                                  </Badge>
+                                </Td>
+                                <Td>
+                                  {collab.nextActionDueDate
+                                    ? new Date(collab.nextActionDueDate).toLocaleDateString()
+                                    : '-'}
+                                </Td>
+                                <Td>
+                                  <Menu>
+                                    <MenuButton
+                                      as={IconButton}
+                                      icon={<Text>⋮</Text>}
+                                      variant="ghost"
+                                      size="sm"
+                                    />
+                                    <MenuList>
+                                      <MenuItem onClick={() => handleViewHistory(collab.id)}>
+                                        View Details
+                                      </MenuItem>
+                                      {(collab.status === 'pending' || collab.status === 'not_invited') && (
+                                        <MenuItem onClick={() => handleSendInvite(collab)}>
+                                          Send Invite
+                                        </MenuItem>
+                                      )}
+                                      {shouldShowResend(collab) && (
+                                        <MenuItem onClick={() => handleSendInvite(collab)}>
+                                          Resend Invite
+                                        </MenuItem>
+                                      )}
+                                      <MenuItem color="red.500">Remove</MenuItem>
+                                    </MenuList>
+                                  </Menu>
+                                </Td>
+                              </Tr>
+                            );
+                          })}
+                      </Tbody>
+                    </Table>
+                  </Box>
+                )}
+
+                {/* Guidance Section */}
+                {collaborations.filter((c) => c.collaborationType === 'guidance').length > 0 && (
+                  <Box>
+                    <Heading size="sm" mb="3">
+                      Guidance & Counseling ({collaborations.filter((c) => c.collaborationType === 'guidance').length})
+                    </Heading>
+                    <Table variant="simple" size="sm">
+                      <Thead>
+                        <Tr>
+                          <Th>Collaborator</Th>
+                          <Th>Status</Th>
+                          <Th>Due Date</Th>
+                          <Th>Actions</Th>
+                        </Tr>
+                      </Thead>
+                      <Tbody>
+                        {collaborations
+                          .filter((c) => c.collaborationType === 'guidance')
+                          .map((collab) => {
+                            const collaborator = collaborators.get(collab.collaboratorId);
+                            return (
+                              <Tr key={collab.id}>
+                                <Td>
+                                  {collaborator ? `${collaborator.name}` : 'Loading...'}
+                                </Td>
+                                <Td>
+                                  <Badge colorScheme={getCollaborationStatusColor(collab.status)}>
+                                    {collab.status}
+                                  </Badge>
+                                </Td>
+                                <Td>
+                                  {collab.nextActionDueDate
+                                    ? new Date(collab.nextActionDueDate).toLocaleDateString()
+                                    : '-'}
+                                </Td>
+                                <Td>
+                                  <Menu>
+                                    <MenuButton
+                                      as={IconButton}
+                                      icon={<Text>⋮</Text>}
+                                      variant="ghost"
+                                      size="sm"
+                                    />
+                                    <MenuList>
+                                      <MenuItem onClick={() => handleViewHistory(collab.id)}>
+                                        View Details
+                                      </MenuItem>
+                                      {(collab.status === 'pending' || collab.status === 'not_invited') && (
+                                        <MenuItem onClick={() => handleSendInvite(collab)}>
+                                          Send Invite
+                                        </MenuItem>
+                                      )}
+                                      {shouldShowResend(collab) && (
+                                        <MenuItem onClick={() => handleSendInvite(collab)}>
+                                          Resend Invite
+                                        </MenuItem>
+                                      )}
+                                      <MenuItem color="red.500">Remove</MenuItem>
+                                    </MenuList>
+                                  </Menu>
+                                </Td>
+                              </Tr>
+                            );
+                          })}
+                      </Tbody>
+                    </Table>
+                  </Box>
+                )}
+              </Stack>
             )}
           </CardBody>
         </Card>
@@ -708,6 +896,15 @@ function ApplicationDetail() {
           </ModalBody>
         </ModalContent>
       </Modal>
+
+      {/* Add Collaboration Modal */}
+      <AddCollaborationModal
+        isOpen={isAddCollabOpen}
+        onClose={onAddCollabClose}
+        applicationId={parseInt(id!)}
+        essays={essays}
+        onSuccess={handleCollaborationSuccess}
+      />
     </Container>
   );
 }
