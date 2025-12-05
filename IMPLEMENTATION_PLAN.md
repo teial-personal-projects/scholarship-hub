@@ -2020,22 +2020,6 @@ scholarship-hub/
 - ✅ Preferences loaded from `user_profiles` table (fields added in migration 008)
 - **Note:** Custom reminder intervals use default values from `reminder_intervals` JSONB field (default: `[7, 3, 1]` days). Advanced UI for customizing intervals can be added in future if needed.
 
-### TODO 6.9.9: Testing
-- [ ] Test reminder logic with various due date scenarios
-- [ ] Test email sending (use test email addresses)
-- [ ] Verify reminder history is logged correctly
-- [ ] Test that reminders don't spam (check last_reminder_sent_at)
-- [ ] Test reminder preferences (if implemented)
-
-### TODO 6.9.10: Setup scheduled execution
-- [ ] **Note:** GitHub Actions workflow file creation is covered in section 6.9.1
-- [ ] Test cron job execution (manually trigger via `workflow_dispatch` in GitHub Actions)
-- [ ] Verify reminders are sent correctly
-- [ ] Verify reminder emails are received
-- [ ] Set up monitoring/alerting for failed jobs
-- [ ] Monitor GitHub Actions workflow runs and logs
-- [ ] Set up notifications for workflow failures (GitHub Actions notifications or email alerts)
-
 **Milestone**: Full unified collaborator system with automated reminders - students and collaborators receive timely notifications about upcoming and overdue deadlines
 
 ---
@@ -2236,7 +2220,24 @@ scholarship-hub/
   - `collaboration.spec.ts` - Add collaborator, request recommendation
 - [ ] Configure GitHub Actions for E2E tests (optional)
 
-### TODO 7.10: Set Up Continuous Integration
+
+### TODO 7.10 Testing
+- [ ] Test reminder logic with various due date scenarios
+- [ ] Test email sending (use test email addresses)
+- [ ] Verify reminder history is logged correctly
+- [ ] Test that reminders don't spam (check last_reminder_sent_at)
+- [ ] Test reminder preferences (if implemented)
+
+### TODO 7.11: Setup scheduled execution
+- [ ] **Note:** GitHub Actions workflow file creation is covered in section 6.9.1
+- [ ] Test cron job execution (manually trigger via `workflow_dispatch` in GitHub Actions)
+- [ ] Verify reminders are sent correctly
+- [ ] Verify reminder emails are received
+- [ ] Set up monitoring/alerting for failed jobs
+- [ ] Monitor GitHub Actions workflow runs and logs
+- [ ] Set up notifications for workflow failures (GitHub Actions notifications or email alerts)
+
+### TODO 7.12: Set Up Continuous Integration
 - [ ] Create `.github/workflows/test.yml`:
   ```yaml
   name: Tests
