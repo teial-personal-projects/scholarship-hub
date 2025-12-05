@@ -390,7 +390,7 @@ function generateApplicationOverdueEmail(params: SendApplicationReminderParams):
  * Generate HTML for collaborator reminder (due soon)
  */
 function generateCollaboratorDueSoonEmail(params: SendCollaborationReminderParams): string {
-  const { recipientName, studentName, collaborationType, dueDate, daysUntilDue, applicationName, collaborationId } = params;
+  const { recipientName, studentName, collaborationType, dueDate, daysUntilDue, applicationName } = params;
 
   const escapedRecipient = he.encode(recipientName);
   const escapedStudent = studentName ? he.encode(studentName) : 'a student';
@@ -557,7 +557,7 @@ export async function sendApplicationReminder(
     return null;
   }
 
-  const { studentEmail, studentName, scholarshipName, daysUntilDue } = params;
+  const { studentEmail, scholarshipName, daysUntilDue } = params;
 
   try {
     const isOverdue = daysUntilDue < 0;
@@ -607,7 +607,7 @@ export async function sendCollaborationReminder(
     return null;
   }
 
-  const { recipientEmail, recipientName, collaborationType, studentName, daysUntilDue } = params;
+  const { recipientEmail, collaborationType, studentName, daysUntilDue } = params;
 
   try {
     const isOverdue = daysUntilDue < 0;
