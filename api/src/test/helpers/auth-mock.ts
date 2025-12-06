@@ -76,6 +76,42 @@ export const createMockNext = (): NextFunction => {
 };
 
 /**
+ * Create a complete mock Supabase User object
+ */
+const createMockSupabaseUser = (overrides: { id?: string; email?: string } = {}) => ({
+  id: overrides.id || 'test-auth-user-id',
+  email: overrides.email || 'test@example.com',
+  app_metadata: {},
+  user_metadata: {},
+  aud: 'authenticated',
+  created_at: new Date().toISOString(),
+  ...overrides,
+});
+
+/**
+ * Create a complete mock Supabase Session object
+ */
+const createMockSupabaseSession = (user?: { id: string; email: string }) => ({
+  access_token: generateMockToken(),
+  refresh_token: 'mock-refresh-token',
+  expires_in: 3600,
+  expires_at: Math.floor(Date.now() / 1000) + 3600,
+  token_type: 'bearer',
+  user: user ? createMockSupabaseUser(user) : createMockSupabaseUser(),
+});
+
+/**
+ * Create a complete mock AuthError object
+ */
+const createMockAuthError = (message: string, status: number = 401) => ({
+  message,
+  status,
+  code: 'AUTH_ERROR',
+  __isAuthError: true,
+  name: 'AuthError',
+});
+
+/**
  * Mock Supabase auth helpers
  */
 export const mockSupabaseAuth = {
@@ -84,13 +120,8 @@ export const mockSupabaseAuth = {
    */
   success: (user: { id: string; email: string } = { id: 'test-auth-user-id', email: 'test@example.com' }) => ({
     data: {
-      user,
-      session: {
-        access_token: generateMockToken(),
-        refresh_token: 'mock-refresh-token',
-        expires_in: 3600,
-        token_type: 'bearer',
-      },
+      user: createMockSupabaseUser(user),
+      session: createMockSupabaseSession(user),
     },
     error: null,
   }),
@@ -100,17 +131,14 @@ export const mockSupabaseAuth = {
    */
   failure: (message: string = 'Invalid credentials') => ({
     data: { user: null, session: null },
-    error: {
-      message,
-      status: 401,
-    },
+    error: createMockAuthError(message, 401),
   }),
 
   /**
    * Mock getUser response
    */
   getUser: (user: { id: string; email: string } = { id: 'test-auth-user-id', email: 'test@example.com' }) => ({
-    data: { user },
+    data: { user: createMockSupabaseUser(user) },
     error: null,
   }),
 };

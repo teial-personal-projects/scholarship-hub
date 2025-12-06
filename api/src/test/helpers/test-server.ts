@@ -4,18 +4,45 @@
  */
 
 import express, { Express } from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
 import request from 'supertest';
 import { vi } from 'vitest';
+import apiRoutes from '../../routes/index.js';
+import { errorHandler } from '../../middleware/error-handler.js';
 
 /**
- * Create a test Express app with minimal configuration
+ * Create a test Express app with full configuration matching production
  */
 export const createTestApp = (): Express => {
   const app = express();
 
-  // Basic middleware
+  // Middleware (matching production setup)
+  app.use(helmet());
+  app.use(cors());
+  app.use(morgan('dev'));
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
+
+  // Health check
+  app.get('/health', (_req, res) => {
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  });
+
+  // API routes
+  app.use('/api', apiRoutes);
+
+  // 404 handler
+  app.use((_req, res) => {
+    res.status(404).json({
+      error: 'Not Found',
+      message: 'The requested resource was not found',
+    });
+  });
+
+  // Error handler (must be last)
+  app.use(errorHandler);
 
   return app;
 };

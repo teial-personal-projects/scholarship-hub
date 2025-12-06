@@ -2090,8 +2090,8 @@ scholarship-hub/
   - Round-trip conversion tests to ensure data integrity
 - **Test Coverage**: All major service methods covered with mock Supabase client, testing success paths, error handling, and edge cases
 
-### TODO 7.4: Write Backend Integration Tests
-- [ ] Test API endpoints with supertest:
+### TODO 7.4: Write Backend Integration Tests ✅ COMPLETED
+- [✅] Test API endpoints with supertest:
   - `routes/users.test.ts`:
     - GET /api/users/me (authenticated)
     - PATCH /api/users/me
@@ -2114,12 +2114,12 @@ scholarship-hub/
   - `routes/recommendations.test.ts`:
     - Status updates
     - Due date tracking
-- [ ] Test authentication flows:
+- [✅] Test authentication flows:
   - Registration
   - Login
   - Token refresh
   - Protected route access
-- [ ] Test error handling:
+- [✅] Test error handling:
   - 404 for non-existent resources
   - 401 for unauthenticated requests
   - 403 for unauthorized access

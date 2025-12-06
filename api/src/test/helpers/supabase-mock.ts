@@ -151,6 +151,7 @@ export const createMockSupabaseClient = (options: {
       signInWithPassword: vi.fn(),
       signUp: vi.fn(),
       signOut: vi.fn(),
+      refreshSession: vi.fn(),
     },
     storage: {
       from: vi.fn(),
