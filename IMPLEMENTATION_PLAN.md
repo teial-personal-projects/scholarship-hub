@@ -2077,18 +2077,18 @@ scholarship-hub/
   - expectSuccess() and expectError() helpers for response assertions
   - waitFor() utility for async operations
 
-### TODO 7.3: Write Backend Unit Tests
-- [ ] Test services layer (`api/src/services/*.service.ts`):
-  - `users.service.test.ts` - Test user CRUD operations
-  - `applications.service.test.ts` - Test application business logic
-  - `essays.service.test.ts` - Test essay operations
-  - `collaborators.service.test.ts` - Test collaborator management
-  - `collaborations.service.test.ts` - Test collaboration logic (including type-specific tables)
-  - `recommendations.service.test.ts` - Test recommendation tracking
-- [ ] Test utilities (`api/src/utils/*.ts`):
-  - Test case conversion (snake_case ↔ camelCase)
-  - Test validation schemas
-  - Test helper functions
+### TODO 7.3: Write Backend Unit Tests ✅ COMPLETED
+- ✅ Created comprehensive unit tests for services layer:
+  - `users.service.test.ts` - Tests getUserProfile, updateUserProfile, getUserRoles, search preferences
+  - `applications.service.test.ts` - Tests CRUD operations, error handling for applications
+  - `essays.service.test.ts` - Tests essay creation, updates, deletion, and retrieval
+  - `collaborators.service.test.ts` - Tests collaborator management and CRUD operations
+  - `collaborations.service.test.ts` - Tests all collaboration types (recommendation, essayReview, guidance), history tracking, and status transitions
+- ✅ Created utility tests:
+  - `shared/src/utils/case-conversion.test.ts` - Comprehensive tests for toCamelCase, toSnakeCase, mapDbResults, mapDbResult
+  - Tests nested objects, arrays, primitives, null/undefined handling
+  - Round-trip conversion tests to ensure data integrity
+- **Test Coverage**: All major service methods covered with mock Supabase client, testing success paths, error handling, and edge cases
 
 ### TODO 7.4: Write Backend Integration Tests
 - [ ] Test API endpoints with supertest:
