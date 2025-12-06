@@ -2051,24 +2051,31 @@ scholarship-hub/
   - `npm run test:ui` - Run tests with UI
   - `npm run test:coverage` - Run tests with coverage report
 
-### TODO 7.2: Create Backend Test Utilities & Mocks
-- [ ] Create `api/src/test/helpers/supabase-mock.ts`:
-  - Mock Supabase client for testing
-  - Mock database queries and responses
-  - Helper functions for common test data
-- [ ] Create `api/src/test/helpers/auth-mock.ts`:
-  - Mock authentication middleware
-  - Generate test JWT tokens
-  - Mock user sessions
-- [ ] Create `api/src/test/fixtures/` directory:
-  - `users.fixture.ts` - Sample user data
-  - `applications.fixture.ts` - Sample application data
-  - `collaborators.fixture.ts` - Sample collaborator data
-  - `essays.fixture.ts` - Sample essay data
-  - `recommendations.fixture.ts` - Sample recommendation data
-- [ ] Create `api/src/test/helpers/test-server.ts`:
-  - Helper to spin up Express app for integration tests
-  - Clean database state between tests
+### TODO 7.2: Create Backend Test Utilities & Mocks ✅ COMPLETED
+- ✅ Created `api/src/test/helpers/supabase-mock.ts`:
+  - MockQueryBuilder class that supports method chaining (select, insert, update, delete, eq, etc.)
+  - createMockSupabaseClient() function with configurable responses
+  - Mock helper functions: generateMockUser, generateMockApplication, generateMockEssay, generateMockCollaborator, generateMockCollaboration
+  - Supports async operations via then() method
+- ✅ Created `api/src/test/helpers/auth-mock.ts`:
+  - Mock authentication middleware for injecting test users
+  - generateMockToken() for creating test JWT tokens
+  - createMockUser() for generating test user objects
+  - createMockAuthRequest(), createMockResponse(), createMockNext() for Express testing
+  - mockSupabaseAuth helper with success/failure/getUser scenarios
+- ✅ Created `api/src/test/fixtures/` directory with 5 fixture files:
+  - `users.fixture.ts` - 3+ sample users with different configurations
+  - `applications.fixture.ts` - Multiple applications with various statuses (In Progress, Submitted, Awarded, Rejected, Upcoming)
+  - `collaborators.fixture.ts` - 5 collaborators with different relationships (Teacher, Counselor, Mentor, Coach, Employer)
+  - `essays.fixture.ts` - 5 essays including drafts and completed essays
+  - `collaborations.fixture.ts` - 8+ collaborations covering all types (recommendation, essayReview, guidance) and statuses
+- ✅ Created `api/src/test/helpers/test-server.ts`:
+  - createTestApp() for setting up Express app for tests
+  - createTestAgent() for supertest integration
+  - dbTestHelpers with cleanup, seed, and reset functions
+  - authenticatedRequest() helper for making authenticated API calls
+  - expectSuccess() and expectError() helpers for response assertions
+  - waitFor() utility for async operations
 
 ### TODO 7.3: Write Backend Unit Tests
 - [ ] Test services layer (`api/src/services/*.service.ts`):
