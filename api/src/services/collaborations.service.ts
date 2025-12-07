@@ -76,6 +76,14 @@ export const getCollaborationsByApplicationId = async (
     .from('collaborations')
     .select(`
       *,
+      collaborators(
+        id,
+        first_name,
+        last_name,
+        email_address,
+        relationship,
+        phone_number
+      ),
       collaboration_invites(
         id,
         invite_token,
@@ -92,15 +100,19 @@ export const getCollaborationsByApplicationId = async (
 
   if (error) throw error;
 
-  // Flatten the invite data (get most recent invite if multiple exist)
+  // Flatten the invite data and include collaborator info
   const collaborations = (data || []).map((collab: any) => {
-    const { collaboration_invites, ...collabData } = collab;
+    const { collaboration_invites, collaborators, ...collabData } = collab;
     const mostRecentInvite = collaboration_invites && collaboration_invites.length > 0
       ? collaboration_invites[collaboration_invites.length - 1]
       : null;
 
+    // Flatten collaborator data (should be a single object, not array)
+    const collaborator = Array.isArray(collaborators) ? collaborators[0] : collaborators;
+
     return {
       ...collabData,
+      collaborator: collaborator || null,
       invite: mostRecentInvite,
     };
   });
@@ -152,7 +164,15 @@ export const getCollaborationById = async (collaborationId: number, userId: numb
     .from('collaborations')
     .select(`
       *,
-      collaborators!inner(user_id)
+      collaborators!inner(
+        id,
+        first_name,
+        last_name,
+        email_address,
+        relationship,
+        phone_number,
+        user_id
+      )
     `)
     .eq('id', collaborationId)
     .eq('collaborators.user_id', userId)
@@ -165,8 +185,9 @@ export const getCollaborationById = async (collaborationId: number, userId: numb
     throw error;
   }
 
-  // Remove the nested collaborators object
+  // Extract and flatten collaborator data
   const { collaborators, ...collaboration } = data as any;
+  const collaborator = Array.isArray(collaborators) ? collaborators[0] : collaborators;
 
   // Fetch type-specific data based on collaboration_type
   const typeSpecificData = await getTypeSpecificData(
@@ -176,6 +197,7 @@ export const getCollaborationById = async (collaborationId: number, userId: numb
 
   return {
     ...collaboration,
+    collaborator: collaborator || null,
     ...typeSpecificData,
   };
 };
@@ -495,9 +517,37 @@ export const deleteCollaboration = async (collaborationId: number, userId: numbe
   await getCollaborationById(collaborationId, userId);
 
   // Delete will cascade to type-specific tables
-  const { error } = await supabase.from('collaborations').delete().eq('id', collaborationId);
+  const { data, error } = await supabase
+    .from('collaborations')
+    .delete()
+    .eq('id', collaborationId)
+    .select();
 
-  if (error) throw error;
+  if (error) {
+    // Log error with context for troubleshooting
+    if (process.env.NODE_ENV === 'development') {
+      console.error('❌ Failed to delete collaboration:', {
+        error: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+        collaborationId,
+        userId,
+      });
+    } else {
+      console.error('❌ Failed to delete collaboration:', {
+        error: error.message,
+        code: error.code,
+        collaborationId,
+      });
+    }
+    throw error;
+  }
+
+  // Verify deletion succeeded
+  if (process.env.NODE_ENV === 'development' && data) {
+    console.log('✅ Collaboration deleted:', { collaborationId, deletedRows: data.length });
+  }
 };
 
 /**
@@ -624,11 +674,11 @@ export const sendCollaborationInvitation = async (
   const collaboratorName =
     collaboration.collaborators.first_name && collaboration.collaborators.last_name
       ? `${collaboration.collaborators.first_name} ${collaboration.collaborators.last_name}`
-      : collaboration.collaborators.email;
+      : collaboration.collaborators.email_address;
 
   // Send email via Resend
   const resendEmailId = await sendCollaborationInvite({
-    collaboratorEmail: collaboration.collaborators.email,
+    collaboratorEmail: collaboration.collaborators.email_address,
     collaboratorName,
     collaborationType: collaboration.collaboration_type as 'recommendation' | 'essayReview' | 'guidance',
     studentName,
@@ -678,7 +728,7 @@ export const sendCollaborationInvitation = async (
   // Log action in history
   await addCollaborationHistory(collaborationId, userId, {
     action: 'invited',
-    details: `Invitation sent to ${collaboration.collaborators.email}`,
+    details: `Invitation sent to ${collaboration.collaborators.email_address}`,
   });
 
   return invite;
@@ -776,11 +826,11 @@ export const resendCollaborationInvitation = async (
   const collaboratorName =
     collaboration.collaborators.first_name && collaboration.collaborators.last_name
       ? `${collaboration.collaborators.first_name} ${collaboration.collaborators.last_name}`
-      : collaboration.collaborators.email;
+      : collaboration.collaborators.email_address;
 
   // Send new email via Resend
   const resendEmailId = await sendCollaborationInvite({
-    collaboratorEmail: collaboration.collaborators.email,
+    collaboratorEmail: collaboration.collaborators.email_address,
     collaboratorName,
     collaborationType: collaboration.collaboration_type as 'recommendation' | 'essayReview' | 'guidance',
     studentName,
@@ -815,7 +865,7 @@ export const resendCollaborationInvitation = async (
   // Log resend action in history
   await addCollaborationHistory(collaborationId, userId, {
     action: 'resend',
-    details: `Invitation resent to ${collaboration.collaborators.email}`,
+    details: `Invitation resent to ${collaboration.collaborators.email_address}`,
   });
 
   return updatedInvite;

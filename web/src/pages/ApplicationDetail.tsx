@@ -49,6 +49,7 @@ import EssayForm from '../components/EssayForm';
 import SendInviteDialog from '../components/SendInviteDialog';
 import CollaborationHistory from '../components/CollaborationHistory';
 import AddCollaborationModal from '../components/AddCollaborationModal';
+import EditCollaborationModal from '../components/EditCollaborationModal';
 import { useRef } from 'react';
 import { useToastHelpers } from '../utils/toast';
 
@@ -72,6 +73,11 @@ function ApplicationDetail() {
   const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();
   const cancelRef = useRef<HTMLButtonElement>(null);
 
+  // Collaboration deletion
+  const [deleteCollaborationId, setDeleteCollaborationId] = useState<number | null>(null);
+  const { isOpen: isDeleteCollabOpen, onOpen: onDeleteCollabOpen, onClose: onDeleteCollabClose } = useDisclosure();
+  const cancelCollabRef = useRef<HTMLButtonElement>(null);
+
   // Collaboration invitation
   const { isOpen: isInviteDialogOpen, onOpen: onInviteDialogOpen, onClose: onInviteDialogClose } = useDisclosure();
   const [selectedCollaboration, setSelectedCollaboration] = useState<CollaborationResponse | null>(null);
@@ -82,6 +88,10 @@ function ApplicationDetail() {
 
   // Add collaboration modal
   const { isOpen: isAddCollabOpen, onOpen: onAddCollabOpen, onClose: onAddCollabClose } = useDisclosure();
+  
+  // Edit collaboration modal
+  const { isOpen: isEditCollabOpen, onOpen: onEditCollabOpen, onClose: onEditCollabClose } = useDisclosure();
+  const [selectedCollaborationForEdit, setSelectedCollaborationForEdit] = useState<CollaborationResponse | null>(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -109,11 +119,18 @@ function ApplicationDetail() {
           const collabsData = await apiGet<CollaborationResponse[]>(`/applications/${id}/collaborations`);
           setCollaborations(collabsData || []);
 
-          // Fetch collaborator details for each collaboration
+          // Extract collaborator data from collaboration responses
+          // Collaborator data is now included in each collaboration response
           if (collabsData && collabsData.length > 0) {
             const collaboratorMap = new Map<number, CollaboratorResponse>();
             for (const collab of collabsData) {
-              if (!collaboratorMap.has(collab.collaboratorId)) {
+              // Check if collaborator is in the response (not in type yet, so use any)
+              const collabAny = collab as any;
+              if (collabAny.collaborator && collabAny.collaborator.id) {
+                // Use collaborator from response
+                collaboratorMap.set(collabAny.collaborator.id, collabAny.collaborator);
+              } else if (!collaboratorMap.has(collab.collaboratorId)) {
+                // Fallback: fetch collaborator if not in response
                 try {
                   const collaboratorData = await apiGet<CollaboratorResponse>(`/collaborators/${collab.collaboratorId}`);
                   collaboratorMap.set(collab.collaboratorId, collaboratorData);
@@ -256,20 +273,85 @@ function ApplicationDetail() {
     onHistoryOpen();
   };
 
+  // Handle editing collaboration
+  const handleEditCollaboration = (collaboration: CollaborationResponse) => {
+    setSelectedCollaborationForEdit(collaboration);
+    onEditCollabOpen();
+  };
+
+  // Handle deleting collaboration
+  const handleDeleteCollaborationClick = (collaborationId: number) => {
+    setDeleteCollaborationId(collaborationId);
+    onDeleteCollabOpen();
+  };
+
+  const handleDeleteCollaborationConfirm = async () => {
+    if (!deleteCollaborationId) return;
+
+    try {
+      await apiDelete(`/collaborations/${deleteCollaborationId}`);
+      showSuccess('Success', 'Collaboration deleted successfully', 3000);
+
+      // Refresh collaborations list
+      if (id) {
+        const collabsData = await apiGet<CollaborationResponse[]>(`/applications/${id}/collaborations`);
+        setCollaborations(collabsData || []);
+
+        // Refresh collaborator details
+        const collaboratorIds = new Set(
+          (collabsData || []).map((c) => c.collaboratorId)
+        );
+        if (collaboratorIds.size > 0) {
+          const collaboratorPromises = Array.from(collaboratorIds).map((collabId) =>
+            apiGet<CollaboratorResponse>(`/collaborators/${collabId}`).catch(() => null)
+          );
+          const collaboratorResults = await Promise.all(collaboratorPromises);
+          const collaboratorMap = new Map<number, CollaboratorResponse>();
+          collaboratorResults.forEach((collab) => {
+            if (collab) {
+              collaboratorMap.set(collab.id, collab);
+            }
+          });
+          setCollaborators(collaboratorMap);
+        } else {
+          setCollaborators(new Map());
+        }
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to delete collaboration';
+      showError('Error', errorMessage);
+    } finally {
+      setDeleteCollaborationId(null);
+      onDeleteCollabClose();
+    }
+  };
+
   // Handle adding collaboration success
   const handleCollaborationSuccess = async () => {
-    if (!id) return;
+    if (!id) {
+      console.warn('handleCollaborationSuccess: No application ID');
+      return;
+    }
 
-    // Refresh collaborations list after adding
+    console.log('Refreshing collaborations list...');
+    
+    // Refresh collaborations list after adding/editing
     try {
       const collabsData = await apiGet<CollaborationResponse[]>(`/applications/${id}/collaborations`);
+      console.log('Fetched collaborations:', collabsData?.length || 0);
       setCollaborations(collabsData || []);
 
-      // Fetch collaborator details for new collaborations
+      // Update collaborator map from collaboration data (collaborator is now included in response)
       if (collabsData && collabsData.length > 0) {
-        const collaboratorMap = new Map(collaborators);
+        const collaboratorMap = new Map<number, CollaboratorResponse>();
         for (const collab of collabsData) {
-          if (!collaboratorMap.has(collab.collaboratorId)) {
+          // Use collaborator data from the collaboration response if available
+          // Type assertion needed until shared package is rebuilt with updated types
+          const collabWithCollaborator = collab as CollaborationResponse & { collaborator?: CollaboratorResponse | null };
+          if (collabWithCollaborator.collaborator && collabWithCollaborator.collaborator.id) {
+            collaboratorMap.set(collabWithCollaborator.collaborator.id, collabWithCollaborator.collaborator);
+          } else if (!collaboratorMap.has(collab.collaboratorId)) {
+            // Fallback: fetch collaborator if not in response
             try {
               const collaboratorData = await apiGet<CollaboratorResponse>(`/collaborators/${collab.collaboratorId}`);
               collaboratorMap.set(collab.collaboratorId, collaboratorData);
@@ -279,9 +361,21 @@ function ApplicationDetail() {
           }
         }
         setCollaborators(collaboratorMap);
+        console.log('Updated collaborator map with', collaboratorMap.size, 'collaborators');
+      } else {
+        setCollaborators(new Map());
       }
     } catch (err) {
-      setCollaborations([]);
+      console.error('Failed to refresh collaborations:', err);
+      showError('Error', 'Failed to refresh collaborations list');
+      // Still try to reload the page data
+      try {
+        const collabsData = await apiGet<CollaborationResponse[]>(`/applications/${id}/collaborations`);
+        setCollaborations(collabsData || []);
+      } catch (refreshErr) {
+        console.error('Failed to reload collaborations:', refreshErr);
+        setCollaborations([]);
+      }
     }
   };
 
@@ -640,7 +734,9 @@ function ApplicationDetail() {
                             return (
                               <Tr key={collab.id}>
                                 <Td>
-                                  {collaborator ? `${collaborator.name}` : 'Loading...'}
+                                  {collaborator 
+                                    ? `${collaborator.firstName} ${collaborator.lastName}` 
+                                    : 'Loading...'}
                                 </Td>
                                 <Td>
                                   <Badge colorScheme={getCollaborationStatusColor(collab.status)}>
@@ -664,6 +760,9 @@ function ApplicationDetail() {
                                       <MenuItem onClick={() => handleViewHistory(collab.id)}>
                                         View Details
                                       </MenuItem>
+                                      <MenuItem onClick={() => handleEditCollaboration(collab)}>
+                                        Edit
+                                      </MenuItem>
                                       {(collab.status === 'pending' || collab.status === 'not_invited') && (
                                         <MenuItem onClick={() => handleSendInvite(collab)}>
                                           Send Invite
@@ -674,7 +773,9 @@ function ApplicationDetail() {
                                           Resend Invite
                                         </MenuItem>
                                       )}
-                                      <MenuItem color="red.500">Remove</MenuItem>
+                                      <MenuItem color="red.500" onClick={() => handleDeleteCollaborationClick(collab.id)}>
+                                        Remove
+                                      </MenuItem>
                                     </MenuList>
                                   </Menu>
                                 </Td>
@@ -711,7 +812,9 @@ function ApplicationDetail() {
                             return (
                               <Tr key={collab.id}>
                                 <Td>
-                                  {collaborator ? `${collaborator.name}` : 'Loading...'}
+                                  {collaborator 
+                                    ? `${collaborator.firstName} ${collaborator.lastName}` 
+                                    : 'Loading...'}
                                 </Td>
                                 <Td>{essay?.title || 'Unknown Essay'}</Td>
                                 <Td>
@@ -736,6 +839,9 @@ function ApplicationDetail() {
                                       <MenuItem onClick={() => handleViewHistory(collab.id)}>
                                         View Details
                                       </MenuItem>
+                                      <MenuItem onClick={() => handleEditCollaboration(collab)}>
+                                        Edit
+                                      </MenuItem>
                                       {(collab.status === 'pending' || collab.status === 'not_invited') && (
                                         <MenuItem onClick={() => handleSendInvite(collab)}>
                                           Send Invite
@@ -746,7 +852,9 @@ function ApplicationDetail() {
                                           Resend Invite
                                         </MenuItem>
                                       )}
-                                      <MenuItem color="red.500">Remove</MenuItem>
+                                      <MenuItem color="red.500" onClick={() => handleDeleteCollaborationClick(collab.id)}>
+                                        Remove
+                                      </MenuItem>
                                     </MenuList>
                                   </Menu>
                                 </Td>
@@ -781,7 +889,9 @@ function ApplicationDetail() {
                             return (
                               <Tr key={collab.id}>
                                 <Td>
-                                  {collaborator ? `${collaborator.name}` : 'Loading...'}
+                                  {collaborator 
+                                    ? `${collaborator.firstName} ${collaborator.lastName}` 
+                                    : 'Loading...'}
                                 </Td>
                                 <Td>
                                   <Badge colorScheme={getCollaborationStatusColor(collab.status)}>
@@ -805,6 +915,9 @@ function ApplicationDetail() {
                                       <MenuItem onClick={() => handleViewHistory(collab.id)}>
                                         View Details
                                       </MenuItem>
+                                      <MenuItem onClick={() => handleEditCollaboration(collab)}>
+                                        Edit
+                                      </MenuItem>
                                       {(collab.status === 'pending' || collab.status === 'not_invited') && (
                                         <MenuItem onClick={() => handleSendInvite(collab)}>
                                           Send Invite
@@ -815,7 +928,9 @@ function ApplicationDetail() {
                                           Resend Invite
                                         </MenuItem>
                                       )}
-                                      <MenuItem color="red.500">Remove</MenuItem>
+                                      <MenuItem color="red.500" onClick={() => handleDeleteCollaborationClick(collab.id)}>
+                                        Remove
+                                      </MenuItem>
                                     </MenuList>
                                   </Menu>
                                 </Td>
@@ -905,6 +1020,42 @@ function ApplicationDetail() {
         essays={essays}
         onSuccess={handleCollaborationSuccess}
       />
+
+      {/* Edit Collaboration Modal */}
+      <EditCollaborationModal
+        isOpen={isEditCollabOpen}
+        onClose={onEditCollabClose}
+        collaboration={selectedCollaborationForEdit}
+        onSuccess={handleCollaborationSuccess}
+      />
+
+      {/* Delete Collaboration Confirmation Dialog */}
+      <AlertDialog
+        isOpen={isDeleteCollabOpen}
+        leastDestructiveRef={cancelCollabRef}
+        onClose={onDeleteCollabClose}
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+              Delete Collaboration
+            </AlertDialogHeader>
+
+            <AlertDialogBody>
+              Are you sure you want to delete this collaboration? This action cannot be undone.
+            </AlertDialogBody>
+
+            <AlertDialogFooter>
+              <Button ref={cancelCollabRef} onClick={onDeleteCollabClose}>
+                Cancel
+              </Button>
+              <Button colorScheme="red" onClick={handleDeleteCollaborationConfirm} ml={3}>
+                Delete
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
     </Container>
   );
 }
