@@ -23,11 +23,11 @@ import {
   Link,
   Flex,
   IconButton,
-  SimpleGrid,
-  Stat,
-  StatLabel,
-  StatNumber,
-  StatHelpText,
+  Tabs,
+  TabList,
+  TabPanels,
+  Tab,
+  TabPanel,
 } from '@chakra-ui/react';
 import { apiGet } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -46,6 +46,7 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [activeTab, setActiveTab] = useState(0);
   const itemsPerPage = 10;
 
   useEffect(() => {
@@ -78,28 +79,42 @@ function Dashboard() {
     fetchData();
   }, [user, showError]);
 
-  // Calculate statistics (must be before early returns)
-  const stats = useMemo(() => {
-    const saved = applications.filter(app => app.status === 'Not Started').length;
-    const inProgress = applications.filter(app => app.status === 'In Progress').length;
-    const submitted = applications.filter(app => app.status === 'Submitted' || app.status === 'Awarded' || app.status === 'Not Awarded').length;
-    return { saved, inProgress, submitted, total: applications.length };
+  // Count applications for tabs
+  const inProgressCount = useMemo(() => {
+    return applications.filter(app => app.status === 'In Progress').length;
   }, [applications]);
 
+  const submittedCount = useMemo(() => {
+    return applications.filter(app => 
+      app.status === 'Submitted' || app.status === 'Awarded' || app.status === 'Not Awarded'
+    ).length;
+  }, [applications]);
+
+  // Filter applications by tab (must be before early returns)
+  const filteredApplications = useMemo(() => {
+    if (activeTab === 0) {
+      // "In Progress" tab - show applications with status "In Progress"
+      return applications.filter(app => app.status === 'In Progress');
+    } else {
+      // "Submitted" tab - show applications with status "Submitted", "Awarded", or "Not Awarded"
+      return applications.filter(app => 
+        app.status === 'Submitted' || app.status === 'Awarded' || app.status === 'Not Awarded'
+      );
+    }
+  }, [applications, activeTab]);
+
   // Pagination calculations (must be before early returns)
-  const totalPages = Math.ceil(applications.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredApplications.length / itemsPerPage);
   const paginatedApplications = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
-    return applications.slice(startIndex, endIndex);
-  }, [applications, currentPage, itemsPerPage]);
+    return filteredApplications.slice(startIndex, endIndex);
+  }, [filteredApplications, currentPage, itemsPerPage]);
 
-  // Reset to page 1 when applications change
+  // Reset to page 1 when applications change or tab changes
   useEffect(() => {
-    if (applications.length > 0) {
-      setCurrentPage(1);
-    }
-  }, [applications.length]);
+    setCurrentPage(1);
+  }, [applications.length, activeTab]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -154,57 +169,6 @@ function Dashboard() {
             </VStack>
           </Box>
 
-          {/* Statistics Cards - Minimal Academic Style */}
-          <SimpleGrid columns={{ base: 1, sm: 3 }} spacing={{ base: '4', md: '6' }}>
-            <Card variant="academic" bg="highlight.50">
-              <CardBody>
-                <Stat>
-                  <StatLabel color="brand.700" fontWeight="semibold" fontSize="sm" mb="1">
-                    Saved
-                  </StatLabel>
-                  <StatNumber color="brand.500" fontSize={{ base: '2xl', md: '3xl' }} fontWeight="bold">
-                    {stats.saved}
-                  </StatNumber>
-                  <StatHelpText color="gray.600" fontSize="xs" m="0">
-                    Scholarships to explore
-                  </StatHelpText>
-                </Stat>
-              </CardBody>
-            </Card>
-
-            <Card variant="academic" bg="highlight.50">
-              <CardBody>
-                <Stat>
-                  <StatLabel color="brand.700" fontWeight="semibold" fontSize="sm" mb="1">
-                    In Progress
-                  </StatLabel>
-                  <StatNumber color="accent.400" fontSize={{ base: '2xl', md: '3xl' }} fontWeight="bold">
-                    {stats.inProgress}
-                  </StatNumber>
-                  <StatHelpText color="gray.600" fontSize="xs" m="0">
-                    Applications underway
-                  </StatHelpText>
-                </Stat>
-              </CardBody>
-            </Card>
-
-            <Card variant="academic" bg="highlight.50">
-              <CardBody>
-                <Stat>
-                  <StatLabel color="brand.700" fontWeight="semibold" fontSize="sm" mb="1">
-                    Submitted
-                  </StatLabel>
-                  <StatNumber color="brand.500" fontSize={{ base: '2xl', md: '3xl' }} fontWeight="bold">
-                    {stats.submitted}
-                  </StatNumber>
-                  <StatHelpText color="gray.600" fontSize="xs" m="0">
-                    Applications sent
-                  </StatHelpText>
-                </Stat>
-              </CardBody>
-            </Card>
-          </SimpleGrid>
-
           {/* Actions */}
           <HStack spacing="4" flexWrap="wrap">
             <Button
@@ -232,16 +196,9 @@ function Dashboard() {
             borderBottom="1px solid"
             borderColor="brand.200"
           >
-            <Flex justify="space-between" align="center" flexWrap="wrap" gap="4">
-              <Heading size="md" color="brand.700">
-                Your Applications
-              </Heading>
-              {applications.length > 0 && (
-                <Badge colorScheme="accent" fontSize="sm" px="3" py="1" borderRadius="full">
-                  {applications.length} total
-                </Badge>
-              )}
-            </Flex>
+            <Heading size="md" color="brand.700">
+              Your Applications
+            </Heading>
           </CardHeader>
           <CardBody>
             {applications.length === 0 ? (
@@ -264,199 +221,414 @@ function Dashboard() {
                 </Button>
               </Box>
             ) : (
-              <Stack spacing="4">
-                {/* Desktop Table View */}
-                <Box overflowX="auto" display={{ base: 'none', md: 'block' }}>
-                  <Table variant="simple" size="md">
-                    <Thead>
-                      <Tr>
-                        <Th>Scholarship Name</Th>
-                        <Th>Organization</Th>
-                        <Th>Status</Th>
-                        <Th>Due Date</Th>
-                        <Th>Actions</Th>
-                      </Tr>
-                    </Thead>
-                    <Tbody>
-                      {paginatedApplications.map((app) => (
-                        <Tr
-                          key={app.id}
-                          _hover={{
-                            bg: 'highlight.50',
-                            cursor: 'pointer',
-                          }}
-                          onClick={() => navigate(`/applications/${app.id}`)}
-                        >
-                          <Td fontWeight="medium" color="brand.700">{app.scholarshipName}</Td>
-                          <Td color="gray.600">{app.organization || '-'}</Td>
-                          <Td>
-                            <Badge
-                              colorScheme={
-                                app.status === 'Submitted' || app.status === 'Awarded'
-                                  ? 'success'
-                                  : app.status === 'In Progress'
-                                  ? 'accent'
-                                  : app.status === 'Not Started'
-                                  ? 'gray'
-                                  : 'orange'
-                              }
-                              borderRadius="full"
-                              px="3"
-                              py="1"
-                              fontWeight="semibold"
-                            >
-                              {app.status}
-                            </Badge>
-                          </Td>
-                          <Td color="gray.700">
-                            {app.dueDate
-                              ? new Date(app.dueDate).toLocaleDateString()
-                              : '-'}
-                          </Td>
-                          <Td>
-                            <Link
-                              color="accent.400"
-                              fontWeight="semibold"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                navigate(`/applications/${app.id}`);
-                              }}
+              <Tabs index={activeTab} onChange={setActiveTab}>
+                <TabList>
+                  <Tab>
+                    In Progress
+                    {inProgressCount > 0 && (
+                      <Badge ml="2" colorScheme="accent" borderRadius="full" px="2" py="0.5">
+                        {inProgressCount}
+                      </Badge>
+                    )}
+                  </Tab>
+                  <Tab>
+                    Submitted
+                    {submittedCount > 0 && (
+                      <Badge ml="2" colorScheme="accent" borderRadius="full" px="2" py="0.5">
+                        {submittedCount}
+                      </Badge>
+                    )}
+                  </Tab>
+                </TabList>
+
+                <TabPanels>
+                  {/* In Progress Tab */}
+                  <TabPanel px="0" pt="6">
+                    {filteredApplications.length === 0 ? (
+                      <Box textAlign="center" py="12">
+                        <Box fontSize="5xl" mb="4" color="brand.500">
+                          📝
+                        </Box>
+                        <Text color="gray.600">No applications in progress yet.</Text>
+                      </Box>
+                    ) : (
+                      <Stack spacing="4">
+                        {/* Desktop Table View */}
+                        <Box overflowX="auto" display={{ base: 'none', md: 'block' }}>
+                          <Table variant="simple" size="md">
+                            <Thead>
+                              <Tr>
+                                <Th>Scholarship Name</Th>
+                                <Th>Organization</Th>
+                                <Th>Status</Th>
+                                <Th>Due Date</Th>
+                                <Th>Actions</Th>
+                              </Tr>
+                            </Thead>
+                            <Tbody>
+                              {paginatedApplications.map((app) => (
+                                <Tr
+                                  key={app.id}
+                                  _hover={{
+                                    bg: 'highlight.50',
+                                    cursor: 'pointer',
+                                  }}
+                                  onClick={() => navigate(`/applications/${app.id}`)}
+                                >
+                                  <Td fontWeight="medium" color="brand.700">{app.scholarshipName}</Td>
+                                  <Td color="gray.600">{app.organization || '-'}</Td>
+                                  <Td>
+                                    <Badge
+                                      colorScheme="accent"
+                                      borderRadius="full"
+                                      px="3"
+                                      py="1"
+                                      fontWeight="semibold"
+                                    >
+                                      {app.status}
+                                    </Badge>
+                                  </Td>
+                                  <Td color="gray.700">
+                                    {app.dueDate
+                                      ? new Date(app.dueDate).toLocaleDateString()
+                                      : '-'}
+                                  </Td>
+                                  <Td>
+                                    <Link
+                                      color="accent.400"
+                                      fontWeight="semibold"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        navigate(`/applications/${app.id}`);
+                                      }}
+                                      cursor="pointer"
+                                      _hover={{ color: 'accent.500', textDecoration: 'underline' }}
+                                    >
+                                      View →
+                                    </Link>
+                                  </Td>
+                                </Tr>
+                              ))}
+                            </Tbody>
+                          </Table>
+                        </Box>
+
+                        {/* Mobile Card View */}
+                        <Stack spacing="4" display={{ base: 'flex', md: 'none' }}>
+                          {paginatedApplications.map((app) => (
+                            <Card
+                              key={app.id}
                               cursor="pointer"
-                              _hover={{ color: 'accent.500', textDecoration: 'underline' }}
+                              onClick={() => navigate(`/applications/${app.id}`)}
+                              variant="academic"
+                              bg="highlight.50"
+                              _hover={{
+                                transform: 'translateY(-2px)',
+                                boxShadow: 'lg',
+                              }}
+                              transition="all 0.3s"
                             >
-                              View →
-                            </Link>
-                          </Td>
-                        </Tr>
-                      ))}
-                    </Tbody>
-                  </Table>
-                </Box>
-
-                {/* Mobile Card View */}
-                <Stack spacing="4" display={{ base: 'flex', md: 'none' }}>
-                  {paginatedApplications.map((app) => (
-                    <Card
-                      key={app.id}
-                      cursor="pointer"
-                      onClick={() => navigate(`/applications/${app.id}`)}
-                      variant="academic"
-                      bg="highlight.50"
-                      _hover={{
-                        transform: 'translateY(-2px)',
-                        boxShadow: 'lg',
-                      }}
-                      transition="all 0.3s"
-                    >
-                      <CardBody>
-                        <Stack spacing="3">
-                          <Flex justify="space-between" align="start">
-                            <Box flex="1">
-                              <Text fontWeight="bold" fontSize="md" mb="1" color="gray.800">
-                                {app.scholarshipName}
-                              </Text>
-                              {app.organization && (
-                                <Text fontSize="sm" color="gray.600" mb="2">
-                                  {app.organization}
-                                </Text>
-                              )}
-                            </Box>
-                            <Badge
-                              colorScheme={
-                                app.status === 'Submitted' || app.status === 'Awarded'
-                                  ? 'success'
-                                  : app.status === 'In Progress'
-                                  ? 'accent'
-                                  : app.status === 'Not Started'
-                                  ? 'gray'
-                                  : 'orange'
-                              }
-                              borderRadius="full"
-                              px="3"
-                              py="1"
-                              fontWeight="semibold"
-                            >
-                              {app.status}
-                            </Badge>
-                          </Flex>
-                          <HStack spacing="4" fontSize="sm" color="gray.600">
-                            <Text>
-                              <Text as="span" fontWeight="semibold">Due:</Text>{' '}
-                              {app.dueDate
-                                ? new Date(app.dueDate).toLocaleDateString()
-                                : '-'}
-                            </Text>
-                          </HStack>
+                              <CardBody>
+                                <Stack spacing="3">
+                                  <Flex justify="space-between" align="start">
+                                    <Box flex="1">
+                                      <Text fontWeight="bold" fontSize="md" mb="1" color="brand.700">
+                                        {app.scholarshipName}
+                                      </Text>
+                                      {app.organization && (
+                                        <Text fontSize="sm" color="gray.600" mb="2">
+                                          {app.organization}
+                                        </Text>
+                                      )}
+                                    </Box>
+                                    <Badge
+                                      colorScheme="accent"
+                                      borderRadius="full"
+                                      px="3"
+                                      py="1"
+                                      fontWeight="semibold"
+                                    >
+                                      {app.status}
+                                    </Badge>
+                                  </Flex>
+                                  <HStack spacing="4" fontSize="sm" color="gray.600">
+                                    <Text>
+                                      <Text as="span" fontWeight="semibold">Due:</Text>{' '}
+                                      {app.dueDate
+                                        ? new Date(app.dueDate).toLocaleDateString()
+                                        : '-'}
+                                    </Text>
+                                  </HStack>
+                                </Stack>
+                              </CardBody>
+                            </Card>
+                          ))}
                         </Stack>
-                      </CardBody>
-                    </Card>
-                  ))}
-                </Stack>
 
-                {/* Pagination Controls */}
-                {totalPages > 1 && (
-                  <Flex
-                    justify="center"
-                    align="center"
-                    gap="2"
-                    flexWrap="wrap"
-                    pt="4"
-                    borderTop="1px solid"
-                    borderColor="gray.200"
-                  >
-                    <IconButton
-                      aria-label="Previous page"
-                      icon={<Text>‹</Text>}
-                      onClick={() => handlePageChange(currentPage - 1)}
-                      isDisabled={currentPage === 1}
-                      size="sm"
-                    />
+                        {/* Pagination Controls */}
+                        {totalPages > 1 && (
+                          <Flex
+                            justify="center"
+                            align="center"
+                            gap="2"
+                            flexWrap="wrap"
+                            pt="4"
+                            borderTop="1px solid"
+                            borderColor="gray.200"
+                          >
+                            <IconButton
+                              aria-label="Previous page"
+                              icon={<Text>‹</Text>}
+                              onClick={() => handlePageChange(currentPage - 1)}
+                              isDisabled={currentPage === 1}
+                              size="sm"
+                            />
 
-                    {/* Page Numbers */}
-                    <HStack spacing="1">
-                      {Array.from({ length: totalPages }, (_, i) => i + 1)
-                        .filter((page) => {
-                          // Show first page, last page, current page, and pages around current
-                          if (page === 1 || page === totalPages) return true;
-                          if (Math.abs(page - currentPage) <= 1) return true;
-                          return false;
-                        })
-                        .map((page, index, array) => {
-                          // Add ellipsis between non-consecutive pages
-                          const prevPage = array[index - 1];
-                          const showEllipsis = prevPage && page - prevPage > 1;
+                            <HStack spacing="1">
+                              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                                .filter((page) => {
+                                  if (page === 1 || page === totalPages) return true;
+                                  if (Math.abs(page - currentPage) <= 1) return true;
+                                  return false;
+                                })
+                                .map((page, index, array) => {
+                                  const prevPage = array[index - 1];
+                                  const showEllipsis = prevPage && page - prevPage > 1;
 
-                          return (
-                            <Box key={page}>
-                              {showEllipsis && (
-                                <Text as="span" px="2" color="gray.500">
-                                  ...
-                                </Text>
-                              )}
-                              <Button
-                                size="sm"
-                                onClick={() => handlePageChange(page)}
-                                colorScheme={currentPage === page ? 'accent' : 'gray'}
-                                variant={currentPage === page ? 'solid' : 'outline'}
-                                borderRadius="md"
-                              >
-                                {page}
-                              </Button>
-                            </Box>
-                          );
-                        })}
-                    </HStack>
+                                  return (
+                                    <Box key={page}>
+                                      {showEllipsis && (
+                                        <Text as="span" px="2" color="gray.500">
+                                          ...
+                                        </Text>
+                                      )}
+                                      <Button
+                                        size="sm"
+                                        onClick={() => handlePageChange(page)}
+                                        colorScheme={currentPage === page ? 'accent' : 'gray'}
+                                        variant={currentPage === page ? 'solid' : 'outline'}
+                                        borderRadius="md"
+                                      >
+                                        {page}
+                                      </Button>
+                                    </Box>
+                                  );
+                                })}
+                            </HStack>
 
-                    <IconButton
-                      aria-label="Next page"
-                      icon={<Text>›</Text>}
-                      onClick={() => handlePageChange(currentPage + 1)}
-                      isDisabled={currentPage === totalPages}
-                      size="sm"
-                    />
-                  </Flex>
-                )}
-              </Stack>
+                            <IconButton
+                              aria-label="Next page"
+                              icon={<Text>›</Text>}
+                              onClick={() => handlePageChange(currentPage + 1)}
+                              isDisabled={currentPage === totalPages}
+                              size="sm"
+                            />
+                          </Flex>
+                        )}
+                      </Stack>
+                    )}
+                  </TabPanel>
+
+                  {/* Submitted Tab */}
+                  <TabPanel px="0" pt="6">
+                    {filteredApplications.length === 0 ? (
+                      <Box textAlign="center" py="12">
+                        <Box fontSize="5xl" mb="4" color="brand.500">
+                          ✅
+                        </Box>
+                        <Text color="gray.600">No submitted applications yet.</Text>
+                      </Box>
+                    ) : (
+                      <Stack spacing="4">
+                        {/* Desktop Table View */}
+                        <Box overflowX="auto" display={{ base: 'none', md: 'block' }}>
+                          <Table variant="simple" size="md">
+                            <Thead>
+                              <Tr>
+                                <Th>Scholarship Name</Th>
+                                <Th>Organization</Th>
+                                <Th>Status</Th>
+                                <Th>Due Date</Th>
+                                <Th>Actions</Th>
+                              </Tr>
+                            </Thead>
+                            <Tbody>
+                              {paginatedApplications.map((app) => (
+                                <Tr
+                                  key={app.id}
+                                  _hover={{
+                                    bg: 'highlight.50',
+                                    cursor: 'pointer',
+                                  }}
+                                  onClick={() => navigate(`/applications/${app.id}`)}
+                                >
+                                  <Td fontWeight="medium" color="brand.700">{app.scholarshipName}</Td>
+                                  <Td color="gray.600">{app.organization || '-'}</Td>
+                                  <Td>
+                                    <Badge
+                                      colorScheme={
+                                        app.status === 'Awarded'
+                                          ? 'success'
+                                          : app.status === 'Submitted'
+                                          ? 'success'
+                                          : 'orange'
+                                      }
+                                      borderRadius="full"
+                                      px="3"
+                                      py="1"
+                                      fontWeight="semibold"
+                                    >
+                                      {app.status}
+                                    </Badge>
+                                  </Td>
+                                  <Td color="gray.700">
+                                    {app.dueDate
+                                      ? new Date(app.dueDate).toLocaleDateString()
+                                      : '-'}
+                                  </Td>
+                                  <Td>
+                                    <Link
+                                      color="accent.400"
+                                      fontWeight="semibold"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        navigate(`/applications/${app.id}`);
+                                      }}
+                                      cursor="pointer"
+                                      _hover={{ color: 'accent.500', textDecoration: 'underline' }}
+                                    >
+                                      View →
+                                    </Link>
+                                  </Td>
+                                </Tr>
+                              ))}
+                            </Tbody>
+                          </Table>
+                        </Box>
+
+                        {/* Mobile Card View */}
+                        <Stack spacing="4" display={{ base: 'flex', md: 'none' }}>
+                          {paginatedApplications.map((app) => (
+                            <Card
+                              key={app.id}
+                              cursor="pointer"
+                              onClick={() => navigate(`/applications/${app.id}`)}
+                              variant="academic"
+                              bg="highlight.50"
+                              _hover={{
+                                transform: 'translateY(-2px)',
+                                boxShadow: 'lg',
+                              }}
+                              transition="all 0.3s"
+                            >
+                              <CardBody>
+                                <Stack spacing="3">
+                                  <Flex justify="space-between" align="start">
+                                    <Box flex="1">
+                                      <Text fontWeight="bold" fontSize="md" mb="1" color="brand.700">
+                                        {app.scholarshipName}
+                                      </Text>
+                                      {app.organization && (
+                                        <Text fontSize="sm" color="gray.600" mb="2">
+                                          {app.organization}
+                                        </Text>
+                                      )}
+                                    </Box>
+                                    <Badge
+                                      colorScheme={
+                                        app.status === 'Awarded'
+                                          ? 'success'
+                                          : app.status === 'Submitted'
+                                          ? 'success'
+                                          : 'orange'
+                                      }
+                                      borderRadius="full"
+                                      px="3"
+                                      py="1"
+                                      fontWeight="semibold"
+                                    >
+                                      {app.status}
+                                    </Badge>
+                                  </Flex>
+                                  <HStack spacing="4" fontSize="sm" color="gray.600">
+                                    <Text>
+                                      <Text as="span" fontWeight="semibold">Due:</Text>{' '}
+                                      {app.dueDate
+                                        ? new Date(app.dueDate).toLocaleDateString()
+                                        : '-'}
+                                    </Text>
+                                  </HStack>
+                                </Stack>
+                              </CardBody>
+                            </Card>
+                          ))}
+                        </Stack>
+
+                        {/* Pagination Controls */}
+                        {totalPages > 1 && (
+                          <Flex
+                            justify="center"
+                            align="center"
+                            gap="2"
+                            flexWrap="wrap"
+                            pt="4"
+                            borderTop="1px solid"
+                            borderColor="gray.200"
+                          >
+                            <IconButton
+                              aria-label="Previous page"
+                              icon={<Text>‹</Text>}
+                              onClick={() => handlePageChange(currentPage - 1)}
+                              isDisabled={currentPage === 1}
+                              size="sm"
+                            />
+
+                            <HStack spacing="1">
+                              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                                .filter((page) => {
+                                  if (page === 1 || page === totalPages) return true;
+                                  if (Math.abs(page - currentPage) <= 1) return true;
+                                  return false;
+                                })
+                                .map((page, index, array) => {
+                                  const prevPage = array[index - 1];
+                                  const showEllipsis = prevPage && page - prevPage > 1;
+
+                                  return (
+                                    <Box key={page}>
+                                      {showEllipsis && (
+                                        <Text as="span" px="2" color="gray.500">
+                                          ...
+                                        </Text>
+                                      )}
+                                      <Button
+                                        size="sm"
+                                        onClick={() => handlePageChange(page)}
+                                        colorScheme={currentPage === page ? 'accent' : 'gray'}
+                                        variant={currentPage === page ? 'solid' : 'outline'}
+                                        borderRadius="md"
+                                      >
+                                        {page}
+                                      </Button>
+                                    </Box>
+                                  );
+                                })}
+                            </HStack>
+
+                            <IconButton
+                              aria-label="Next page"
+                              icon={<Text>›</Text>}
+                              onClick={() => handlePageChange(currentPage + 1)}
+                              isDisabled={currentPage === totalPages}
+                              size="sm"
+                            />
+                          </Flex>
+                        )}
+                      </Stack>
+                    )}
+                  </TabPanel>
+                </TabPanels>
+              </Tabs>
             )}
           </CardBody>
         </Card>
