@@ -9,17 +9,44 @@ import { mockCollaborations } from '../test/fixtures/collaborations.fixture.js';
 import { mockCollaborators } from '../test/fixtures/collaborators.fixture.js';
 import { mockApplications } from '../test/fixtures/applications.fixture.js';
 import { mockUsers } from '../test/fixtures/users.fixture.js';
-import { createMockSupabaseClient } from '../test/helpers/supabase-mock.js';
 import { mockSupabaseAuth } from '../test/helpers/auth-mock.js';
 
 // Mock Supabase
 vi.mock('../config/supabase.js', () => ({
-  supabase: createMockSupabaseClient(),
+  supabase: {
+    from: vi.fn(),
+    auth: {
+      getUser: vi.fn(),
+      signInWithPassword: vi.fn(),
+      signUp: vi.fn(),
+      signOut: vi.fn(),
+      refreshSession: vi.fn(),
+    },
+    storage: {
+      from: vi.fn(),
+    },
+  },
 }));
 
 // Mock utils
 vi.mock('../utils/supabase.js', () => ({
   getUserProfileByAuthId: vi.fn(),
+  getUserProfileById: vi.fn(),
+}));
+
+// Mock shared package
+vi.mock('@scholarship-hub/shared/utils/case-conversion', () => ({
+  toCamelCase: vi.fn((obj: any) => obj),
+}));
+
+// Mock collaborations service
+vi.mock('../services/collaborations.service.js', () => ({
+  getCollaborationsByApplicationId: vi.fn(),
+  getCollaborationById: vi.fn(),
+  createCollaboration: vi.fn(),
+  updateCollaboration: vi.fn(),
+  deleteCollaboration: vi.fn(),
+  getCollaborationHistory: vi.fn(),
 }));
 
 describe('Collaborations Routes', () => {
@@ -42,12 +69,32 @@ describe('Collaborations Routes', () => {
       mockSupabaseAuth.getUser({ id: 'auth-user-1', email: 'student1@example.com' })
     );
     vi.mocked(getUserProfileByAuthId).mockResolvedValue(mockUsers.student1);
+
+    // Mock user_roles query for role middleware
+    const mockRolesSelect = vi.fn().mockReturnValue({
+      eq: vi.fn().mockResolvedValue({
+        data: [{ role: 'student' }],
+        error: null,
+      }),
+    });
+
+    const mockFrom = vi.fn((table: string) => {
+      if (table === 'user_roles') {
+        return {
+          select: mockRolesSelect,
+        };
+      }
+      return {
+        select: mockRolesSelect,
+      };
+    });
+    vi.mocked(supabase.from).mockImplementation(mockFrom as any);
   };
 
   describe('POST /api/collaborations', () => {
     it('should create recommendation collaboration when authenticated', async () => {
       await setupAuth();
-      const { supabase } = await import('../config/supabase.js');
+      const collaborationsService = await import('../services/collaborations.service.js');
 
       const newCollaboration = {
         collaboratorId: 1,
@@ -62,58 +109,7 @@ describe('Collaborations Routes', () => {
         id: 10,
       };
 
-      const mockFrom = vi.fn((table: string) => {
-        if (table === 'collaborators') {
-          return {
-            select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({
-                  data: mockCollaborators.teacher,
-                  error: null,
-                }),
-              }),
-            }),
-          };
-        }
-        if (table === 'applications') {
-          return {
-            select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({
-                  data: mockApplications.inProgress,
-                  error: null,
-                }),
-              }),
-            }),
-          };
-        }
-        if (table === 'collaborations') {
-          return {
-            insert: vi.fn().mockReturnValue({
-              select: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({
-                  data: createdCollaboration,
-                  error: null,
-                }),
-              }),
-            }),
-          };
-        }
-        if (table === 'recommendation_collaborations') {
-          return {
-            insert: vi.fn().mockReturnValue({
-              select: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({
-                  data: { collaboration_id: 10, portal_url: null },
-                  error: null,
-                }),
-              }),
-            }),
-          };
-        }
-        return {};
-      });
-      vi.mocked(supabase.from).mockImplementation(mockFrom as any);
+      vi.mocked(collaborationsService.createCollaboration).mockResolvedValue(createdCollaboration);
 
       const response = await authenticatedRequest(agent, 'valid-token')
         .post('/api/collaborations')
@@ -121,12 +117,12 @@ describe('Collaborations Routes', () => {
 
       expect(response.status).toBe(201);
       expect(response.body).toHaveProperty('id');
-      expect(response.body).toHaveProperty('collaborationType', 'recommendation');
+      expect(response.body).toHaveProperty('collaboration_type', 'recommendation');
     });
 
     it('should create essay review collaboration when authenticated', async () => {
       await setupAuth();
-      const { supabase } = await import('../config/supabase.js');
+      const collaborationsService = await import('../services/collaborations.service.js');
 
       const newCollaboration = {
         collaboratorId: 1,
@@ -142,70 +138,19 @@ describe('Collaborations Routes', () => {
         id: 11,
       };
 
-      const mockFrom = vi.fn((table: string) => {
-        if (table === 'collaborators') {
-          return {
-            select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({
-                  data: mockCollaborators.teacher,
-                  error: null,
-                }),
-              }),
-            }),
-          };
-        }
-        if (table === 'applications') {
-          return {
-            select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({
-                  data: mockApplications.inProgress,
-                  error: null,
-                }),
-              }),
-            }),
-          };
-        }
-        if (table === 'collaborations') {
-          return {
-            insert: vi.fn().mockReturnValue({
-              select: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({
-                  data: createdCollaboration,
-                  error: null,
-                }),
-              }),
-            }),
-          };
-        }
-        if (table === 'essay_review_collaborations') {
-          return {
-            insert: vi.fn().mockReturnValue({
-              select: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({
-                  data: { collaboration_id: 11, essay_id: 1 },
-                  error: null,
-                }),
-              }),
-            }),
-          };
-        }
-        return {};
-      });
-      vi.mocked(supabase.from).mockImplementation(mockFrom as any);
+      vi.mocked(collaborationsService.createCollaboration).mockResolvedValue(createdCollaboration);
 
       const response = await authenticatedRequest(agent, 'valid-token')
         .post('/api/collaborations')
         .send(newCollaboration);
 
       expect(response.status).toBe(201);
-      expect(response.body).toHaveProperty('collaborationType', 'essayReview');
+      expect(response.body).toHaveProperty('collaboration_type', 'essayReview');
     });
 
     it('should create guidance collaboration when authenticated', async () => {
       await setupAuth();
-      const { supabase } = await import('../config/supabase.js');
+      const collaborationsService = await import('../services/collaborations.service.js');
 
       const newCollaboration = {
         collaboratorId: 2,
@@ -220,58 +165,7 @@ describe('Collaborations Routes', () => {
         id: 12,
       };
 
-      const mockFrom = vi.fn((table: string) => {
-        if (table === 'collaborators') {
-          return {
-            select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({
-                  data: mockCollaborators.counselor,
-                  error: null,
-                }),
-              }),
-            }),
-          };
-        }
-        if (table === 'applications') {
-          return {
-            select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({
-                  data: mockApplications.inProgress,
-                  error: null,
-                }),
-              }),
-            }),
-          };
-        }
-        if (table === 'collaborations') {
-          return {
-            insert: vi.fn().mockReturnValue({
-              select: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({
-                  data: createdCollaboration,
-                  error: null,
-                }),
-              }),
-            }),
-          };
-        }
-        if (table === 'guidance_collaborations') {
-          return {
-            insert: vi.fn().mockReturnValue({
-              select: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({
-                  data: { collaboration_id: 12, scheduled_date: null },
-                  error: null,
-                }),
-              }),
-            }),
-          };
-        }
-        return {};
-      });
-      vi.mocked(supabase.from).mockImplementation(mockFrom as any);
+      vi.mocked(collaborationsService.createCollaboration).mockResolvedValue(createdCollaboration);
 
       const response = await authenticatedRequest(agent, 'valid-token')
         .post('/api/collaborations')
@@ -309,19 +203,11 @@ describe('Collaborations Routes', () => {
   describe('GET /api/collaborations/:id', () => {
     it('should return collaboration details when authenticated and owner', async () => {
       await setupAuth();
-      const { supabase } = await import('../config/supabase.js');
+      const collaborationsService = await import('../services/collaborations.service.js');
 
-      const mockFrom = vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: mockCollaborations.recommendationPending,
-              error: null,
-            }),
-          }),
-        }),
-      });
-      vi.mocked(supabase.from).mockImplementation(mockFrom as any);
+      vi.mocked(collaborationsService.getCollaborationById).mockResolvedValue(
+        mockCollaborations.recommendationPending
+      );
 
       const response = await authenticatedRequest(agent, 'valid-token').get('/api/collaborations/1');
 
@@ -331,19 +217,11 @@ describe('Collaborations Routes', () => {
 
     it('should return 404 for non-existent collaboration', async () => {
       await setupAuth();
-      const { supabase } = await import('../config/supabase.js');
+      const collaborationsService = await import('../services/collaborations.service.js');
+      const { AppError } = await import('../middleware/error-handler.js');
 
-      const mockFrom = vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: null,
-              error: { code: 'PGRST116' },
-            }),
-          }),
-        }),
-      });
-      vi.mocked(supabase.from).mockImplementation(mockFrom as any);
+      const error = new AppError('Collaboration not found', 404);
+      vi.mocked(collaborationsService.getCollaborationById).mockRejectedValue(error);
 
       const response = await authenticatedRequest(agent, 'valid-token').get('/api/collaborations/999');
 
@@ -360,7 +238,7 @@ describe('Collaborations Routes', () => {
   describe('PATCH /api/collaborations/:id', () => {
     it('should update collaboration status when authenticated and owner', async () => {
       await setupAuth();
-      const { supabase } = await import('../config/supabase.js');
+      const collaborationsService = await import('../services/collaborations.service.js');
 
       const updatedCollaboration = {
         ...mockCollaborations.recommendationPending,
@@ -368,19 +246,10 @@ describe('Collaborations Routes', () => {
         awaiting_action_from: 'collaborator',
       };
 
-      const mockFrom = vi.fn().mockReturnValue({
-        update: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            select: vi.fn().mockReturnValue({
-              single: vi.fn().mockResolvedValue({
-                data: updatedCollaboration,
-                error: null,
-              }),
-            }),
-          }),
-        }),
-      });
-      vi.mocked(supabase.from).mockImplementation(mockFrom as any);
+      vi.mocked(collaborationsService.getCollaborationById).mockResolvedValue(
+        mockCollaborations.recommendationPending
+      );
+      vi.mocked(collaborationsService.updateCollaboration).mockResolvedValue(updatedCollaboration);
 
       const response = await authenticatedRequest(agent, 'valid-token')
         .patch('/api/collaborations/1')
@@ -394,48 +263,17 @@ describe('Collaborations Routes', () => {
 
     it('should track status transitions', async () => {
       await setupAuth();
-      const { supabase } = await import('../config/supabase.js');
+      const collaborationsService = await import('../services/collaborations.service.js');
 
       const updatedCollaboration = {
         ...mockCollaborations.recommendationPending,
         status: 'in_progress',
       };
 
-      const mockFrom = vi.fn((table: string) => {
-        if (table === 'collaborations') {
-          return {
-            update: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                select: vi.fn().mockReturnValue({
-                  single: vi.fn().mockResolvedValue({
-                    data: updatedCollaboration,
-                    error: null,
-                  }),
-                }),
-              }),
-            }),
-          };
-        }
-        if (table === 'collaboration_history') {
-          return {
-            insert: vi.fn().mockReturnValue({
-              select: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({
-                  data: {
-                    id: 1,
-                    collaboration_id: 1,
-                    status: 'in_progress',
-                    notes: 'Status updated',
-                  },
-                  error: null,
-                }),
-              }),
-            }),
-          };
-        }
-        return {};
-      });
-      vi.mocked(supabase.from).mockImplementation(mockFrom as any);
+      vi.mocked(collaborationsService.getCollaborationById).mockResolvedValue(
+        mockCollaborations.recommendationPending
+      );
+      vi.mocked(collaborationsService.updateCollaboration).mockResolvedValue(updatedCollaboration);
 
       const response = await authenticatedRequest(agent, 'valid-token')
         .patch('/api/collaborations/1')
@@ -448,21 +286,11 @@ describe('Collaborations Routes', () => {
 
     it('should return 404 for non-existent collaboration', async () => {
       await setupAuth();
-      const { supabase } = await import('../config/supabase.js');
+      const collaborationsService = await import('../services/collaborations.service.js');
+      const { AppError } = await import('../middleware/error-handler.js');
 
-      const mockFrom = vi.fn().mockReturnValue({
-        update: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            select: vi.fn().mockReturnValue({
-              single: vi.fn().mockResolvedValue({
-                data: null,
-                error: { code: 'PGRST116' },
-              }),
-            }),
-          }),
-        }),
-      });
-      vi.mocked(supabase.from).mockImplementation(mockFrom as any);
+      const error = new AppError('Collaboration not found', 404);
+      vi.mocked(collaborationsService.updateCollaboration).mockRejectedValue(error);
 
       const response = await authenticatedRequest(agent, 'valid-token')
         .patch('/api/collaborations/999')
@@ -481,7 +309,7 @@ describe('Collaborations Routes', () => {
   describe('GET /api/collaborations/:id/history', () => {
     it('should return collaboration history when authenticated and owner', async () => {
       await setupAuth();
-      const { supabase } = await import('../config/supabase.js');
+      const collaborationsService = await import('../services/collaborations.service.js');
 
       const mockHistory = [
         {
@@ -500,34 +328,10 @@ describe('Collaborations Routes', () => {
         },
       ];
 
-      const mockFrom = vi.fn((table: string) => {
-        if (table === 'collaborations') {
-          return {
-            select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({
-                  data: mockCollaborations.recommendationPending,
-                  error: null,
-                }),
-              }),
-            }),
-          };
-        }
-        if (table === 'collaboration_history') {
-          return {
-            select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                order: vi.fn().mockResolvedValue({
-                  data: mockHistory,
-                  error: null,
-                }),
-              }),
-            }),
-          };
-        }
-        return {};
-      });
-      vi.mocked(supabase.from).mockImplementation(mockFrom as any);
+      vi.mocked(collaborationsService.getCollaborationById).mockResolvedValue(
+        mockCollaborations.recommendationPending
+      );
+      vi.mocked(collaborationsService.getCollaborationHistory).mockResolvedValue(mockHistory);
 
       const response = await authenticatedRequest(agent, 'valid-token').get(
         '/api/collaborations/1/history'
@@ -547,34 +351,12 @@ describe('Collaborations Routes', () => {
   describe('DELETE /api/collaborations/:id', () => {
     it('should delete collaboration when authenticated and owner', async () => {
       await setupAuth();
-      const { supabase } = await import('../config/supabase.js');
+      const collaborationsService = await import('../services/collaborations.service.js');
 
-      const mockSelect = vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({
-            data: mockCollaborations.recommendationPending,
-            error: null,
-          }),
-        }),
-      });
-
-      const mockDelete = vi.fn().mockReturnValue({
-        eq: vi.fn().mockResolvedValue({
-          data: null,
-          error: null,
-        }),
-      });
-
-      const mockFrom = vi.fn((table: string) => {
-        if (table === 'collaborations') {
-          return {
-            select: mockSelect,
-            delete: mockDelete,
-          };
-        }
-        return { select: mockSelect };
-      });
-      vi.mocked(supabase.from).mockImplementation(mockFrom as any);
+      vi.mocked(collaborationsService.getCollaborationById).mockResolvedValue(
+        mockCollaborations.recommendationPending
+      );
+      vi.mocked(collaborationsService.deleteCollaboration).mockResolvedValue(undefined);
 
       const response = await authenticatedRequest(agent, 'valid-token').delete('/api/collaborations/1');
 
@@ -583,19 +365,11 @@ describe('Collaborations Routes', () => {
 
     it('should return 404 for non-existent collaboration', async () => {
       await setupAuth();
-      const { supabase } = await import('../config/supabase.js');
+      const collaborationsService = await import('../services/collaborations.service.js');
+      const { AppError } = await import('../middleware/error-handler.js');
 
-      const mockFrom = vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: null,
-              error: { code: 'PGRST116' },
-            }),
-          }),
-        }),
-      });
-      vi.mocked(supabase.from).mockImplementation(mockFrom as any);
+      const error = new AppError('Collaboration not found', 404);
+      vi.mocked(collaborationsService.deleteCollaboration).mockRejectedValue(error);
 
       const response = await authenticatedRequest(agent, 'valid-token').delete('/api/collaborations/999');
 

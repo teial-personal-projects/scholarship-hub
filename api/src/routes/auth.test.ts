@@ -6,17 +6,51 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import request from 'supertest';
 import { createTestApp } from '../test/helpers/test-server.js';
 import { mockUsers } from '../test/fixtures/users.fixture.js';
-import { createMockSupabaseClient } from '../test/helpers/supabase-mock.js';
 import { mockSupabaseAuth } from '../test/helpers/auth-mock.js';
 
 // Mock Supabase
 vi.mock('../config/supabase.js', () => ({
-  supabase: createMockSupabaseClient(),
+  supabase: {
+    from: vi.fn(),
+    auth: {
+      getUser: vi.fn(),
+      signInWithPassword: vi.fn(),
+      signUp: vi.fn(),
+      signOut: vi.fn(),
+      refreshSession: vi.fn(),
+    },
+    storage: {
+      from: vi.fn(),
+    },
+  },
 }));
 
 // Mock utils
 vi.mock('../utils/supabase.js', () => ({
   getUserProfileByAuthId: vi.fn(),
+}));
+
+// Mock shared package
+vi.mock('@scholarship-hub/shared/utils/case-conversion', () => ({
+  toCamelCase: vi.fn((obj: any) => obj),
+}));
+
+// Mock auth service
+vi.mock('../services/auth.service.js', () => ({
+  register: vi.fn(),
+  login: vi.fn(),
+  logout: vi.fn(),
+  refreshSession: vi.fn(),
+}));
+
+// Mock users service
+vi.mock('../services/users.service.js', () => ({
+  getUserProfile: vi.fn(),
+  updateUserProfile: vi.fn(),
+  getUserRoles: vi.fn().mockResolvedValue(['student']),
+  getUserSearchPreferences: vi.fn(),
+  updateUserSearchPreferences: vi.fn(),
+  getUserReminders: vi.fn(),
 }));
 
 describe('Auth Routes', () => {
@@ -33,8 +67,7 @@ describe('Auth Routes', () => {
 
   describe('POST /api/auth/register', () => {
     it('should register new user successfully', async () => {
-      const { supabase } = await import('../config/supabase.js');
-      const { getUserProfileByAuthId } = await import('../utils/supabase.js');
+      const authService = await import('../services/auth.service.js');
 
       const registrationData = {
         email: 'newuser@example.com',
@@ -43,37 +76,6 @@ describe('Auth Routes', () => {
         lastName: 'User',
       };
 
-      // Mock Supabase sign up
-      vi.mocked(supabase.auth.signUp).mockResolvedValue({
-        data: {
-          user: {
-            id: 'new-auth-user-id',
-            email: registrationData.email,
-            app_metadata: {},
-            user_metadata: {},
-            aud: 'authenticated',
-            created_at: new Date().toISOString(),
-          },
-          session: {
-            access_token: 'mock-access-token',
-            refresh_token: 'mock-refresh-token',
-            expires_in: 3600,
-            expires_at: Math.floor(Date.now() / 1000) + 3600,
-            token_type: 'bearer',
-            user: {
-              id: 'new-auth-user-id',
-              email: registrationData.email,
-              app_metadata: {},
-              user_metadata: {},
-              aud: 'authenticated',
-              created_at: new Date().toISOString(),
-            },
-          },
-        },
-        error: null,
-      });
-
-      // Mock user profile creation
       const newUser = {
         ...mockUsers.student1,
         id: 10,
@@ -83,20 +85,34 @@ describe('Auth Routes', () => {
         last_name: registrationData.lastName,
       };
 
-      const mockFrom = vi.fn().mockReturnValue({
-        insert: vi.fn().mockReturnValue({
-          select: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: newUser,
-              error: null,
-            }),
-          }),
-        }),
-      });
-      vi.mocked(supabase.from).mockImplementation(mockFrom as any);
+      const mockSession = {
+        access_token: 'mock-access-token',
+        refresh_token: 'mock-refresh-token',
+        expires_in: 3600,
+        expires_at: Math.floor(Date.now() / 1000) + 3600,
+        token_type: 'bearer' as const,
+        user: {
+          id: 'new-auth-user-id',
+          email: registrationData.email,
+          app_metadata: {},
+          user_metadata: {},
+          aud: 'authenticated' as const,
+          created_at: new Date().toISOString(),
+        },
+      };
 
-      // Mock getUserProfileByAuthId for subsequent calls
-      vi.mocked(getUserProfileByAuthId).mockResolvedValue(newUser);
+      vi.mocked(authService.register).mockResolvedValue({
+        user: {
+          id: 'new-auth-user-id',
+          email: registrationData.email,
+          app_metadata: {},
+          user_metadata: {},
+          aud: 'authenticated',
+          created_at: new Date().toISOString(),
+        },
+        profile: newUser,
+        session: mockSession,
+      });
 
       const response = await agent.post('/api/auth/register').send(registrationData);
 
@@ -139,45 +155,40 @@ describe('Auth Routes', () => {
 
   describe('POST /api/auth/login', () => {
     it('should login user successfully', async () => {
-      const { supabase } = await import('../config/supabase.js');
-      const { getUserProfileByAuthId } = await import('../utils/supabase.js');
+      const authService = await import('../services/auth.service.js');
 
       const loginData = {
         email: 'student1@example.com',
         password: 'SecurePassword123!',
       };
 
-      // Mock Supabase sign in
-      vi.mocked(supabase.auth.signInWithPassword).mockResolvedValue({
-        data: {
-          user: {
-            id: 'auth-user-1',
-            email: loginData.email,
-            app_metadata: {},
-            user_metadata: {},
-            aud: 'authenticated',
-            created_at: new Date().toISOString(),
-          },
-          session: {
-            access_token: 'mock-access-token',
-            refresh_token: 'mock-refresh-token',
-            expires_in: 3600,
-            expires_at: Math.floor(Date.now() / 1000) + 3600,
-            token_type: 'bearer',
-            user: {
-              id: 'auth-user-1',
-              email: loginData.email,
-              app_metadata: {},
-              user_metadata: {},
-              aud: 'authenticated',
-              created_at: new Date().toISOString(),
-            },
-          },
+      const mockSession = {
+        access_token: 'mock-access-token',
+        refresh_token: 'mock-refresh-token',
+        expires_in: 3600,
+        expires_at: Math.floor(Date.now() / 1000) + 3600,
+        token_type: 'bearer' as const,
+        user: {
+          id: 'auth-user-1',
+          email: loginData.email,
+          app_metadata: {},
+          user_metadata: {},
+          aud: 'authenticated' as const,
+          created_at: new Date().toISOString(),
         },
-        error: null,
-      });
+      };
 
-      vi.mocked(getUserProfileByAuthId).mockResolvedValue(mockUsers.student1);
+      vi.mocked(authService.login).mockResolvedValue({
+        user: {
+          id: 'auth-user-1',
+          email: loginData.email,
+          app_metadata: {},
+          user_metadata: {},
+          aud: 'authenticated',
+          created_at: new Date().toISOString(),
+        },
+        session: mockSession,
+      });
 
       const response = await agent.post('/api/auth/login').send(loginData);
 
@@ -187,21 +198,11 @@ describe('Auth Routes', () => {
     });
 
     it('should return 401 for invalid credentials', async () => {
-      const { supabase } = await import('../config/supabase.js');
+      const authService = await import('../services/auth.service.js');
+      const { AppError } = await import('../middleware/error-handler.js');
 
-      vi.mocked(supabase.auth.signInWithPassword).mockResolvedValue({
-        data: {
-          user: null,
-          session: null,
-        },
-        error: {
-          message: 'Invalid login credentials',
-          status: 400,
-          code: 'AUTH_ERROR',
-          __isAuthError: true,
-          name: 'AuthError',
-        } as any,
-      });
+      const error = new AppError('Invalid email or password', 401);
+      vi.mocked(authService.login).mockRejectedValue(error);
 
       const response = await agent.post('/api/auth/login').send({
         email: 'student1@example.com',
@@ -223,13 +224,13 @@ describe('Auth Routes', () => {
 
   describe('POST /api/auth/logout', () => {
     it('should logout user successfully', async () => {
-      const { supabase } = await import('../config/supabase.js');
+      const authService = await import('../services/auth.service.js');
 
-      vi.mocked(supabase.auth.signOut).mockResolvedValue({
-        error: null,
-      });
+      vi.mocked(authService.logout).mockResolvedValue({ success: true });
 
-      const response = await agent.post('/api/auth/logout');
+      const response = await agent
+        .post('/api/auth/logout')
+        .set('Authorization', 'Bearer valid-token');
 
       expect(response.status).toBe(200);
     });
@@ -237,44 +238,39 @@ describe('Auth Routes', () => {
 
   describe('POST /api/auth/refresh', () => {
     it('should refresh token successfully', async () => {
-      const { supabase } = await import('../config/supabase.js');
-      const { getUserProfileByAuthId } = await import('../utils/supabase.js');
+      const authService = await import('../services/auth.service.js');
 
       const refreshData = {
         refreshToken: 'valid-refresh-token',
       };
 
-      // Mock Supabase refresh session
-      vi.mocked(supabase.auth.refreshSession).mockResolvedValue({
-        data: {
-          session: {
-            access_token: 'new-access-token',
-            refresh_token: 'new-refresh-token',
-            expires_in: 3600,
-            expires_at: Math.floor(Date.now() / 1000) + 3600,
-            token_type: 'bearer',
-            user: {
-              id: 'auth-user-1',
-              email: 'student1@example.com',
-              app_metadata: {},
-              user_metadata: {},
-              aud: 'authenticated',
-              created_at: new Date().toISOString(),
-            },
-          },
-          user: {
-            id: 'auth-user-1',
-            email: 'student1@example.com',
-            app_metadata: {},
-            user_metadata: {},
-            aud: 'authenticated',
-            created_at: new Date().toISOString(),
-          },
+      const mockSession = {
+        access_token: 'new-access-token',
+        refresh_token: 'new-refresh-token',
+        expires_in: 3600,
+        expires_at: Math.floor(Date.now() / 1000) + 3600,
+        token_type: 'bearer' as const,
+        user: {
+          id: 'auth-user-1',
+          email: 'student1@example.com',
+          app_metadata: {},
+          user_metadata: {},
+          aud: 'authenticated' as const,
+          created_at: new Date().toISOString(),
         },
-        error: null,
-      });
+      };
 
-      vi.mocked(getUserProfileByAuthId).mockResolvedValue(mockUsers.student1);
+      vi.mocked(authService.refreshSession).mockResolvedValue({
+        session: mockSession,
+        user: {
+          id: 'auth-user-1',
+          email: 'student1@example.com',
+          app_metadata: {},
+          user_metadata: {},
+          aud: 'authenticated',
+          created_at: new Date().toISOString(),
+        },
+      });
 
       const response = await agent.post('/api/auth/refresh').send(refreshData);
 
@@ -283,21 +279,11 @@ describe('Auth Routes', () => {
     });
 
     it('should return 401 for invalid refresh token', async () => {
-      const { supabase } = await import('../config/supabase.js');
+      const authService = await import('../services/auth.service.js');
+      const { AppError } = await import('../middleware/error-handler.js');
 
-      vi.mocked(supabase.auth.refreshSession).mockResolvedValue({
-        data: {
-          session: null,
-          user: null,
-        },
-        error: {
-          message: 'Invalid refresh token',
-          status: 401,
-          code: 'AUTH_ERROR',
-          __isAuthError: true,
-          name: 'AuthError',
-        } as any,
-      });
+      const error = new AppError('Invalid refresh token', 401);
+      vi.mocked(authService.refreshSession).mockRejectedValue(error);
 
       const response = await agent.post('/api/auth/refresh').send({
         refreshToken: 'invalid-refresh-token',
@@ -317,23 +303,38 @@ describe('Auth Routes', () => {
     it('should allow access to protected routes with valid token', async () => {
       const { supabase } = await import('../config/supabase.js');
       const { getUserProfileByAuthId } = await import('../utils/supabase.js');
+      const usersService = await import('../services/users.service.js');
 
       vi.mocked(supabase.auth.getUser).mockResolvedValue(
         mockSupabaseAuth.getUser({ id: 'auth-user-1', email: 'student1@example.com' })
       );
       vi.mocked(getUserProfileByAuthId).mockResolvedValue(mockUsers.student1);
 
-      const mockFrom = vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: mockUsers.student1,
-              error: null,
-            }),
-          }),
+      // Mock user_roles query for role middleware
+      const mockRolesSelect = vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({
+          data: [{ role: 'student' }],
+          error: null,
         }),
       });
+
+      const mockFrom = vi.fn((table: string) => {
+        if (table === 'user_roles') {
+          return {
+            select: mockRolesSelect,
+          };
+        }
+        return {
+          select: mockRolesSelect,
+        };
+      });
       vi.mocked(supabase.from).mockImplementation(mockFrom as any);
+
+      // Mock getUserProfile service
+      vi.mocked(usersService.getUserProfile).mockResolvedValue({
+        ...mockUsers.student1,
+        searchPreferences: null,
+      });
 
       const response = await agent
         .get('/api/users/me')

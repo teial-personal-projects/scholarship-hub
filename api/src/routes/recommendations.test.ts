@@ -8,17 +8,43 @@ import { createTestApp, authenticatedRequest } from '../test/helpers/test-server
 import { mockApplications } from '../test/fixtures/applications.fixture.js';
 import { mockCollaborators } from '../test/fixtures/collaborators.fixture.js';
 import { mockUsers } from '../test/fixtures/users.fixture.js';
-import { createMockSupabaseClient } from '../test/helpers/supabase-mock.js';
 import { mockSupabaseAuth } from '../test/helpers/auth-mock.js';
 
 // Mock Supabase
 vi.mock('../config/supabase.js', () => ({
-  supabase: createMockSupabaseClient(),
+  supabase: {
+    from: vi.fn(),
+    auth: {
+      getUser: vi.fn(),
+      signInWithPassword: vi.fn(),
+      signUp: vi.fn(),
+      signOut: vi.fn(),
+      refreshSession: vi.fn(),
+    },
+    storage: {
+      from: vi.fn(),
+    },
+  },
 }));
 
 // Mock utils
 vi.mock('../utils/supabase.js', () => ({
   getUserProfileByAuthId: vi.fn(),
+  getUserProfileById: vi.fn(),
+}));
+
+// Mock shared package
+vi.mock('@scholarship-hub/shared/utils/case-conversion', () => ({
+  toCamelCase: vi.fn((obj: any) => obj),
+}));
+
+// Mock recommendations service
+vi.mock('../services/recommendations.service.js', () => ({
+  getRecommendationsByApplicationId: vi.fn(),
+  getRecommendationById: vi.fn(),
+  createRecommendation: vi.fn(),
+  updateRecommendation: vi.fn(),
+  deleteRecommendation: vi.fn(),
 }));
 
 const mockRecommendations = {
@@ -64,12 +90,32 @@ describe('Recommendations Routes', () => {
       mockSupabaseAuth.getUser({ id: 'auth-user-1', email: 'student1@example.com' })
     );
     vi.mocked(getUserProfileByAuthId).mockResolvedValue(mockUsers.student1);
+
+    // Mock user_roles query for role middleware
+    const mockRolesSelect = vi.fn().mockReturnValue({
+      eq: vi.fn().mockResolvedValue({
+        data: [{ role: 'student' }],
+        error: null,
+      }),
+    });
+
+    const mockFrom = vi.fn((table: string) => {
+      if (table === 'user_roles') {
+        return {
+          select: mockRolesSelect,
+        };
+      }
+      return {
+        select: mockRolesSelect,
+      };
+    });
+    vi.mocked(supabase.from).mockImplementation(mockFrom as any);
   };
 
   describe('POST /api/recommendations', () => {
     it('should create new recommendation when authenticated', async () => {
       await setupAuth();
-      const { supabase } = await import('../config/supabase.js');
+      const recommendationsService = await import('../services/recommendations.service.js');
 
       const newRecommendation = {
         applicationId: 1,
@@ -79,50 +125,15 @@ describe('Recommendations Routes', () => {
 
       const createdRecommendation = {
         ...mockRecommendations.pending,
-        ...newRecommendation,
+        application_id: 1,
+        recommender_id: 1,
+        due_date: '2024-12-31',
         id: 10,
       };
 
-      const mockFrom = vi.fn((table: string) => {
-        if (table === 'applications') {
-          return {
-            select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({
-                  data: mockApplications.inProgress,
-                  error: null,
-                }),
-              }),
-            }),
-          };
-        }
-        if (table === 'collaborators') {
-          return {
-            select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({
-                  data: mockCollaborators.teacher,
-                  error: null,
-                }),
-              }),
-            }),
-          };
-        }
-        if (table === 'recommendations') {
-          return {
-            insert: vi.fn().mockReturnValue({
-              select: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({
-                  data: createdRecommendation,
-                  error: null,
-                }),
-              }),
-            }),
-          };
-        }
-        return {};
-      });
-      vi.mocked(supabase.from).mockImplementation(mockFrom as any);
+      vi.mocked(recommendationsService.createRecommendation).mockResolvedValue(
+        createdRecommendation
+      );
 
       const response = await authenticatedRequest(agent, 'valid-token')
         .post('/api/recommendations')
@@ -159,19 +170,11 @@ describe('Recommendations Routes', () => {
   describe('GET /api/recommendations/:id', () => {
     it('should return recommendation details when authenticated and owner', async () => {
       await setupAuth();
-      const { supabase } = await import('../config/supabase.js');
+      const recommendationsService = await import('../services/recommendations.service.js');
 
-      const mockFrom = vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: mockRecommendations.pending,
-              error: null,
-            }),
-          }),
-        }),
-      });
-      vi.mocked(supabase.from).mockImplementation(mockFrom as any);
+      vi.mocked(recommendationsService.getRecommendationById).mockResolvedValue(
+        mockRecommendations.pending
+      );
 
       const response = await authenticatedRequest(agent, 'valid-token').get('/api/recommendations/1');
 
@@ -181,19 +184,11 @@ describe('Recommendations Routes', () => {
 
     it('should return 404 for non-existent recommendation', async () => {
       await setupAuth();
-      const { supabase } = await import('../config/supabase.js');
+      const recommendationsService = await import('../services/recommendations.service.js');
+      const { AppError } = await import('../middleware/error-handler.js');
 
-      const mockFrom = vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: null,
-              error: { code: 'PGRST116' },
-            }),
-          }),
-        }),
-      });
-      vi.mocked(supabase.from).mockImplementation(mockFrom as any);
+      const error = new AppError('Recommendation not found', 404);
+      vi.mocked(recommendationsService.getRecommendationById).mockRejectedValue(error);
 
       const response = await authenticatedRequest(agent, 'valid-token').get('/api/recommendations/999');
 
@@ -210,7 +205,7 @@ describe('Recommendations Routes', () => {
   describe('PATCH /api/recommendations/:id', () => {
     it('should update recommendation status when authenticated and owner', async () => {
       await setupAuth();
-      const { supabase } = await import('../config/supabase.js');
+      const recommendationsService = await import('../services/recommendations.service.js');
 
       const updatedRecommendation = {
         ...mockRecommendations.pending,
@@ -218,19 +213,10 @@ describe('Recommendations Routes', () => {
         submitted_at: new Date().toISOString(),
       };
 
-      const mockFrom = vi.fn().mockReturnValue({
-        update: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            select: vi.fn().mockReturnValue({
-              single: vi.fn().mockResolvedValue({
-                data: updatedRecommendation,
-                error: null,
-              }),
-            }),
-          }),
-        }),
-      });
-      vi.mocked(supabase.from).mockImplementation(mockFrom as any);
+      vi.mocked(recommendationsService.getRecommendationById).mockResolvedValue(
+        mockRecommendations.pending
+      );
+      vi.mocked(recommendationsService.updateRecommendation).mockResolvedValue(updatedRecommendation);
 
       const response = await authenticatedRequest(agent, 'valid-token')
         .patch('/api/recommendations/1')
@@ -244,26 +230,17 @@ describe('Recommendations Routes', () => {
 
     it('should update due date when authenticated and owner', async () => {
       await setupAuth();
-      const { supabase } = await import('../config/supabase.js');
+      const recommendationsService = await import('../services/recommendations.service.js');
 
       const updatedRecommendation = {
         ...mockRecommendations.pending,
         due_date: '2025-01-15',
       };
 
-      const mockFrom = vi.fn().mockReturnValue({
-        update: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            select: vi.fn().mockReturnValue({
-              single: vi.fn().mockResolvedValue({
-                data: updatedRecommendation,
-                error: null,
-              }),
-            }),
-          }),
-        }),
-      });
-      vi.mocked(supabase.from).mockImplementation(mockFrom as any);
+      vi.mocked(recommendationsService.getRecommendationById).mockResolvedValue(
+        mockRecommendations.pending
+      );
+      vi.mocked(recommendationsService.updateRecommendation).mockResolvedValue(updatedRecommendation);
 
       const response = await authenticatedRequest(agent, 'valid-token')
         .patch('/api/recommendations/1')
@@ -272,31 +249,22 @@ describe('Recommendations Routes', () => {
         });
 
       expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty('dueDate');
+      expect(response.body).toHaveProperty('due_date');
     });
 
     it('should track due date changes', async () => {
       await setupAuth();
-      const { supabase } = await import('../config/supabase.js');
+      const recommendationsService = await import('../services/recommendations.service.js');
 
       const updatedRecommendation = {
         ...mockRecommendations.pending,
         due_date: '2025-02-01',
       };
 
-      const mockFrom = vi.fn().mockReturnValue({
-        update: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            select: vi.fn().mockReturnValue({
-              single: vi.fn().mockResolvedValue({
-                data: updatedRecommendation,
-                error: null,
-              }),
-            }),
-          }),
-        }),
-      });
-      vi.mocked(supabase.from).mockImplementation(mockFrom as any);
+      vi.mocked(recommendationsService.getRecommendationById).mockResolvedValue(
+        mockRecommendations.pending
+      );
+      vi.mocked(recommendationsService.updateRecommendation).mockResolvedValue(updatedRecommendation);
 
       const response = await authenticatedRequest(agent, 'valid-token')
         .patch('/api/recommendations/1')
@@ -309,21 +277,11 @@ describe('Recommendations Routes', () => {
 
     it('should return 404 for non-existent recommendation', async () => {
       await setupAuth();
-      const { supabase } = await import('../config/supabase.js');
+      const recommendationsService = await import('../services/recommendations.service.js');
+      const { AppError } = await import('../middleware/error-handler.js');
 
-      const mockFrom = vi.fn().mockReturnValue({
-        update: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            select: vi.fn().mockReturnValue({
-              single: vi.fn().mockResolvedValue({
-                data: null,
-                error: { code: 'PGRST116' },
-              }),
-            }),
-          }),
-        }),
-      });
-      vi.mocked(supabase.from).mockImplementation(mockFrom as any);
+      const error = new AppError('Recommendation not found', 404);
+      vi.mocked(recommendationsService.updateRecommendation).mockRejectedValue(error);
 
       const response = await authenticatedRequest(agent, 'valid-token')
         .patch('/api/recommendations/999')
@@ -342,34 +300,12 @@ describe('Recommendations Routes', () => {
   describe('DELETE /api/recommendations/:id', () => {
     it('should delete recommendation when authenticated and owner', async () => {
       await setupAuth();
-      const { supabase } = await import('../config/supabase.js');
+      const recommendationsService = await import('../services/recommendations.service.js');
 
-      const mockSelect = vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({
-            data: mockRecommendations.pending,
-            error: null,
-          }),
-        }),
-      });
-
-      const mockDelete = vi.fn().mockReturnValue({
-        eq: vi.fn().mockResolvedValue({
-          data: null,
-          error: null,
-        }),
-      });
-
-      const mockFrom = vi.fn((table: string) => {
-        if (table === 'recommendations') {
-          return {
-            select: mockSelect,
-            delete: mockDelete,
-          };
-        }
-        return { select: mockSelect };
-      });
-      vi.mocked(supabase.from).mockImplementation(mockFrom as any);
+      vi.mocked(recommendationsService.getRecommendationById).mockResolvedValue(
+        mockRecommendations.pending
+      );
+      vi.mocked(recommendationsService.deleteRecommendation).mockResolvedValue(undefined);
 
       const response = await authenticatedRequest(agent, 'valid-token').delete('/api/recommendations/1');
 
@@ -378,19 +314,11 @@ describe('Recommendations Routes', () => {
 
     it('should return 404 for non-existent recommendation', async () => {
       await setupAuth();
-      const { supabase } = await import('../config/supabase.js');
+      const recommendationsService = await import('../services/recommendations.service.js');
+      const { AppError } = await import('../middleware/error-handler.js');
 
-      const mockFrom = vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: null,
-              error: { code: 'PGRST116' },
-            }),
-          }),
-        }),
-      });
-      vi.mocked(supabase.from).mockImplementation(mockFrom as any);
+      const error = new AppError('Recommendation not found', 404);
+      vi.mocked(recommendationsService.deleteRecommendation).mockRejectedValue(error);
 
       const response = await authenticatedRequest(agent, 'valid-token').delete('/api/recommendations/999');
 

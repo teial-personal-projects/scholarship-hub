@@ -7,17 +7,43 @@ import request from 'supertest';
 import { createTestApp, authenticatedRequest } from '../test/helpers/test-server.js';
 import { mockCollaborators } from '../test/fixtures/collaborators.fixture.js';
 import { mockUsers } from '../test/fixtures/users.fixture.js';
-import { createMockSupabaseClient } from '../test/helpers/supabase-mock.js';
 import { mockSupabaseAuth } from '../test/helpers/auth-mock.js';
 
 // Mock Supabase
 vi.mock('../config/supabase.js', () => ({
-  supabase: createMockSupabaseClient(),
+  supabase: {
+    from: vi.fn(),
+    auth: {
+      getUser: vi.fn(),
+      signInWithPassword: vi.fn(),
+      signUp: vi.fn(),
+      signOut: vi.fn(),
+      refreshSession: vi.fn(),
+    },
+    storage: {
+      from: vi.fn(),
+    },
+  },
 }));
 
 // Mock utils
 vi.mock('../utils/supabase.js', () => ({
   getUserProfileByAuthId: vi.fn(),
+  getUserProfileById: vi.fn(),
+}));
+
+// Mock shared package
+vi.mock('@scholarship-hub/shared/utils/case-conversion', () => ({
+  toCamelCase: vi.fn((obj: any) => obj),
+}));
+
+// Mock collaborators service
+vi.mock('../services/collaborators.service.js', () => ({
+  getUserCollaborators: vi.fn(),
+  getCollaboratorById: vi.fn(),
+  createCollaborator: vi.fn(),
+  updateCollaborator: vi.fn(),
+  deleteCollaborator: vi.fn(),
 }));
 
 describe('Collaborators Routes', () => {
@@ -40,24 +66,37 @@ describe('Collaborators Routes', () => {
       mockSupabaseAuth.getUser({ id: 'auth-user-1', email: 'student1@example.com' })
     );
     vi.mocked(getUserProfileByAuthId).mockResolvedValue(mockUsers.student1);
+
+    // Mock user_roles query for role middleware
+    const mockRolesSelect = vi.fn().mockReturnValue({
+      eq: vi.fn().mockResolvedValue({
+        data: [{ role: 'student' }],
+        error: null,
+      }),
+    });
+
+    const mockFrom = vi.fn((table: string) => {
+      if (table === 'user_roles') {
+        return {
+          select: mockRolesSelect,
+        };
+      }
+      return {
+        select: mockRolesSelect,
+      };
+    });
+    vi.mocked(supabase.from).mockImplementation(mockFrom as any);
   };
 
   describe('GET /api/collaborators', () => {
     it('should return list of user collaborators when authenticated', async () => {
       await setupAuth();
-      const { supabase } = await import('../config/supabase.js');
+      const collaboratorsService = await import('../services/collaborators.service.js');
 
-      const mockFrom = vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            order: vi.fn().mockResolvedValue({
-              data: [mockCollaborators.teacher, mockCollaborators.counselor],
-              error: null,
-            }),
-          }),
-        }),
-      });
-      vi.mocked(supabase.from).mockImplementation(mockFrom as any);
+      vi.mocked(collaboratorsService.getUserCollaborators).mockResolvedValue([
+        mockCollaborators.teacher,
+        mockCollaborators.counselor,
+      ]);
 
       const response = await authenticatedRequest(agent, 'valid-token').get('/api/collaborators');
 
@@ -73,26 +112,18 @@ describe('Collaborators Routes', () => {
 
     it('should enforce relationship validation - only return user own collaborators', async () => {
       await setupAuth();
-      const { supabase } = await import('../config/supabase.js');
+      const collaboratorsService = await import('../services/collaborators.service.js');
 
-      const mockFrom = vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            order: vi.fn().mockResolvedValue({
-              data: [mockCollaborators.teacher], // Only user_id: 1
-              error: null,
-            }),
-          }),
-        }),
-      });
-      vi.mocked(supabase.from).mockImplementation(mockFrom as any);
+      vi.mocked(collaboratorsService.getUserCollaborators).mockResolvedValue([
+        mockCollaborators.teacher, // Only user_id: 1
+      ]);
 
       const response = await authenticatedRequest(agent, 'valid-token').get('/api/collaborators');
 
       expect(response.status).toBe(200);
       // Verify all returned collaborators belong to user
       response.body.forEach((collab: any) => {
-        expect(collab.userId).toBe(1);
+        expect(collab.user_id).toBe(1);
       });
     });
   });
@@ -100,10 +131,11 @@ describe('Collaborators Routes', () => {
   describe('POST /api/collaborators', () => {
     it('should create new collaborator when authenticated', async () => {
       await setupAuth();
-      const { supabase } = await import('../config/supabase.js');
+      const collaboratorsService = await import('../services/collaborators.service.js');
 
       const newCollaborator = {
-        name: 'Dr. New Teacher',
+        firstName: 'Dr. New',
+        lastName: 'Teacher',
         emailAddress: 'newteacher@school.edu',
         relationship: 'Teacher',
         phoneNumber: '+1234567890',
@@ -111,22 +143,16 @@ describe('Collaborators Routes', () => {
 
       const createdCollaborator = {
         ...mockCollaborators.teacher,
-        ...newCollaborator,
+        first_name: 'Dr. New',
+        last_name: 'Teacher',
+        email_address: 'newteacher@school.edu',
+        relationship: 'Teacher',
+        phone_number: '+1234567890',
         id: 10,
         user_id: 1,
       };
 
-      const mockFrom = vi.fn().mockReturnValue({
-        insert: vi.fn().mockReturnValue({
-          select: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: createdCollaborator,
-              error: null,
-            }),
-          }),
-        }),
-      });
-      vi.mocked(supabase.from).mockImplementation(mockFrom as any);
+      vi.mocked(collaboratorsService.createCollaborator).mockResolvedValue(createdCollaborator);
 
       const response = await authenticatedRequest(agent, 'valid-token')
         .post('/api/collaborators')
@@ -134,7 +160,7 @@ describe('Collaborators Routes', () => {
 
       expect(response.status).toBe(201);
       expect(response.body).toHaveProperty('id');
-      expect(response.body).toHaveProperty('name', newCollaborator.name);
+      expect(response.body).toHaveProperty('first_name', newCollaborator.firstName);
     });
 
     it('should return 400 for invalid input', async () => {
@@ -176,19 +202,11 @@ describe('Collaborators Routes', () => {
   describe('GET /api/collaborators/:id', () => {
     it('should return collaborator details when authenticated and owner', async () => {
       await setupAuth();
-      const { supabase } = await import('../config/supabase.js');
+      const collaboratorsService = await import('../services/collaborators.service.js');
 
-      const mockFrom = vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: mockCollaborators.teacher,
-              error: null,
-            }),
-          }),
-        }),
-      });
-      vi.mocked(supabase.from).mockImplementation(mockFrom as any);
+      vi.mocked(collaboratorsService.getCollaboratorById).mockResolvedValue(
+        mockCollaborators.teacher
+      );
 
       const response = await authenticatedRequest(agent, 'valid-token').get('/api/collaborators/1');
 
@@ -198,19 +216,11 @@ describe('Collaborators Routes', () => {
 
     it('should return 404 for non-existent collaborator', async () => {
       await setupAuth();
-      const { supabase } = await import('../config/supabase.js');
+      const collaboratorsService = await import('../services/collaborators.service.js');
+      const { AppError } = await import('../middleware/error-handler.js');
 
-      const mockFrom = vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: null,
-              error: { code: 'PGRST116' },
-            }),
-          }),
-        }),
-      });
-      vi.mocked(supabase.from).mockImplementation(mockFrom as any);
+      const error = new AppError('Collaborator not found', 404);
+      vi.mocked(collaboratorsService.getCollaboratorById).mockRejectedValue(error);
 
       const response = await authenticatedRequest(agent, 'valid-token').get('/api/collaborators/999');
 
@@ -219,19 +229,11 @@ describe('Collaborators Routes', () => {
 
     it('should enforce relationship validation - return 404 for other user collaborator', async () => {
       await setupAuth();
-      const { supabase } = await import('../config/supabase.js');
+      const collaboratorsService = await import('../services/collaborators.service.js');
+      const { AppError } = await import('../middleware/error-handler.js');
 
-      const mockFrom = vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: null,
-              error: { code: 'PGRST116' },
-            }),
-          }),
-        }),
-      });
-      vi.mocked(supabase.from).mockImplementation(mockFrom as any);
+      const error = new AppError('Collaborator not found', 404);
+      vi.mocked(collaboratorsService.getCollaboratorById).mockRejectedValue(error);
 
       const response = await authenticatedRequest(agent, 'valid-token').get('/api/collaborators/4'); // user_id: 2
 
@@ -248,26 +250,17 @@ describe('Collaborators Routes', () => {
   describe('PATCH /api/collaborators/:id', () => {
     it('should update collaborator when authenticated and owner', async () => {
       await setupAuth();
-      const { supabase } = await import('../config/supabase.js');
+      const collaboratorsService = await import('../services/collaborators.service.js');
 
       const updatedCollaborator = {
         ...mockCollaborators.teacher,
         name: 'Updated Name',
       };
 
-      const mockFrom = vi.fn().mockReturnValue({
-        update: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            select: vi.fn().mockReturnValue({
-              single: vi.fn().mockResolvedValue({
-                data: updatedCollaborator,
-                error: null,
-              }),
-            }),
-          }),
-        }),
-      });
-      vi.mocked(supabase.from).mockImplementation(mockFrom as any);
+      vi.mocked(collaboratorsService.getCollaboratorById).mockResolvedValue(
+        mockCollaborators.teacher
+      );
+      vi.mocked(collaboratorsService.updateCollaborator).mockResolvedValue(updatedCollaborator);
 
       const response = await authenticatedRequest(agent, 'valid-token')
         .patch('/api/collaborators/1')
@@ -281,21 +274,11 @@ describe('Collaborators Routes', () => {
 
     it('should return 404 for non-existent collaborator', async () => {
       await setupAuth();
-      const { supabase } = await import('../config/supabase.js');
+      const collaboratorsService = await import('../services/collaborators.service.js');
+      const { AppError } = await import('../middleware/error-handler.js');
 
-      const mockFrom = vi.fn().mockReturnValue({
-        update: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            select: vi.fn().mockReturnValue({
-              single: vi.fn().mockResolvedValue({
-                data: null,
-                error: { code: 'PGRST116' },
-              }),
-            }),
-          }),
-        }),
-      });
-      vi.mocked(supabase.from).mockImplementation(mockFrom as any);
+      const error = new AppError('Collaborator not found', 404);
+      vi.mocked(collaboratorsService.updateCollaborator).mockRejectedValue(error);
 
       const response = await authenticatedRequest(agent, 'valid-token')
         .patch('/api/collaborators/999')
@@ -314,34 +297,12 @@ describe('Collaborators Routes', () => {
   describe('DELETE /api/collaborators/:id', () => {
     it('should delete collaborator when authenticated and owner', async () => {
       await setupAuth();
-      const { supabase } = await import('../config/supabase.js');
+      const collaboratorsService = await import('../services/collaborators.service.js');
 
-      const mockSelect = vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({
-            data: mockCollaborators.teacher,
-            error: null,
-          }),
-        }),
-      });
-
-      const mockDelete = vi.fn().mockReturnValue({
-        eq: vi.fn().mockResolvedValue({
-          data: null,
-          error: null,
-        }),
-      });
-
-      const mockFrom = vi.fn((table: string) => {
-        if (table === 'collaborators') {
-          return {
-            select: mockSelect,
-            delete: mockDelete,
-          };
-        }
-        return { select: mockSelect };
-      });
-      vi.mocked(supabase.from).mockImplementation(mockFrom as any);
+      vi.mocked(collaboratorsService.getCollaboratorById).mockResolvedValue(
+        mockCollaborators.teacher
+      );
+      vi.mocked(collaboratorsService.deleteCollaborator).mockResolvedValue(undefined);
 
       const response = await authenticatedRequest(agent, 'valid-token').delete('/api/collaborators/1');
 
@@ -350,19 +311,11 @@ describe('Collaborators Routes', () => {
 
     it('should return 404 for non-existent collaborator', async () => {
       await setupAuth();
-      const { supabase } = await import('../config/supabase.js');
+      const collaboratorsService = await import('../services/collaborators.service.js');
+      const { AppError } = await import('../middleware/error-handler.js');
 
-      const mockFrom = vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: null,
-              error: { code: 'PGRST116' },
-            }),
-          }),
-        }),
-      });
-      vi.mocked(supabase.from).mockImplementation(mockFrom as any);
+      const error = new AppError('Collaborator not found', 404);
+      vi.mocked(collaboratorsService.deleteCollaborator).mockRejectedValue(error);
 
       const response = await authenticatedRequest(agent, 'valid-token').delete('/api/collaborators/999');
 
