@@ -119,35 +119,38 @@ export const updateUserSearchPreferences = async (
   if (preferences.recommendationRequired !== undefined) dbPrefs.recommendation_required = preferences.recommendationRequired;
   if (preferences.academicLevel !== undefined) dbPrefs.academic_level = preferences.academicLevel;
 
-  // Try to update first
-  const { data: existing } = await supabase
+  // Use UPSERT (INSERT ... ON CONFLICT ... DO UPDATE) to handle both insert and update
+  // This avoids race conditions and handles the case where record might not exist
+  const { data, error } = await supabase
     .from('user_search_preferences')
-    .select('id')
-    .eq('user_id', userId)
+    .upsert(dbPrefs, {
+      onConflict: 'user_id', // Primary key column
+    })
+    .select()
     .single();
 
-  if (existing) {
-    // Update existing
-    const { data, error } = await supabase
-      .from('user_search_preferences')
-      .update(dbPrefs)
-      .eq('user_id', userId)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
-  } else {
-    // Insert new
-    const { data, error } = await supabase
-      .from('user_search_preferences')
-      .insert(dbPrefs)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
+  if (error) {
+    // Log error with context for troubleshooting
+    if (process.env.NODE_ENV === 'development') {
+      console.error('❌ Failed to upsert user search preferences:', {
+        error: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+        userId,
+        dbPrefs,
+      });
+    } else {
+      console.error('❌ Failed to upsert user search preferences:', {
+        error: error.message,
+        code: error.code,
+        userId,
+      });
+    }
+    throw error;
   }
+
+  return data;
 };
 
 /**
