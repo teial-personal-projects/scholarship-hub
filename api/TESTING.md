@@ -224,7 +224,7 @@ curl -X POST http://localhost:3001/api/collaborations \
     "status": "pending",
     "awaitingActionFrom": "collaborator",
     "portalUrl": "https://portal.example.com",
-    "portalDeadline": "2024-12-31"
+    "nextActionDueDate": "2024-12-31"
   }'
 
 # Create an essay review collaboration

@@ -165,7 +165,6 @@ CREATE TABLE public.recommendation_collaborations (
 
   -- Recommendation tracking
   portal_url TEXT,
-  portal_deadline DATE,
   questionnaire_completed BOOLEAN DEFAULT FALSE,
   letter_submitted_at TIMESTAMPTZ
 );
@@ -325,9 +324,9 @@ interface RecommendationCollaboration extends BaseCollaboration {
   collaborationType: 'recommendation';
   awaitingActionType?: RecommendationActionType;
   portalUrl?: string;
-  portalDeadline?: Date;
   questionnaireCompleted?: boolean;
   letterSubmittedAt?: Date;
+  // Due date is required for recommendations (nextActionDueDate from BaseCollaboration)
 }
 
 interface GuidanceCollaboration extends BaseCollaboration {

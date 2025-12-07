@@ -49,7 +49,6 @@ function AddCollaborationModal({
   const [meetingUrl, setMeetingUrl] = useState('');
   const [scheduledFor, setScheduledFor] = useState('');
   const [portalUrl, setPortalUrl] = useState('');
-  const [portalDeadline, setPortalDeadline] = useState('');
 
   // Data state
   const [collaborators, setCollaborators] = useState<CollaboratorResponse[]>([]);
@@ -87,7 +86,6 @@ function AddCollaborationModal({
       setMeetingUrl('');
       setScheduledFor('');
       setPortalUrl('');
-      setPortalDeadline('');
     }
   }, [isOpen]);
 
@@ -99,6 +97,11 @@ function AddCollaborationModal({
 
     if (collaborationType === 'essayReview' && !essayId) {
       showError('Validation Error', 'Please select an essay for review');
+      return;
+    }
+
+    if (collaborationType === 'recommendation' && !nextActionDueDate) {
+      showError('Validation Error', 'Due date is required for recommendation collaborations');
       return;
     }
 
@@ -116,7 +119,7 @@ function AddCollaborationModal({
         notes: notes || undefined,
       };
 
-      // Add due date if provided
+      // Add due date (required for recommendations, optional for others)
       if (nextActionDueDate) {
         payload.nextActionDueDate = nextActionDueDate;
       }
@@ -141,9 +144,6 @@ function AddCollaborationModal({
       if (collaborationType === 'recommendation') {
         if (portalUrl) {
           payload.portalUrl = portalUrl;
-        }
-        if (portalDeadline) {
-          payload.portalDeadline = portalDeadline;
         }
       }
 
@@ -230,25 +230,14 @@ function AddCollaborationModal({
             )}
 
             {collaborationType === 'recommendation' && (
-              <>
-                <FormControl>
-                  <FormLabel>Recommendation Portal URL</FormLabel>
-                  <Input
-                    placeholder="https://..."
-                    value={portalUrl}
-                    onChange={(e) => setPortalUrl(e.target.value)}
-                  />
-                </FormControl>
-
-                <FormControl>
-                  <FormLabel>Portal Deadline</FormLabel>
-                  <Input
-                    type="date"
-                    value={portalDeadline}
-                    onChange={(e) => setPortalDeadline(e.target.value)}
-                  />
-                </FormControl>
-              </>
+              <FormControl>
+                <FormLabel>Recommendation Portal URL</FormLabel>
+                <Input
+                  placeholder="https://..."
+                  value={portalUrl}
+                  onChange={(e) => setPortalUrl(e.target.value)}
+                />
+              </FormControl>
             )}
 
             {collaborationType === 'guidance' && (
@@ -286,8 +275,8 @@ function AddCollaborationModal({
               </>
             )}
 
-            <FormControl>
-              <FormLabel>Due Date (Optional)</FormLabel>
+            <FormControl isRequired={collaborationType === 'recommendation'}>
+              <FormLabel>Due Date{collaborationType === 'recommendation' ? '' : ' (Optional)'}</FormLabel>
               <Input
                 type="date"
                 value={nextActionDueDate}
@@ -316,7 +305,11 @@ function AddCollaborationModal({
             onClick={handleSubmit}
             isLoading={saving}
             loadingText="Adding..."
-            isDisabled={!collaboratorId || (collaborationType === 'essayReview' && !essayId)}
+            isDisabled={
+              !collaboratorId ||
+              (collaborationType === 'essayReview' && !essayId) ||
+              (collaborationType === 'recommendation' && !nextActionDueDate)
+            }
           >
             Add Collaborator
           </Button>

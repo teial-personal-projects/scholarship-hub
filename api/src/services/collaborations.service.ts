@@ -231,7 +231,6 @@ export const createCollaboration = async (
     // Type-specific fields
     essayId?: number; // For essayReview
     portalUrl?: string; // For recommendation
-    portalDeadline?: string; // For recommendation
     sessionType?: string; // For guidance
     meetingUrl?: string; // For guidance
     scheduledFor?: string; // For guidance
@@ -240,6 +239,11 @@ export const createCollaboration = async (
   // Verify ownership
   await verifyCollaboratorOwnership(collaborationData.collaboratorId, userId);
   await verifyApplicationOwnership(collaborationData.applicationId, userId);
+
+  // Validate: Due date is required for recommendation collaborations
+  if (collaborationData.collaborationType === 'recommendation' && !collaborationData.nextActionDueDate) {
+    throw new Error('Due date is required for recommendation collaborations');
+  }
 
   // Convert camelCase to snake_case for base collaboration
   const dbData: Record<string, unknown> = {
@@ -279,8 +283,6 @@ export const createCollaboration = async (
       collaboration_id: collaboration.id,
     };
     if (collaborationData.portalUrl !== undefined) recData.portal_url = collaborationData.portalUrl;
-    if (collaborationData.portalDeadline !== undefined)
-      recData.portal_deadline = collaborationData.portalDeadline;
     await supabase.from('recommendation_collaborations').insert(recData);
   } else if (collaborationData.collaborationType === 'guidance') {
     const guidanceData: Record<string, unknown> = {
@@ -313,7 +315,6 @@ export const updateCollaboration = async (
     notes?: string;
     // Type-specific fields
     portalUrl?: string; // For recommendation
-    portalDeadline?: string; // For recommendation
     questionnaireCompleted?: boolean; // For recommendation
     sessionType?: string; // For guidance
     meetingUrl?: string; // For guidance
@@ -322,6 +323,13 @@ export const updateCollaboration = async (
 ) => {
   // First verify ownership
   const existing = await getCollaborationById(collaborationId, userId);
+
+  // Validate: Due date is required for recommendation collaborations
+  if (existing.collaboration_type === 'recommendation' && 
+      updates.nextActionDueDate === undefined && 
+      !existing.next_action_due_date) {
+    throw new Error('Due date is required for recommendation collaborations');
+  }
 
   // Convert camelCase to snake_case for base collaboration
   const dbUpdates: Record<string, unknown> = {};
@@ -351,7 +359,6 @@ export const updateCollaboration = async (
   if (existing.collaboration_type === 'recommendation') {
     const recUpdates: Record<string, unknown> = {};
     if (updates.portalUrl !== undefined) recUpdates.portal_url = updates.portalUrl;
-    if (updates.portalDeadline !== undefined) recUpdates.portal_deadline = updates.portalDeadline;
     if (updates.questionnaireCompleted !== undefined)
       recUpdates.questionnaire_completed = updates.questionnaireCompleted;
 

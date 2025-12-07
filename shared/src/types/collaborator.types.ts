@@ -88,9 +88,11 @@ export interface RecommendationCollaboration extends BaseCollaboration {
 
   // Recommendation-specific fields
   portalUrl?: string;
-  portalDeadline?: Date;
   questionnaireCompleted?: boolean;
   letterSubmittedAt?: Date;
+  
+  // Due date is required for recommendations
+  nextActionDueDate: Date;
 }
 
 // Guidance/Counseling specific collaboration

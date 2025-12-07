@@ -90,7 +90,6 @@ export const createCollaboration = asyncHandler(async (req: Request, res: Respon
     notes,
     essayId,
     portalUrl,
-    portalDeadline,
     sessionType,
     meetingUrl,
     scheduledFor,
@@ -123,6 +122,15 @@ export const createCollaboration = asyncHandler(async (req: Request, res: Respon
     return;
   }
 
+  // Validate recommendation requires nextActionDueDate
+  if (collaborationType === 'recommendation' && !nextActionDueDate) {
+    res.status(400).json({
+      error: 'Validation Error',
+      message: 'nextActionDueDate is required for recommendation collaborations',
+    });
+    return;
+  }
+
   const collaboration = await collaborationsService.createCollaboration(req.user.userId, {
     collaboratorId,
     applicationId,
@@ -135,7 +143,6 @@ export const createCollaboration = asyncHandler(async (req: Request, res: Respon
     notes,
     essayId,
     portalUrl,
-    portalDeadline,
     sessionType,
     meetingUrl,
     scheduledFor,
@@ -200,7 +207,6 @@ export const updateCollaboration = asyncHandler(async (req: Request, res: Respon
     nextActionDueDate,
     notes,
     portalUrl,
-    portalDeadline,
     questionnaireCompleted,
     sessionType,
     meetingUrl,
@@ -218,7 +224,6 @@ export const updateCollaboration = asyncHandler(async (req: Request, res: Respon
       nextActionDueDate,
       notes,
       portalUrl,
-      portalDeadline,
       questionnaireCompleted,
       sessionType,
       meetingUrl,

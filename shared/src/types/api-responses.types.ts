@@ -113,7 +113,6 @@ export interface CollaborationResponse {
   lastFeedbackAt?: string;
   // Recommendation specific
   portalUrl?: string;
-  portalDeadline?: string;
   questionnaireCompleted?: boolean;
   letterSubmittedAt?: string;
   // Guidance specific

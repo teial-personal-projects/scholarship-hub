@@ -819,7 +819,6 @@ scholarship-hub/
 
     -- Recommendation tracking
     portal_url TEXT,
-    portal_deadline DATE,
     questionnaire_completed BOOLEAN DEFAULT FALSE,
     letter_submitted_at TIMESTAMPTZ
   );

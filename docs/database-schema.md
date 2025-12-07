@@ -283,9 +283,10 @@ Type-specific data for recommendation collaborations. One-to-one with collaborat
 | `id` | BIGSERIAL | PRIMARY KEY | Auto-generated ID |
 | `collaboration_id` | BIGINT | NOT NULL, UNIQUE, FK → collaborations | References base collaboration |
 | `portal_url` | TEXT | | URL to recommendation portal |
-| `portal_deadline` | DATE | | Deadline for portal submission |
 | `questionnaire_completed` | BOOLEAN | DEFAULT FALSE | Whether questionnaire is completed |
 | `letter_submitted_at` | TIMESTAMPTZ | | Timestamp when letter was submitted |
+
+**Note**: The deadline for portal submission is tracked via `next_action_due_date` in the base `collaborations` table.
 
 **RLS Policies**:
 - Users can view recommendation collaborations for their own collaborations
