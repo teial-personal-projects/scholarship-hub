@@ -33,8 +33,7 @@ import {
   useDisclosure,
   Card,
   CardBody,
-  Flex,
-  HStack,
+  Flex
 } from '@chakra-ui/react';
 import { useCollaborations } from '../hooks/useCollaborations';
 import type { CollaborationResponse } from '@scholarship-hub/shared';

@@ -23,7 +23,6 @@ import {
   Tr,
   Th,
   Td,
-  VStack,
 } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
 import { apiGet } from '../services/api';
@@ -73,6 +72,15 @@ function DashboardCollaborations() {
           }
         }
         setCollaborations(allCollaborations);
+        
+        // Debug: Check what collaboration types we have
+        if (allCollaborations.length > 0) {
+          console.log('Fetched collaborations:', allCollaborations.map(c => ({
+            id: c.id,
+            collaborationType: c.collaborationType,
+            rawType: (c as any).collaboration_type,
+          })));
+        }
 
         // Fetch collaborator details
         const collaboratorMap = new Map<number, CollaboratorResponse>();
@@ -110,11 +118,31 @@ function DashboardCollaborations() {
 
   // Filter collaborations by type
   const recommendations = useMemo(() => {
-    return collaborations.filter(c => c.collaborationType === 'recommendation');
+    const filtered = collaborations.filter(c => {
+      // Check both camelCase and snake_case field names (defensive)
+      const type = c.collaborationType || (c as any).collaboration_type;
+      return type === 'recommendation';
+    });
+    
+    // Debug: Log if we have collaborations but no recommendations
+    if (collaborations.length > 0 && filtered.length === 0) {
+      console.warn('No recommendations found. All collaborations:', collaborations.map(c => ({
+        id: c.id,
+        collaborationType: c.collaborationType,
+        collaboration_type: (c as any).collaboration_type,
+        allKeys: Object.keys(c),
+      })));
+    }
+    
+    return filtered;
   }, [collaborations]);
 
   const essays = useMemo(() => {
-    return collaborations.filter(c => c.collaborationType === 'essayReview');
+    return collaborations.filter(c => {
+      // Check both camelCase and snake_case field names (defensive)
+      const type = c.collaborationType || (c as any).collaboration_type;
+      return type === 'essayReview';
+    });
   }, [collaborations]);
 
   // Create a map of application IDs to application names

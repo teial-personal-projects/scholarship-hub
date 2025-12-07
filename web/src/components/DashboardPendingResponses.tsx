@@ -103,11 +103,19 @@ function DashboardPendingResponses() {
 
   // Filter pending responses by type
   const recommendations = useMemo(() => {
-    return pendingResponses.filter(c => c.collaborationType === 'recommendation');
+    return pendingResponses.filter(c => {
+      // Check both camelCase and snake_case field names (defensive)
+      const type = c.collaborationType || (c as any).collaboration_type;
+      return type === 'recommendation';
+    });
   }, [pendingResponses]);
 
   const essays = useMemo(() => {
-    return pendingResponses.filter(c => c.collaborationType === 'essayReview');
+    return pendingResponses.filter(c => {
+      // Check both camelCase and snake_case field names (defensive)
+      const type = c.collaborationType || (c as any).collaboration_type;
+      return type === 'essayReview';
+    });
   }, [pendingResponses]);
 
   // Create a map of application IDs to application names
