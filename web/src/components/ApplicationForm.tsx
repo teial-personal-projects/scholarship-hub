@@ -20,6 +20,7 @@ import {
   NumberInput,
   NumberInputField,
   FormHelperText,
+  Flex,
 } from '@chakra-ui/react';
 import { apiGet, apiPost, apiPatch } from '../services/api';
 import type { ApplicationResponse } from '@scholarship-hub/shared';
@@ -182,13 +183,43 @@ function ApplicationForm() {
   return (
     <Container maxW="4xl" py={{ base: '8', md: '12' }}>
       <Card>
-        <CardHeader>
-          <Heading size="lg">
-            {isEditMode ? 'Edit Application' : 'New Application'}
-          </Heading>
+        <CardHeader
+          position="sticky"
+          top="64px"
+          zIndex={10}
+          bg="white"
+          borderBottom="1px solid"
+          borderColor="gray.200"
+          boxShadow="sm"
+        >
+          <Flex justify="space-between" align="center" flexWrap="wrap" gap="4">
+            <Heading size="lg">
+              {isEditMode ? 'Edit Application' : 'New Application'}
+            </Heading>
+            {/* Action Buttons at Top */}
+            <HStack spacing="4">
+              <Button
+                type="submit"
+                form="application-form"
+                colorScheme="accent"
+                isLoading={submitting}
+                loadingText={isEditMode ? 'Updating...' : 'Creating...'}
+              >
+                {isEditMode ? 'Update' : 'Save'}
+              </Button>
+              <Button
+                variant="outline"
+                colorScheme="brand"
+                onClick={() => navigate(isEditMode ? `/applications/${id}` : '/applications')}
+                isDisabled={submitting}
+              >
+                Cancel
+              </Button>
+            </HStack>
+          </Flex>
         </CardHeader>
         <CardBody>
-          <form onSubmit={handleSubmit}>
+          <form id="application-form" onSubmit={handleSubmit}>
             <Stack spacing="6">
               {/* Scholarship Name - Required */}
               <FormControl isRequired>
@@ -393,24 +424,6 @@ function ApplicationForm() {
                 <FormHelperText>Link to information about required documents</FormHelperText>
               </FormControl>
 
-              {/* Action Buttons */}
-              <HStack spacing="4" pt="4">
-                <Button
-                  type="submit"
-                  colorScheme="blue"
-                  isLoading={submitting}
-                  loadingText={isEditMode ? 'Updating...' : 'Creating...'}
-                >
-                  {isEditMode ? 'Update Application' : 'Create Application'}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => navigate(isEditMode ? `/applications/${id}` : '/applications')}
-                  isDisabled={submitting}
-                >
-                  Cancel
-                </Button>
-              </HStack>
             </Stack>
           </form>
         </CardBody>
