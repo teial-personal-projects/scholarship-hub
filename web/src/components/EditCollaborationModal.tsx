@@ -6,13 +6,14 @@ import {
   ModalHeader,
   ModalBody,
   ModalCloseButton,
-  ModalFooter,
   Button,
   FormControl,
   FormLabel,
   Input,
   Textarea,
   Stack,
+  HStack,
+  Flex,
 } from '@chakra-ui/react';
 import { apiPatch } from '../services/api';
 import type { CollaborationResponse } from '@scholarship-hub/shared';
@@ -113,8 +114,43 @@ function EditCollaborationModal({
     <Modal isOpen={isOpen} onClose={onClose} size={{ base: 'full', md: 'xl' }} isCentered>
       <ModalOverlay />
       <ModalContent mx={{ base: 0, md: 'auto' }} my={{ base: 0, md: 'auto' }} maxH={{ base: '100vh', md: '90vh' }} overflowY="auto">
-        <ModalHeader>Edit Collaboration</ModalHeader>
-        <ModalCloseButton />
+        <ModalHeader
+          position="sticky"
+          top="0"
+          zIndex={10}
+          bg="white"
+          borderBottom="1px solid"
+          borderColor="gray.200"
+          boxShadow="sm"
+        >
+          <Flex justify="space-between" align="center" flexWrap="wrap" gap="4">
+            <span>Edit Collaboration</span>
+            <HStack spacing="3">
+              <Button
+                colorScheme="accent"
+                size="sm"
+                onClick={handleSubmit}
+                isLoading={saving}
+                loadingText="Saving..."
+                isDisabled={
+                  collaboration.collaborationType === 'recommendation' && !nextActionDueDate
+                }
+              >
+                Save
+              </Button>
+              <Button
+                variant="outline"
+                colorScheme="brand"
+                size="sm"
+                onClick={onClose}
+                isDisabled={saving}
+              >
+                Cancel
+              </Button>
+            </HStack>
+          </Flex>
+        </ModalHeader>
+        <ModalCloseButton isDisabled={saving} />
         <ModalBody>
           <Stack spacing="4">
             <FormControl>
@@ -159,23 +195,6 @@ function EditCollaborationModal({
             </FormControl>
           </Stack>
         </ModalBody>
-
-        <ModalFooter>
-          <Button variant="ghost" mr={3} onClick={onClose}>
-            Cancel
-          </Button>
-          <Button
-            colorScheme="blue"
-            onClick={handleSubmit}
-            isLoading={saving}
-            loadingText="Saving..."
-            isDisabled={
-              collaboration.collaborationType === 'recommendation' && !nextActionDueDate
-            }
-          >
-            Save Changes
-          </Button>
-        </ModalFooter>
       </ModalContent>
     </Modal>
   );

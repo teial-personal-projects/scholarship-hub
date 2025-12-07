@@ -6,7 +6,6 @@ import {
   ModalHeader,
   ModalBody,
   ModalCloseButton,
-  ModalFooter,
   Button,
   FormControl,
   FormLabel,
@@ -17,6 +16,8 @@ import {
   Text,
   Alert,
   AlertIcon,
+  HStack,
+  Flex,
 } from '@chakra-ui/react';
 import { apiGet, apiPost } from '../services/api';
 import type { CollaboratorResponse, EssayResponse } from '@scholarship-hub/shared';
@@ -175,8 +176,45 @@ function AddCollaborationModal({
     <Modal isOpen={isOpen} onClose={onClose} size={{ base: 'full', md: 'xl' }} isCentered>
       <ModalOverlay />
       <ModalContent mx={{ base: 0, md: 'auto' }} my={{ base: 0, md: 'auto' }} maxH={{ base: '100vh', md: '90vh' }} overflowY="auto">
-        <ModalHeader>Add Collaborator</ModalHeader>
-        <ModalCloseButton />
+        <ModalHeader
+          position="sticky"
+          top="0"
+          zIndex={10}
+          bg="white"
+          borderBottom="1px solid"
+          borderColor="gray.200"
+          boxShadow="sm"
+        >
+          <Flex justify="space-between" align="center" flexWrap="wrap" gap="4">
+            <span>Add Collaborator</span>
+            <HStack spacing="3">
+              <Button
+                colorScheme="accent"
+                size="sm"
+                onClick={handleSubmit}
+                isLoading={saving}
+                loadingText="Adding..."
+                isDisabled={
+                  !collaboratorId ||
+                  (collaborationType === 'essayReview' && !essayId) ||
+                  (collaborationType === 'recommendation' && !nextActionDueDate)
+                }
+              >
+                Add
+              </Button>
+              <Button
+                variant="outline"
+                colorScheme="brand"
+                size="sm"
+                onClick={onClose}
+                isDisabled={saving}
+              >
+                Cancel
+              </Button>
+            </HStack>
+          </Flex>
+        </ModalHeader>
+        <ModalCloseButton isDisabled={saving} />
         <ModalBody>
           <Stack spacing="4">
             {collaborators.length === 0 && !loading && (
@@ -306,25 +344,6 @@ function AddCollaborationModal({
             </FormControl>
           </Stack>
         </ModalBody>
-
-        <ModalFooter>
-          <Button variant="ghost" mr={3} onClick={onClose}>
-            Cancel
-          </Button>
-          <Button
-            colorScheme="blue"
-            onClick={handleSubmit}
-            isLoading={saving}
-            loadingText="Adding..."
-            isDisabled={
-              !collaboratorId ||
-              (collaborationType === 'essayReview' && !essayId) ||
-              (collaborationType === 'recommendation' && !nextActionDueDate)
-            }
-          >
-            Add Collaborator
-          </Button>
-        </ModalFooter>
       </ModalContent>
     </Modal>
   );

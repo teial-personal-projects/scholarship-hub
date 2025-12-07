@@ -9,7 +9,6 @@ import {
   ModalOverlay,
   ModalContent,
   ModalHeader,
-  ModalFooter,
   ModalBody,
   ModalCloseButton,
   Button,
@@ -20,6 +19,8 @@ import {
   Input,
   VStack,
   Text,
+  HStack,
+  Flex,
 } from '@chakra-ui/react';
 import { apiPost } from '../services/api';
 import { useToastHelpers } from '../utils/toast';
@@ -121,9 +122,43 @@ const AssignCollaboratorModal: React.FC<AssignCollaboratorModalProps> = ({
     <Modal isOpen={isOpen} onClose={onClose} size={{ base: 'full', md: 'md' }} isCentered>
       <ModalOverlay />
       <ModalContent mx={{ base: 0, md: 'auto' }} my={{ base: 0, md: 'auto' }} maxH={{ base: '100vh', md: '90vh' }} overflowY="auto">
-        <form onSubmit={handleSubmit}>
-          <ModalHeader>Assign Collaborator</ModalHeader>
-          <ModalCloseButton />
+        <form id="assign-collaborator-form" onSubmit={handleSubmit}>
+          <ModalHeader
+            position="sticky"
+            top="0"
+            zIndex={10}
+            bg="white"
+            borderBottom="1px solid"
+            borderColor="gray.200"
+            boxShadow="sm"
+          >
+            <Flex justify="space-between" align="center" flexWrap="wrap" gap="4">
+              <span>Assign Collaborator</span>
+              <HStack spacing="3">
+                <Button
+                  type="submit"
+                  form="assign-collaborator-form"
+                  colorScheme="accent"
+                  size="sm"
+                  isLoading={isLoading}
+                  loadingText="Assigning..."
+                  isDisabled={collaborators.length === 0}
+                >
+                  Assign
+                </Button>
+                <Button
+                  variant="outline"
+                  colorScheme="brand"
+                  size="sm"
+                  onClick={onClose}
+                  isDisabled={isLoading}
+                >
+                  Cancel
+                </Button>
+              </HStack>
+            </Flex>
+          </ModalHeader>
+          <ModalCloseButton isDisabled={isLoading} />
 
           <ModalBody>
             <VStack spacing={4}>
@@ -185,21 +220,6 @@ const AssignCollaboratorModal: React.FC<AssignCollaboratorModalProps> = ({
               </Text>
             </VStack>
           </ModalBody>
-
-          <ModalFooter>
-            <Button variant="ghost" mr={3} onClick={onClose} isDisabled={isLoading}>
-              Cancel
-            </Button>
-            <Button
-              colorScheme="blue"
-              type="submit"
-              isLoading={isLoading}
-              loadingText="Assigning..."
-              isDisabled={collaborators.length === 0}
-            >
-              Assign
-            </Button>
-          </ModalFooter>
         </form>
       </ModalContent>
     </Modal>

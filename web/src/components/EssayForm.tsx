@@ -4,7 +4,6 @@ import {
   ModalOverlay,
   ModalContent,
   ModalHeader,
-  ModalFooter,
   ModalBody,
   ModalCloseButton,
   Button,
@@ -15,6 +14,8 @@ import {
   NumberInputField,
   Stack,
   FormHelperText,
+  HStack,
+  Flex,
 } from '@chakra-ui/react';
 import { apiPost, apiPatch } from '../services/api';
 import type { EssayResponse } from '@scholarship-hub/shared';
@@ -90,8 +91,41 @@ function EssayForm({ isOpen, onClose, applicationId, essay, onSuccess }: EssayFo
     <Modal isOpen={isOpen} onClose={handleClose} size={{ base: 'full', md: 'lg' }} isCentered>
       <ModalOverlay />
       <ModalContent mx={{ base: 0, md: 'auto' }} my={{ base: 0, md: 'auto' }} maxH={{ base: '100vh', md: '90vh' }} overflowY="auto">
-        <form onSubmit={handleSubmit}>
-          <ModalHeader>{isEditMode ? 'Edit Essay' : 'Add Essay'}</ModalHeader>
+        <form id="essay-form" onSubmit={handleSubmit}>
+          <ModalHeader
+            position="sticky"
+            top="0"
+            zIndex={10}
+            bg="white"
+            borderBottom="1px solid"
+            borderColor="gray.200"
+            boxShadow="sm"
+          >
+            <Flex justify="space-between" align="center" flexWrap="wrap" gap="4">
+              <span>{isEditMode ? 'Edit Essay' : 'Add Essay'}</span>
+              <HStack spacing="3">
+                <Button
+                  type="submit"
+                  form="essay-form"
+                  colorScheme="accent"
+                  size="sm"
+                  isLoading={submitting}
+                  loadingText={isEditMode ? 'Updating...' : 'Creating...'}
+                >
+                  {isEditMode ? 'Update' : 'Save'}
+                </Button>
+                <Button
+                  variant="outline"
+                  colorScheme="brand"
+                  size="sm"
+                  onClick={handleClose}
+                  isDisabled={submitting}
+                >
+                  Cancel
+                </Button>
+              </HStack>
+            </Flex>
+          </ModalHeader>
           <ModalCloseButton isDisabled={submitting} />
           <ModalBody>
             <Stack spacing="4">
@@ -131,25 +165,6 @@ function EssayForm({ isOpen, onClose, applicationId, essay, onSuccess }: EssayFo
               </FormControl>
             </Stack>
           </ModalBody>
-
-          <ModalFooter>
-            <Button
-              variant="outline"
-              mr={3}
-              onClick={handleClose}
-              isDisabled={submitting}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              colorScheme="blue"
-              isLoading={submitting}
-              loadingText={isEditMode ? 'Updating...' : 'Creating...'}
-            >
-              {isEditMode ? 'Update Essay' : 'Create Essay'}
-            </Button>
-          </ModalFooter>
         </form>
       </ModalContent>
     </Modal>

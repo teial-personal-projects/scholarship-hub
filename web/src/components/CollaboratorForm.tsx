@@ -9,7 +9,6 @@ import {
   ModalOverlay,
   ModalContent,
   ModalHeader,
-  ModalFooter,
   ModalBody,
   ModalCloseButton,
   Button,
@@ -17,6 +16,8 @@ import {
   FormLabel,
   Input,
   VStack,
+  HStack,
+  Flex,
 } from '@chakra-ui/react';
 import { apiPost, apiPatch } from '../services/api';
 import type { CollaboratorResponse } from '@scholarship-hub/shared';
@@ -114,9 +115,42 @@ const CollaboratorForm: React.FC<CollaboratorFormProps> = ({
     <Modal isOpen={isOpen} onClose={onClose} size={{ base: 'full', md: 'md' }} isCentered>
       <ModalOverlay />
       <ModalContent mx={{ base: 0, md: 'auto' }} my={{ base: 0, md: 'auto' }} maxH={{ base: '100vh', md: '90vh' }} overflowY="auto">
-        <form onSubmit={handleSubmit}>
-          <ModalHeader>{isEditMode ? 'Edit' : 'Add'} Collaborator</ModalHeader>
-          <ModalCloseButton />
+        <form id="collaborator-form" onSubmit={handleSubmit}>
+          <ModalHeader
+            position="sticky"
+            top="0"
+            zIndex={10}
+            bg="white"
+            borderBottom="1px solid"
+            borderColor="gray.200"
+            boxShadow="sm"
+          >
+            <Flex justify="space-between" align="center" flexWrap="wrap" gap="4">
+              <span>{isEditMode ? 'Edit' : 'Add'} Collaborator</span>
+              <HStack spacing="3">
+                <Button
+                  type="submit"
+                  form="collaborator-form"
+                  colorScheme="accent"
+                  size="sm"
+                  isLoading={isLoading}
+                  loadingText={isEditMode ? 'Updating...' : 'Creating...'}
+                >
+                  {isEditMode ? 'Update' : 'Save'}
+                </Button>
+                <Button
+                  variant="outline"
+                  colorScheme="brand"
+                  size="sm"
+                  onClick={onClose}
+                  isDisabled={isLoading}
+                >
+                  Cancel
+                </Button>
+              </HStack>
+            </Flex>
+          </ModalHeader>
+          <ModalCloseButton isDisabled={isLoading} />
 
           <ModalBody>
             <VStack spacing={4}>
@@ -168,20 +202,6 @@ const CollaboratorForm: React.FC<CollaboratorFormProps> = ({
               </FormControl>
             </VStack>
           </ModalBody>
-
-          <ModalFooter>
-            <Button variant="ghost" mr={3} onClick={onClose} isDisabled={isLoading}>
-              Cancel
-            </Button>
-            <Button
-              colorScheme="blue"
-              type="submit"
-              isLoading={isLoading}
-              loadingText={isEditMode ? 'Updating...' : 'Creating...'}
-            >
-              {isEditMode ? 'Update' : 'Create'}
-            </Button>
-          </ModalFooter>
         </form>
       </ModalContent>
     </Modal>

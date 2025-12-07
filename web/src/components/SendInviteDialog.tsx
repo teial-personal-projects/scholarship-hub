@@ -9,7 +9,6 @@ import {
   ModalOverlay,
   ModalContent,
   ModalHeader,
-  ModalFooter,
   ModalBody,
   ModalCloseButton,
   Button,
@@ -21,6 +20,7 @@ import {
   FormLabel,
   Input,
   Divider,
+  Flex,
 } from '@chakra-ui/react';
 import { apiPost } from '../services/api';
 import type { CollaborationResponse } from '@scholarship-hub/shared';
@@ -134,8 +134,78 @@ const SendInviteDialog: React.FC<SendInviteDialogProps> = ({
     <Modal isOpen={isOpen} onClose={handleClose} size={{ base: 'full', md: 'md' }} isCentered>
       <ModalOverlay />
       <ModalContent mx={{ base: 0, md: 'auto' }} my={{ base: 0, md: 'auto' }} maxH={{ base: '100vh', md: '90vh' }} overflowY="auto">
-        <ModalHeader>{isResend ? 'Resend' : 'Send'} Collaboration Invitation</ModalHeader>
-        <ModalCloseButton />
+        <ModalHeader
+          position="sticky"
+          top="0"
+          zIndex={10}
+          bg="white"
+          borderBottom="1px solid"
+          borderColor="gray.200"
+          boxShadow="sm"
+        >
+          <Flex justify="space-between" align="center" flexWrap="wrap" gap="4">
+            <span>{isResend ? 'Resend' : 'Send'} Collaboration Invitation</span>
+            <HStack spacing="3">
+              {!showSchedule ? (
+                <>
+                  <Button
+                    variant="outline"
+                    colorScheme="brand"
+                    size="sm"
+                    onClick={() => setShowSchedule(true)}
+                    isDisabled={isLoading}
+                  >
+                    Schedule
+                  </Button>
+                  <Button
+                    colorScheme="accent"
+                    size="sm"
+                    onClick={handleSendNow}
+                    isLoading={isLoading}
+                    loadingText={isResend ? 'Resending...' : 'Sending...'}
+                  >
+                    {isResend ? 'Resend' : 'Send Now'}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    variant="outline"
+                    colorScheme="brand"
+                    size="sm"
+                    onClick={() => {
+                      setShowSchedule(false);
+                      setScheduledFor('');
+                    }}
+                    isDisabled={isLoading}
+                  >
+                    Back
+                  </Button>
+                  <Button
+                    colorScheme="accent"
+                    size="sm"
+                    onClick={handleSchedule}
+                    isLoading={isLoading}
+                    loadingText="Scheduling..."
+                    isDisabled={!scheduledFor}
+                  >
+                    Schedule
+                  </Button>
+                </>
+              )}
+              <Button
+                variant="outline"
+                colorScheme="brand"
+                size="sm"
+                onClick={handleClose}
+                isDisabled={isLoading}
+              >
+                Cancel
+              </Button>
+            </HStack>
+          </Flex>
+        </ModalHeader>
+        <ModalCloseButton isDisabled={isLoading} />
 
         <ModalBody>
           <VStack align="stretch" spacing={4}>
@@ -198,56 +268,6 @@ const SendInviteDialog: React.FC<SendInviteDialogProps> = ({
             )}
           </VStack>
         </ModalBody>
-
-        <ModalFooter>
-          <HStack spacing={3}>
-            <Button variant="ghost" onClick={handleClose} isDisabled={isLoading}>
-              Cancel
-            </Button>
-
-            {!showSchedule ? (
-              <>
-                <Button
-                  variant="outline"
-                  onClick={() => setShowSchedule(true)}
-                  isDisabled={isLoading}
-                >
-                  Schedule for Later
-                </Button>
-                <Button
-                  colorScheme="blue"
-                  onClick={handleSendNow}
-                  isLoading={isLoading}
-                  loadingText={isResend ? 'Resending...' : 'Sending...'}
-                >
-                  {isResend ? 'Resend Now' : 'Send Now'}
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setShowSchedule(false);
-                    setScheduledFor('');
-                  }}
-                  isDisabled={isLoading}
-                >
-                  Back
-                </Button>
-                <Button
-                  colorScheme="blue"
-                  onClick={handleSchedule}
-                  isLoading={isLoading}
-                  loadingText="Scheduling..."
-                  isDisabled={!scheduledFor}
-                >
-                  Schedule
-                </Button>
-              </>
-            )}
-          </HStack>
-        </ModalFooter>
       </ModalContent>
     </Modal>
   );
