@@ -232,39 +232,51 @@ function Profile() {
             <Stack spacing="6">
               <SimpleGrid columns={{ base: 1, md: 2 }} spacing="6">
                 <FormControl>
-                  <FormLabel>First Name</FormLabel>
+                  <FormLabel fontSize={{ base: 'md', md: 'sm' }}>First Name</FormLabel>
                   <Input
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
                     placeholder="First name"
+                    size={{ base: 'lg', md: 'md' }}
+                    fontSize={{ base: 'md', md: 'sm' }}
                   />
                 </FormControl>
 
                 <FormControl>
-                  <FormLabel>Last Name</FormLabel>
+                  <FormLabel fontSize={{ base: 'md', md: 'sm' }}>Last Name</FormLabel>
                   <Input
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
                     placeholder="Last name"
+                    size={{ base: 'lg', md: 'md' }}
+                    fontSize={{ base: 'md', md: 'sm' }}
                   />
                 </FormControl>
               </SimpleGrid>
 
               <FormControl>
-                <FormLabel>Email</FormLabel>
-                <Input value={emailAddress} isReadOnly bg="gray.50" />
-                <Text fontSize="sm" color="gray.500" mt="1">
+                <FormLabel fontSize={{ base: 'md', md: 'sm' }}>Email</FormLabel>
+                <Input 
+                  value={emailAddress} 
+                  isReadOnly 
+                  bg="gray.50"
+                  size={{ base: 'lg', md: 'md' }}
+                  fontSize={{ base: 'md', md: 'sm' }}
+                />
+                <Text fontSize={{ base: 'sm', md: 'sm' }} color="gray.500" mt="1">
                   Email cannot be changed
                 </Text>
               </FormControl>
 
               <FormControl>
-                <FormLabel>Phone Number</FormLabel>
+                <FormLabel fontSize={{ base: 'md', md: 'sm' }}>Phone Number</FormLabel>
                 <Input
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
                   placeholder="Phone number"
                   type="tel"
+                  size={{ base: 'lg', md: 'md' }}
+                  fontSize={{ base: 'md', md: 'sm' }}
                 />
               </FormControl>
             </Stack>
@@ -283,11 +295,13 @@ function Profile() {
             <Stack spacing="6">
               <SimpleGrid columns={{ base: 1, md: 2 }} spacing="6">
                 <FormControl>
-                  <FormLabel>Target Type</FormLabel>
+                  <FormLabel fontSize={{ base: 'md', md: 'sm' }}>Target Type</FormLabel>
                   <Select
                     value={targetType}
                     onChange={(e) => setTargetType(e.target.value)}
                     placeholder="Select target type"
+                    size={{ base: 'lg', md: 'md' }}
+                    fontSize={{ base: 'md', md: 'sm' }}
                   >
                     {TARGET_TYPES.map((type) => (
                       <option key={type} value={type}>
@@ -298,11 +312,13 @@ function Profile() {
                 </FormControl>
 
                 <FormControl>
-                  <FormLabel>Academic Level</FormLabel>
+                  <FormLabel fontSize={{ base: 'md', md: 'sm' }}>Academic Level</FormLabel>
                   <Select
                     value={academicLevel}
                     onChange={(e) => setAcademicLevel(e.target.value)}
                     placeholder="Select academic level"
+                    size={{ base: 'lg', md: 'md' }}
+                    fontSize={{ base: 'md', md: 'sm' }}
                   >
                     {ACADEMIC_LEVELS.map((level) => (
                       <option key={level} value={level}>
@@ -315,11 +331,13 @@ function Profile() {
 
               <SimpleGrid columns={{ base: 1, md: 2 }} spacing="6">
                 <FormControl>
-                  <FormLabel>Gender</FormLabel>
+                  <FormLabel fontSize={{ base: 'md', md: 'sm' }}>Gender</FormLabel>
                   <Select
                     value={gender}
                     onChange={(e) => setGender(e.target.value)}
                     placeholder="Select gender"
+                    size={{ base: 'lg', md: 'md' }}
+                    fontSize={{ base: 'md', md: 'sm' }}
                   >
                     {GENDER_OPTIONS.map((g) => (
                       <option key={g} value={g}>
@@ -330,11 +348,13 @@ function Profile() {
                 </FormControl>
 
                 <FormControl>
-                  <FormLabel>Ethnicity</FormLabel>
+                  <FormLabel fontSize={{ base: 'md', md: 'sm' }}>Ethnicity</FormLabel>
                   <Select
                     value={ethnicity}
                     onChange={(e) => setEthnicity(e.target.value)}
                     placeholder="Select ethnicity"
+                    size={{ base: 'lg', md: 'md' }}
+                    fontSize={{ base: 'md', md: 'sm' }}
                   >
                     {ETHNICITY_OPTIONS.map((e) => (
                       <option key={e} value={e}>
@@ -346,13 +366,17 @@ function Profile() {
               </SimpleGrid>
 
               <FormControl>
-                <FormLabel>Minimum Award Amount ($)</FormLabel>
+                <FormLabel fontSize={{ base: 'md', md: 'sm' }}>Minimum Award Amount ($)</FormLabel>
                 <NumberInput
                   value={minAward}
                   onChange={(_, value) => setMinAward(value)}
                   min={0}
+                  size={{ base: 'lg', md: 'md' }}
                 >
-                  <NumberInputField placeholder="Minimum award amount" />
+                  <NumberInputField 
+                    placeholder="Minimum award amount"
+                    fontSize={{ base: 'md', md: 'sm' }}
+                  />
                   <NumberInputStepper>
                     <NumberIncrementStepper />
                     <NumberDecrementStepper />
@@ -361,42 +385,51 @@ function Profile() {
               </FormControl>
 
               <FormControl>
-                <FormLabel>Subject Areas</FormLabel>
+                <FormLabel fontSize={{ base: 'md', md: 'sm' }}>Subject Areas</FormLabel>
                 <Wrap spacing="2" mb="3">
                   {subjectAreas.map((area) => (
-                    <Tag key={area} size="md" colorScheme="blue">
+                    <Tag key={area} size={{ base: 'lg', md: 'md' }} colorScheme="blue" fontSize={{ base: 'sm', md: 'xs' }}>
                       <TagLabel>{area}</TagLabel>
                       <TagCloseButton onClick={() => handleRemoveSubjectArea(area)} />
                     </Tag>
                   ))}
                 </Wrap>
-                <Box display="flex" gap="2">
+                <Box display="flex" gap="2" flexDirection={{ base: 'column', md: 'row' }}>
                   <Select
                     value={newSubjectArea}
                     onChange={(e) => setNewSubjectArea(e.target.value)}
                     placeholder="Select subject area to add"
                     flex="1"
+                    size={{ base: 'lg', md: 'md' }}
+                    fontSize={{ base: 'md', md: 'sm' }}
                   >
                     {SUBJECT_AREAS.filter((area) => !subjectAreas.includes(area)).map(
                       (area) => (
-                        <option key={area} value={area}>
+                        <option key={area} value={area} style={{ fontSize: '16px' }}>
                           {area}
                         </option>
                       )
                     )}
                   </Select>
-                  <Button onClick={handleAddSubjectArea} isDisabled={!newSubjectArea}>
+                  <Button 
+                    onClick={handleAddSubjectArea} 
+                    isDisabled={!newSubjectArea}
+                    size={{ base: 'lg', md: 'md' }}
+                    width={{ base: '100%', md: 'auto' }}
+                  >
                     Add
                   </Button>
                 </Box>
               </FormControl>
 
               <FormControl>
-                <FormLabel>Geographic Restrictions</FormLabel>
+                <FormLabel fontSize={{ base: 'md', md: 'sm' }}>Geographic Restrictions</FormLabel>
                 <Input
                   value={geographicRestrictions}
                   onChange={(e) => setGeographicRestrictions(e.target.value)}
                   placeholder="e.g., United States, California only"
+                  size={{ base: 'lg', md: 'md' }}
+                  fontSize={{ base: 'md', md: 'sm' }}
                 />
               </FormControl>
 
@@ -404,14 +437,16 @@ function Profile() {
                 <Checkbox
                   isChecked={essayRequired}
                   onChange={(e) => setEssayRequired(e.target.checked)}
+                  size={{ base: 'lg', md: 'md' }}
                 >
-                  Essay Required
+                  <Text fontSize={{ base: 'md', md: 'sm' }}>Essay Required</Text>
                 </Checkbox>
                 <Checkbox
                   isChecked={recommendationRequired}
                   onChange={(e) => setRecommendationRequired(e.target.checked)}
+                  size={{ base: 'lg', md: 'md' }}
                 >
-                  Recommendation Required
+                  <Text fontSize={{ base: 'md', md: 'sm' }}>Recommendation Required</Text>
                 </Checkbox>
               </Stack>
             </Stack>
@@ -428,31 +463,31 @@ function Profile() {
           </CardHeader>
           <CardBody>
             <Stack spacing="4">
-              <FormControl display="flex" alignItems="center">
-                <Box flex="1">
-                  <FormLabel mb="0">Application Reminders</FormLabel>
-                  <Text fontSize="sm" color="gray.500">
+              <FormControl display="flex" alignItems="center" flexDirection={{ base: 'column', md: 'row' }}>
+                <Box flex="1" mb={{ base: 2, md: 0 }}>
+                  <FormLabel mb="0" fontSize={{ base: 'md', md: 'sm' }}>Application Reminders</FormLabel>
+                  <Text fontSize={{ base: 'sm', md: 'sm' }} color="gray.500">
                     Receive email reminders for upcoming scholarship application deadlines
                   </Text>
                 </Box>
                 <Checkbox
                   isChecked={applicationRemindersEnabled}
                   onChange={(e) => setApplicationRemindersEnabled(e.target.checked)}
-                  size="lg"
+                  size={{ base: 'lg', md: 'lg' }}
                 />
               </FormControl>
 
-              <FormControl display="flex" alignItems="center">
-                <Box flex="1">
-                  <FormLabel mb="0">Collaboration Reminders</FormLabel>
-                  <Text fontSize="sm" color="gray.500">
+              <FormControl display="flex" alignItems="center" flexDirection={{ base: 'column', md: 'row' }}>
+                <Box flex="1" mb={{ base: 2, md: 0 }}>
+                  <FormLabel mb="0" fontSize={{ base: 'md', md: 'sm' }}>Collaboration Reminders</FormLabel>
+                  <Text fontSize={{ base: 'sm', md: 'sm' }} color="gray.500">
                     Receive email reminders for collaboration tasks and deadlines
                   </Text>
                 </Box>
                 <Checkbox
                   isChecked={collaborationRemindersEnabled}
                   onChange={(e) => setCollaborationRemindersEnabled(e.target.checked)}
-                  size="lg"
+                  size={{ base: 'lg', md: 'lg' }}
                 />
               </FormControl>
             </Stack>
