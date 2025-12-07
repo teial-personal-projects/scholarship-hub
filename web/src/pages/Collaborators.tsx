@@ -9,11 +9,6 @@ import {
   Heading,
   Button,
   Stack,
-  Tabs,
-  TabList,
-  TabPanels,
-  Tab,
-  TabPanel,
   Table,
   Thead,
   Tbody,
@@ -97,34 +92,9 @@ function Collaborators() {
     await fetchCollaborators();
   };
 
-  // Group collaborators by typical collaboration types
-  const recommenders = collaborators.filter(c =>
-    c.relationship?.toLowerCase().includes('teacher') ||
-    c.relationship?.toLowerCase().includes('professor') ||
-    c.relationship?.toLowerCase().includes('recommender')
-  );
-
-  const essayEditors = collaborators.filter(c =>
-    c.relationship?.toLowerCase().includes('editor') ||
-    c.relationship?.toLowerCase().includes('tutor') ||
-    c.relationship?.toLowerCase().includes('mentor')
-  );
-
-  const counselors = collaborators.filter(c =>
-    c.relationship?.toLowerCase().includes('counselor') ||
-    c.relationship?.toLowerCase().includes('advisor')
-  );
-
-  // All others
-  const others = collaborators.filter(c =>
-    !recommenders.includes(c) &&
-    !essayEditors.includes(c) &&
-    !counselors.includes(c)
-  );
-
-  const renderCollaboratorsTable = (collaboratorsList: CollaboratorResponse[]) => {
-    if (collaboratorsList.length === 0) {
-      return <Text color="gray.500">No collaborators in this category</Text>;
+  const renderCollaboratorsTable = () => {
+    if (collaborators.length === 0) {
+      return <Text color="gray.500">No collaborators yet. Add your first collaborator to get started.</Text>;
     }
 
     return (
@@ -142,7 +112,7 @@ function Collaborators() {
               </Tr>
             </Thead>
             <Tbody>
-              {collaboratorsList.map((collab) => (
+              {collaborators.map((collab) => (
                 <Tr key={collab.id}>
                   <Td fontWeight="semibold">
                     {collab.firstName} {collab.lastName}
@@ -180,7 +150,7 @@ function Collaborators() {
 
         {/* Mobile Card View */}
         <Stack spacing="3" display={{ base: 'flex', md: 'none' }}>
-          {collaboratorsList.map((collab) => (
+          {collaborators.map((collab) => (
             <Card key={collab.id}>
               <CardBody>
                 <Flex justify="space-between" align="start">
@@ -253,36 +223,8 @@ function Collaborators() {
           </Button>
         </Flex>
 
-        {/* Tabs for different collaborator types */}
-        <Tabs colorScheme="blue">
-          <Box overflowX="auto" overflowY="hidden">
-            <TabList display="flex" minW="max-content" flexWrap={{ base: 'nowrap', md: 'wrap' }}>
-              <Tab whiteSpace="nowrap">All ({collaborators.length})</Tab>
-              <Tab whiteSpace="nowrap">Recommenders ({recommenders.length})</Tab>
-              <Tab whiteSpace="nowrap">Essay Editors ({essayEditors.length})</Tab>
-              <Tab whiteSpace="nowrap">Counselors ({counselors.length})</Tab>
-              <Tab whiteSpace="nowrap">Others ({others.length})</Tab>
-            </TabList>
-          </Box>
-
-          <TabPanels>
-            <TabPanel px={0}>
-              {renderCollaboratorsTable(collaborators)}
-            </TabPanel>
-            <TabPanel px={0}>
-              {renderCollaboratorsTable(recommenders)}
-            </TabPanel>
-            <TabPanel px={0}>
-              {renderCollaboratorsTable(essayEditors)}
-            </TabPanel>
-            <TabPanel px={0}>
-              {renderCollaboratorsTable(counselors)}
-            </TabPanel>
-            <TabPanel px={0}>
-              {renderCollaboratorsTable(others)}
-            </TabPanel>
-          </TabPanels>
-        </Tabs>
+        {/* Collaborators Table */}
+        {renderCollaboratorsTable()}
       </Stack>
 
       {/* Collaborator Form Modal */}
