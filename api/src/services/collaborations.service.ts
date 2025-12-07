@@ -242,11 +242,12 @@ export const createCollaboration = async (
 
   // Validate: Due date is required for recommendation collaborations
   if (collaborationData.collaborationType === 'recommendation' && !collaborationData.nextActionDueDate) {
-    throw new Error('Due date is required for recommendation collaborations');
+    throw new AppError('nextActionDueDate is required for recommendation collaborations', 400);
   }
 
   // Convert camelCase to snake_case for base collaboration
   const dbData: Record<string, unknown> = {
+    user_id: userId, // Required: owner of the collaboration (student)
     collaborator_id: collaborationData.collaboratorId,
     application_id: collaborationData.applicationId,
     collaboration_type: collaborationData.collaborationType,
@@ -270,30 +271,126 @@ export const createCollaboration = async (
     .select()
     .single();
 
-  if (error) throw error;
+  if (error) {
+    // Log error with context for troubleshooting (sanitized for production)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('❌ Failed to create base collaboration:', {
+        error: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+        data: {
+          collaboratorId: collaborationData.collaboratorId,
+          applicationId: collaborationData.applicationId,
+          collaborationType: collaborationData.collaborationType,
+          userId,
+        },
+        dbData,
+      });
+    } else {
+      // Production: log minimal info without sensitive data
+      console.error('❌ Failed to create base collaboration:', {
+        error: error.message,
+        code: error.code,
+        collaborationType: collaborationData.collaborationType,
+      });
+    }
+    throw error;
+  }
 
   // Create type-specific data
-  if (collaborationData.collaborationType === 'essayReview' && collaborationData.essayId) {
-    await supabase.from('essay_review_collaborations').insert({
-      collaboration_id: collaboration.id,
-      essay_id: collaborationData.essayId,
-    });
-  } else if (collaborationData.collaborationType === 'recommendation') {
-    const recData: Record<string, unknown> = {
-      collaboration_id: collaboration.id,
-    };
-    if (collaborationData.portalUrl !== undefined) recData.portal_url = collaborationData.portalUrl;
-    await supabase.from('recommendation_collaborations').insert(recData);
-  } else if (collaborationData.collaborationType === 'guidance') {
-    const guidanceData: Record<string, unknown> = {
-      collaboration_id: collaboration.id,
-    };
-    if (collaborationData.sessionType !== undefined)
-      guidanceData.session_type = collaborationData.sessionType;
-    if (collaborationData.meetingUrl !== undefined) guidanceData.meeting_url = collaborationData.meetingUrl;
-    if (collaborationData.scheduledFor !== undefined)
-      guidanceData.scheduled_for = collaborationData.scheduledFor;
-    await supabase.from('guidance_collaborations').insert(guidanceData);
+  try {
+    if (collaborationData.collaborationType === 'essayReview' && collaborationData.essayId) {
+      const { error: essayError } = await supabase.from('essay_review_collaborations').insert({
+        collaboration_id: collaboration.id,
+        essay_id: collaborationData.essayId,
+      });
+      if (essayError) {
+        // Log error (minimal in production)
+        if (process.env.NODE_ENV === 'development') {
+          console.error('❌ Failed to create essay review collaboration:', {
+            error: essayError.message,
+            code: essayError.code,
+            collaborationId: collaboration.id,
+            essayId: collaborationData.essayId,
+          });
+        } else {
+          console.error('❌ Failed to create essay review collaboration:', {
+            error: essayError.message,
+            code: essayError.code,
+          });
+        }
+        throw essayError;
+      }
+    } else if (collaborationData.collaborationType === 'recommendation') {
+      const recData: Record<string, unknown> = {
+        collaboration_id: collaboration.id,
+      };
+      if (collaborationData.portalUrl !== undefined) recData.portal_url = collaborationData.portalUrl;
+      const { error: recError } = await supabase.from('recommendation_collaborations').insert(recData);
+      if (recError) {
+        // Log error (minimal in production, avoid logging portal URLs)
+        if (process.env.NODE_ENV === 'development') {
+          console.error('❌ Failed to create recommendation collaboration:', {
+            error: recError.message,
+            code: recError.code,
+            details: recError.details,
+            hint: recError.hint,
+            collaborationId: collaboration.id,
+            recData,
+          });
+        } else {
+          console.error('❌ Failed to create recommendation collaboration:', {
+            error: recError.message,
+            code: recError.code,
+          });
+        }
+        throw recError;
+      }
+    } else if (collaborationData.collaborationType === 'guidance') {
+      const guidanceData: Record<string, unknown> = {
+        collaboration_id: collaboration.id,
+      };
+      if (collaborationData.sessionType !== undefined)
+        guidanceData.session_type = collaborationData.sessionType;
+      if (collaborationData.meetingUrl !== undefined) guidanceData.meeting_url = collaborationData.meetingUrl;
+      if (collaborationData.scheduledFor !== undefined)
+        guidanceData.scheduled_for = collaborationData.scheduledFor;
+      const { error: guidanceError } = await supabase.from('guidance_collaborations').insert(guidanceData);
+      if (guidanceError) {
+        // Log error (minimal in production, avoid logging meeting URLs)
+        if (process.env.NODE_ENV === 'development') {
+          console.error('❌ Failed to create guidance collaboration:', {
+            error: guidanceError.message,
+            code: guidanceError.code,
+            collaborationId: collaboration.id,
+            guidanceData,
+          });
+        } else {
+          console.error('❌ Failed to create guidance collaboration:', {
+            error: guidanceError.message,
+            code: guidanceError.code,
+          });
+        }
+        throw guidanceError;
+      }
+    }
+  } catch (typeError) {
+    // If type-specific insert fails, delete the base collaboration to maintain consistency
+    if (process.env.NODE_ENV === 'development') {
+      console.error('❌ Type-specific insert failed, rolling back base collaboration:', {
+        collaborationId: collaboration.id,
+        collaborationType: collaborationData.collaborationType,
+        error: typeError instanceof Error ? typeError.message : String(typeError),
+      });
+    } else {
+      console.error('❌ Type-specific insert failed, rolling back base collaboration:', {
+        collaborationType: collaborationData.collaborationType,
+        error: typeError instanceof Error ? typeError.message : String(typeError),
+      });
+    }
+    await supabase.from('collaborations').delete().eq('id', collaboration.id);
+    throw typeError;
   }
 
   // Fetch full collaboration with type-specific data
@@ -328,7 +425,7 @@ export const updateCollaboration = async (
   if (existing.collaboration_type === 'recommendation' && 
       updates.nextActionDueDate === undefined && 
       !existing.next_action_due_date) {
-    throw new Error('Due date is required for recommendation collaborations');
+    throw new AppError('nextActionDueDate is required for recommendation collaborations', 400);
   }
 
   // Convert camelCase to snake_case for base collaboration

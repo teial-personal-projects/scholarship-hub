@@ -120,7 +120,10 @@ function AddCollaborationModal({
       };
 
       // Add due date (required for recommendations, optional for others)
-      if (nextActionDueDate) {
+      // Always include it for recommendations so backend can validate
+      if (collaborationType === 'recommendation') {
+        payload.nextActionDueDate = nextActionDueDate;
+      } else if (nextActionDueDate) {
         payload.nextActionDueDate = nextActionDueDate;
       }
 
@@ -153,7 +156,14 @@ function AddCollaborationModal({
       onSuccess();
       onClose();
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to add collaboration';
+      let errorMessage = 'Failed to add collaboration';
+      if (err instanceof Error) {
+        errorMessage = err.message;
+        // Include error details if available (for debugging)
+        if ((err as any).errorDetails?.originalError && process.env.NODE_ENV === 'development') {
+          errorMessage += `\n\nDetails: ${JSON.stringify((err as any).errorDetails.originalError, null, 2)}`;
+        }
+      }
       showError('Error', errorMessage);
     } finally {
       setSaving(false);

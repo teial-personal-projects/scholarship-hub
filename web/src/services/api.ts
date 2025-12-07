@@ -45,7 +45,23 @@ async function apiRequest<T>(
       message: response.statusText,
     }));
 
-    throw new Error(error.message || `API request failed: ${response.statusText}`);
+    // Create a more descriptive error message
+    let errorMessage = error.message || `API request failed: ${response.statusText}`;
+    
+    // Include error type if available
+    if (error.error && error.error !== 'Error') {
+      errorMessage = `${error.error}: ${errorMessage}`;
+    }
+    
+    // Include original error details in development
+    if (process.env.NODE_ENV === 'development' && error.originalError) {
+      errorMessage += `\n\nOriginal error: ${JSON.stringify(error.originalError, null, 2)}`;
+    }
+
+    const apiError = new Error(errorMessage);
+    // Attach the full error object for debugging
+    (apiError as any).errorDetails = error;
+    throw apiError;
   }
 
   // Handle empty responses
