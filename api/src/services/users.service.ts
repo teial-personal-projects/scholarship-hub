@@ -107,8 +107,8 @@ export const updateUserSearchPreferences = async (
     academicLevel?: string;
   }
 ) => {
-  // Convert camelCase to snake_case
-  const dbPrefs: Record<string, unknown> = { user_id: userId };
+  // Convert camelCase to snake_case (don't include user_id in update data)
+  const dbPrefs: Record<string, unknown> = {};
   if (preferences.targetType !== undefined) dbPrefs.target_type = preferences.targetType;
   if (preferences.subjectAreas !== undefined) dbPrefs.subject_areas = preferences.subjectAreas;
   if (preferences.gender !== undefined) dbPrefs.gender = preferences.gender;
@@ -119,29 +119,56 @@ export const updateUserSearchPreferences = async (
   if (preferences.recommendationRequired !== undefined) dbPrefs.recommendation_required = preferences.recommendationRequired;
   if (preferences.academicLevel !== undefined) dbPrefs.academic_level = preferences.academicLevel;
 
-  // Use UPSERT (INSERT ... ON CONFLICT ... DO UPDATE) to handle both insert and update
-  // This avoids race conditions and handles the case where record might not exist
-  const { data, error } = await supabase
+  // Check if preferences already exist
+  const { data: existing, error: checkError } = await supabase
     .from('user_search_preferences')
-    .upsert(dbPrefs, {
-      onConflict: 'user_id', // Primary key column
-    })
-    .select()
-    .single();
+    .select('user_id')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (checkError && !isDbErrorCode(checkError, DB_ERROR_CODES.NO_ROWS_FOUND)) {
+    throw checkError;
+  }
+
+  let data;
+  let error;
+
+  if (existing) {
+    // Update existing record (don't include user_id in update)
+    const result = await supabase
+      .from('user_search_preferences')
+      .update(dbPrefs)
+      .eq('user_id', userId)
+      .select()
+      .single();
+    data = result.data;
+    error = result.error;
+  } else {
+    // Insert new record (include user_id for insert)
+    const insertData = { ...dbPrefs, user_id: userId };
+    const result = await supabase
+      .from('user_search_preferences')
+      .insert(insertData)
+      .select()
+      .single();
+    data = result.data;
+    error = result.error;
+  }
 
   if (error) {
     // Log error with context for troubleshooting
     if (process.env.NODE_ENV === 'development') {
-      console.error('❌ Failed to upsert user search preferences:', {
+      console.error('❌ Failed to save user search preferences:', {
         error: error.message,
         code: error.code,
         details: error.details,
         hint: error.hint,
         userId,
         dbPrefs,
+        existing: !!existing,
       });
     } else {
-      console.error('❌ Failed to upsert user search preferences:', {
+      console.error('❌ Failed to save user search preferences:', {
         error: error.message,
         code: error.code,
         userId,

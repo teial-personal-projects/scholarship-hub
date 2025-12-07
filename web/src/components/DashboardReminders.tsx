@@ -125,17 +125,17 @@ function DashboardReminders() {
         <CardBody>
           <HStack spacing="4" flexWrap="wrap">
             {hasOverdueItems && (
-              <Badge colorScheme="red" fontSize="md" px="3" py="1" borderRadius="full">
+              <Badge key="overdue" colorScheme="red" fontSize="md" px="3" py="1" borderRadius="full">
                 {reminders.stats.totalOverdue} Overdue
               </Badge>
             )}
             {hasUpcomingItems && (
-              <Badge colorScheme="blue" fontSize="md" px="3" py="1" borderRadius="full">
+              <Badge key="upcoming" colorScheme="blue" fontSize="md" px="3" py="1" borderRadius="full">
                 {reminders.stats.totalUpcoming} Due Soon
               </Badge>
             )}
             {hasPendingCollabs && (
-              <Badge colorScheme="gray" fontSize="md" px="3" py="1" borderRadius="full">
+              <Badge key="pending" colorScheme="gray" fontSize="md" px="3" py="1" borderRadius="full">
                 {reminders.collaborations.pendingResponse.length} Pending Responses
               </Badge>
             )}
@@ -280,7 +280,7 @@ function DashboardReminders() {
               <Stack spacing="3">
                 {reminders.collaborations.pendingResponse.map((collab) => (
                   <Box
-                    key={collab.collaborationId}
+                    key={collab.id}
                     p="3"
                     bg="gray.50"
                     borderRadius="md"
@@ -301,7 +301,7 @@ function DashboardReminders() {
                       <Link
                         color="blue.500"
                         fontSize="sm"
-                        onClick={() => navigate(`/collaborations/${collab.collaborationId}`)}
+                        onClick={() => navigate(`/collaborations/${collab.id}`)}
                         cursor="pointer"
                       >
                         View Details
@@ -338,7 +338,7 @@ function DashboardReminders() {
                   const daysUntilDue = collab.nextActionDueDate ? getDaysUntilDue(collab.nextActionDueDate) : null;
                   return (
                     <Box
-                      key={collab.collaborationId}
+                      key={collab.id}
                       p="3"
                       bg="red.50"
                       borderRadius="md"
@@ -361,7 +361,7 @@ function DashboardReminders() {
                         <Link
                           color="blue.500"
                           fontSize="sm"
-                          onClick={() => navigate(`/collaborations/${collab.collaborationId}`)}
+                          onClick={() => navigate(`/collaborations/${collab.id}`)}
                           cursor="pointer"
                         >
                           View Details
@@ -399,7 +399,7 @@ function DashboardReminders() {
                   const daysUntilDue = collab.nextActionDueDate ? getDaysUntilDue(collab.nextActionDueDate) : null;
                   return (
                     <Box
-                      key={collab.collaborationId}
+                      key={collab.id}
                       p="3"
                       bg="blue.50"
                       borderRadius="md"
@@ -422,7 +422,7 @@ function DashboardReminders() {
                         <Link
                           color="blue.500"
                           fontSize="sm"
-                          onClick={() => navigate(`/collaborations/${collab.collaborationId}`)}
+                          onClick={() => navigate(`/collaborations/${collab.id}`)}
                           cursor="pointer"
                         >
                           View Details
