@@ -38,11 +38,11 @@ function ForgotPassword() {
   };
 
   return (
-    <Container maxW="lg" py={{ base: '12', md: '24' }}>
-      <Stack spacing="8">
+    <Container maxW="lg" py={{ base: '8', md: '24' }} px={{ base: '4', md: '6' }}>
+      <Stack spacing={{ base: '6', md: '8' }}>
         <Stack spacing="6" align="center">
-          <Heading size="xl">Forgot password?</Heading>
-          <Text color="gray.600" textAlign="center">
+          <Heading size={{ base: 'lg', md: 'xl' }}>Forgot password?</Heading>
+          <Text color="gray.600" textAlign="center" fontSize={{ base: 'sm', md: 'md' }}>
             Enter your email and we&apos;ll send you a password reset link.
           </Text>
         </Stack>

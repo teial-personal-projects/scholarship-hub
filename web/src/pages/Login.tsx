@@ -42,11 +42,11 @@ function Login() {
   };
 
   return (
-    <Container maxW="lg" py={{ base: '12', md: '24' }}>
-      <Stack spacing="8">
+    <Container maxW="lg" py={{ base: '8', md: '24' }} px={{ base: '4', md: '6' }}>
+      <Stack spacing={{ base: '6', md: '8' }}>
         <Stack spacing="6" align="center">
-          <Heading size="xl">ScholarshipHub</Heading>
-          <Text color="gray.600">Sign in to your account</Text>
+          <Heading size={{ base: 'lg', md: 'xl' }}>ScholarshipHub</Heading>
+          <Text color="gray.600" fontSize={{ base: 'sm', md: 'md' }}>Sign in to your account</Text>
         </Stack>
 
         <Card>

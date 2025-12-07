@@ -212,16 +212,16 @@ function Profile() {
 
   if (loading) {
     return (
-      <Container maxW="4xl" py={{ base: '8', md: '12' }}>
+      <Container maxW="4xl" py={{ base: '4', md: '12' }} px={{ base: '4', md: '6' }}>
         <Text>Loading profile...</Text>
       </Container>
     );
   }
 
   return (
-    <Container maxW="4xl" py={{ base: '8', md: '12' }}>
-      <Stack spacing="8">
-        <Heading size="lg">Profile & Preferences</Heading>
+    <Container maxW="4xl" py={{ base: '4', md: '12' }} px={{ base: '4', md: '6' }}>
+      <Stack spacing={{ base: '4', md: '8' }}>
+        <Heading size={{ base: 'md', md: 'lg' }}>Profile & Preferences</Heading>
 
         {/* Profile Information */}
         <Card>
@@ -463,10 +463,11 @@ function Profile() {
         <Box>
           <Button
             colorScheme="blue"
-            size="lg"
+            size={{ base: 'md', md: 'lg' }}
             onClick={handleSave}
             isLoading={saving}
             loadingText="Saving..."
+            width={{ base: '100%', md: 'auto' }}
           >
             Save Changes
           </Button>

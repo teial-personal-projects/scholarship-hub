@@ -110,9 +110,9 @@ function EditCollaborationModal({
   if (!collaboration) return null;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="xl">
+    <Modal isOpen={isOpen} onClose={onClose} size={{ base: 'full', md: 'xl' }} isCentered>
       <ModalOverlay />
-      <ModalContent>
+      <ModalContent mx={{ base: 0, md: 'auto' }} my={{ base: 0, md: 'auto' }} maxH={{ base: '100vh', md: '90vh' }} overflowY="auto">
         <ModalHeader>Edit Collaboration</ModalHeader>
         <ModalCloseButton />
         <ModalBody>

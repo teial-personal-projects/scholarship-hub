@@ -10,7 +10,17 @@ import {
   MenuItem,
   Avatar,
   Divider,
+  IconButton,
+  Drawer,
+  DrawerBody,
+  DrawerHeader,
+  DrawerOverlay,
+  DrawerContent,
+  DrawerCloseButton,
+  VStack,
+  useDisclosure,
 } from '@chakra-ui/react';
+// Hamburger icon - using text symbol for simplicity
 import { useAuth } from '../contexts/AuthContext';
 import { useToastHelpers } from '../utils/toast';
 
@@ -23,6 +33,7 @@ export function Navigation() {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { showSuccess, showError } = useToastHelpers();
+  const { isOpen: isDrawerOpen, onOpen: onDrawerOpen, onClose: onDrawerClose } = useDisclosure();
 
   const handleLogout = async () => {
     try {
@@ -46,10 +57,10 @@ export function Navigation() {
     return location.pathname.startsWith(path);
   };
 
-  const NavLink = ({ to, children }: { to: string; children: React.ReactNode }) => {
+  const NavLink = ({ to, children, onClick }: { to: string; children: React.ReactNode; onClick?: () => void }) => {
     const active = isActive(to);
     return (
-      <Link to={to}>
+      <Link to={to} onClick={onClick}>
         <Box
           px="4"
           py="2"
@@ -63,6 +74,8 @@ export function Navigation() {
             bg: active ? 'blue.400' : 'blue.600',
           }}
           transition="all 0.2s"
+          w="100%"
+          textAlign="left"
         >
           {children}
         </Box>
@@ -70,62 +83,125 @@ export function Navigation() {
     );
   };
 
+
   return (
-    <Box bg="blue.500" boxShadow="md" position="sticky" top="0" zIndex="1000">
-      <Flex
-        maxW="100%"
-        mx="auto"
-        px={{ base: '4', md: '8' }}
-        py="3"
-        align="center"
-        justify="space-between"
-      >
-        {/* Left: Logo */}
-        <Link to="/dashboard" style={{ textDecoration: 'none' }}>
-          <HStack spacing="3" cursor="pointer" _hover={{ opacity: 0.8 }}>
-            <Box fontSize="2xl">🎓</Box>
-            <Text fontSize="lg" fontWeight="bold" color="white">
-              Scholarship Hub
-            </Text>
-          </HStack>
-        </Link>
-
-        {/* Center: Navigation Links */}
-        <HStack spacing="1" display={{ base: 'none', md: 'flex' }}>
-          <NavLink to="/dashboard">DASHBOARD</NavLink>
-          <Box w="1px" h="6" bg="white" opacity="0.3" />
-          <NavLink to="/collaborators">COLLABORATORS</NavLink>
-          <Box w="1px" h="6" bg="white" opacity="0.3" />
-          <NavLink to="/profile">PROFILE</NavLink>
-        </HStack>
-
-        {/* Right: User Menu */}
-        <HStack spacing="3">
-          <Menu>
-            <MenuButton
-              as={Box}
-              cursor="pointer"
-              _hover={{ opacity: 0.8 }}
-            >
-              <HStack spacing="2">
-                <Avatar size="sm" bg="green.500" name={user.email || 'User'} />
-                <Text color="white" fontWeight="medium">
-                  User
+    <>
+      <Box bg="blue.500" boxShadow="md" position="sticky" top="0" zIndex="1000">
+        <Flex
+          maxW="100%"
+          mx="auto"
+          px={{ base: '4', md: '8' }}
+          py="3"
+          align="center"
+          justify="space-between"
+        >
+          {/* Left: Logo and Mobile Menu Button */}
+          <HStack spacing="3">
+            {/* Mobile Hamburger Menu */}
+            <IconButton
+              aria-label="Open menu"
+              icon={<Text fontSize="xl">☰</Text>}
+              variant="ghost"
+              color="white"
+              display={{ base: 'flex', md: 'none' }}
+              onClick={onDrawerOpen}
+            />
+            <Link to="/dashboard" style={{ textDecoration: 'none' }}>
+              <HStack spacing="3" cursor="pointer" _hover={{ opacity: 0.8 }}>
+                <Box fontSize={{ base: 'xl', md: '2xl' }}>🎓</Box>
+                <Text fontSize={{ base: 'md', md: 'lg' }} fontWeight="bold" color="white">
+                  Scholarship Hub
                 </Text>
-                <Text color="white" fontSize="sm">▼</Text>
               </HStack>
-            </MenuButton>
-            <MenuList>
-              <MenuItem onClick={() => navigate('/profile')}>Edit Profile</MenuItem>
-              <Divider />
-              <MenuItem onClick={handleLogout} color="red.500">
+            </Link>
+          </HStack>
+
+          {/* Center: Navigation Links (Desktop) */}
+          <HStack spacing="1" display={{ base: 'none', md: 'flex' }}>
+            <NavLink to="/dashboard">DASHBOARD</NavLink>
+            <Box w="1px" h="6" bg="white" opacity="0.3" />
+            <NavLink to="/collaborators">COLLABORATORS</NavLink>
+            <Box w="1px" h="6" bg="white" opacity="0.3" />
+            <NavLink to="/profile">PROFILE</NavLink>
+          </HStack>
+
+          {/* Right: User Menu */}
+          <HStack spacing="3">
+            <Menu>
+              <MenuButton
+                as={Box}
+                cursor="pointer"
+                _hover={{ opacity: 0.8 }}
+              >
+                <HStack spacing="2">
+                  <Avatar size="sm" bg="green.500" name={user.email || 'User'} />
+                  <Text color="white" fontWeight="medium" display={{ base: 'none', md: 'block' }}>
+                    User
+                  </Text>
+                  <Text color="white" fontSize="sm" display={{ base: 'none', md: 'block' }}>▼</Text>
+                </HStack>
+              </MenuButton>
+              <MenuList>
+                <MenuItem onClick={() => navigate('/profile')}>Edit Profile</MenuItem>
+                <Divider />
+                <MenuItem onClick={handleLogout} color="red.500">
+                  Logout
+                </MenuItem>
+              </MenuList>
+            </Menu>
+          </HStack>
+        </Flex>
+      </Box>
+
+      {/* Mobile Drawer Menu */}
+      <Drawer isOpen={isDrawerOpen} placement="left" onClose={onDrawerClose}>
+        <DrawerOverlay />
+        <DrawerContent bg="blue.500">
+          <DrawerCloseButton color="white" />
+          <DrawerHeader>
+            <Text color="white" fontSize="lg" fontWeight="bold">
+              Menu
+            </Text>
+          </DrawerHeader>
+          <DrawerBody>
+            <VStack spacing="2" align="stretch" mt="4">
+              <NavLink to="/dashboard" onClick={onDrawerClose}>DASHBOARD</NavLink>
+              <NavLink to="/collaborators" onClick={onDrawerClose}>COLLABORATORS</NavLink>
+              <NavLink to="/profile" onClick={onDrawerClose}>PROFILE</NavLink>
+              <Divider borderColor="whiteAlpha.300" my="2" />
+              <Box
+                px="4"
+                py="2"
+                borderRadius="md"
+                color="white"
+                cursor="pointer"
+                _hover={{ bg: 'blue.600' }}
+                onClick={() => {
+                  navigate('/profile');
+                  onDrawerClose();
+                }}
+              >
+                Edit Profile
+              </Box>
+              <Box
+                px="4"
+                py="2"
+                borderRadius="md"
+                color="red.200"
+                cursor="pointer"
+                _hover={{ bg: 'blue.600' }}
+                onClick={() => {
+                  handleLogout();
+                  onDrawerClose();
+                }}
+              >
                 Logout
-              </MenuItem>
-            </MenuList>
-          </Menu>
-        </HStack>
-      </Flex>
-    </Box>
+              </Box>
+            </VStack>
+          </DrawerBody>
+        </DrawerContent>
+      </Drawer>
+    </>
   );
 }
 

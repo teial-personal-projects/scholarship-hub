@@ -36,6 +36,10 @@ import {
   AlertDialogOverlay,
   Box,
   Badge,
+  Card,
+  CardBody,
+  Flex,
+  HStack,
 } from '@chakra-ui/react';
 import { apiDelete } from '../services/api';
 import type { CollaboratorResponse } from '@scholarship-hub/shared';
@@ -124,57 +128,108 @@ function Collaborators() {
     }
 
     return (
-      <Table variant="simple">
-        <Thead>
-          <Tr>
-            <Th>Name</Th>
-            <Th>Email</Th>
-            <Th>Relationship</Th>
-            <Th>Phone</Th>
-            <Th>Actions</Th>
-          </Tr>
-        </Thead>
-        <Tbody>
+      <>
+        {/* Desktop Table View */}
+        <Box display={{ base: 'none', md: 'block' }} overflowX="auto">
+          <Table variant="simple">
+            <Thead>
+              <Tr>
+                <Th>Name</Th>
+                <Th>Email</Th>
+                <Th>Relationship</Th>
+                <Th>Phone</Th>
+                <Th>Actions</Th>
+              </Tr>
+            </Thead>
+            <Tbody>
+              {collaboratorsList.map((collab) => (
+                <Tr key={collab.id}>
+                  <Td fontWeight="semibold">
+                    {collab.firstName} {collab.lastName}
+                  </Td>
+                  <Td>{collab.emailAddress}</Td>
+                  <Td>
+                    {collab.relationship ? (
+                      <Badge colorScheme="blue">{collab.relationship}</Badge>
+                    ) : (
+                      <Text color="gray.400">-</Text>
+                    )}
+                  </Td>
+                  <Td>{collab.phoneNumber || '-'}</Td>
+                  <Td>
+                    <Menu>
+                      <MenuButton
+                        as={IconButton}
+                        icon={<Text>⋮</Text>}
+                        variant="ghost"
+                        size="sm"
+                      />
+                      <MenuList>
+                        <MenuItem onClick={() => handleEditCollaborator(collab)}>Edit</MenuItem>
+                        <MenuItem color="red.500" onClick={() => handleDeleteClick(collab.id)}>
+                          Delete
+                        </MenuItem>
+                      </MenuList>
+                    </Menu>
+                  </Td>
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
+        </Box>
+
+        {/* Mobile Card View */}
+        <Stack spacing="3" display={{ base: 'flex', md: 'none' }}>
           {collaboratorsList.map((collab) => (
-            <Tr key={collab.id}>
-              <Td fontWeight="semibold">
-                {collab.firstName} {collab.lastName}
-              </Td>
-              <Td>{collab.emailAddress}</Td>
-              <Td>
-                {collab.relationship ? (
-                  <Badge colorScheme="blue">{collab.relationship}</Badge>
-                ) : (
-                  <Text color="gray.400">-</Text>
-                )}
-              </Td>
-              <Td>{collab.phoneNumber || '-'}</Td>
-              <Td>
-                <Menu>
-                  <MenuButton
-                    as={IconButton}
-                    icon={<Text>⋮</Text>}
-                    variant="ghost"
-                    size="sm"
-                  />
-                  <MenuList>
-                    <MenuItem onClick={() => handleEditCollaborator(collab)}>Edit</MenuItem>
-                    <MenuItem color="red.500" onClick={() => handleDeleteClick(collab.id)}>
-                      Delete
-                    </MenuItem>
-                  </MenuList>
-                </Menu>
-              </Td>
-            </Tr>
+            <Card key={collab.id}>
+              <CardBody>
+                <Flex justify="space-between" align="start">
+                  <Box flex="1" minW="0">
+                    <Text fontWeight="bold" fontSize="md" mb="1">
+                      {collab.firstName} {collab.lastName}
+                    </Text>
+                    <Text fontSize="sm" color="gray.600" mb="2" wordBreak="break-all">
+                      {collab.emailAddress}
+                    </Text>
+                    <HStack spacing="2" mb="2" flexWrap="wrap">
+                      {collab.relationship && (
+                        <Badge colorScheme="blue" fontSize="xs">
+                          {collab.relationship}
+                        </Badge>
+                      )}
+                      {collab.phoneNumber && (
+                        <Text fontSize="xs" color="gray.600">
+                          {collab.phoneNumber}
+                        </Text>
+                      )}
+                    </HStack>
+                  </Box>
+                  <Menu>
+                    <MenuButton
+                      as={IconButton}
+                      icon={<Text>⋮</Text>}
+                      variant="ghost"
+                      size="sm"
+                    />
+                    <MenuList>
+                      <MenuItem onClick={() => handleEditCollaborator(collab)}>Edit</MenuItem>
+                      <MenuItem color="red.500" onClick={() => handleDeleteClick(collab.id)}>
+                        Delete
+                      </MenuItem>
+                    </MenuList>
+                  </Menu>
+                </Flex>
+              </CardBody>
+            </Card>
           ))}
-        </Tbody>
-      </Table>
+        </Stack>
+      </>
     );
   };
 
   if (loading) {
     return (
-      <Container maxW="7xl" py={{ base: '8', md: '12' }}>
+      <Container maxW="7xl" py={{ base: '4', md: '12' }} px={{ base: '4', md: '6' }}>
         <Stack spacing="8" align="center">
           <Spinner size="xl" />
           <Text>Loading collaborators...</Text>
@@ -184,25 +239,31 @@ function Collaborators() {
   }
 
   return (
-    <Container maxW="7xl" py={{ base: '8', md: '12' }}>
-      <Stack spacing="6">
+    <Container maxW="7xl" py={{ base: '4', md: '12' }} px={{ base: '4', md: '6' }}>
+      <Stack spacing={{ base: '4', md: '6' }}>
         {/* Header */}
-        <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Heading size="lg">Collaborators</Heading>
-          <Button colorScheme="blue" onClick={handleAddCollaborator}>
+        <Flex justify="space-between" align="center" flexWrap="wrap" gap="4">
+          <Heading size={{ base: 'md', md: 'lg' }}>Collaborators</Heading>
+          <Button 
+            colorScheme="blue" 
+            onClick={handleAddCollaborator}
+            size={{ base: 'sm', md: 'md' }}
+          >
             Add Collaborator
           </Button>
-        </Box>
+        </Flex>
 
         {/* Tabs for different collaborator types */}
         <Tabs colorScheme="blue">
-          <TabList>
-            <Tab>All ({collaborators.length})</Tab>
-            <Tab>Recommenders ({recommenders.length})</Tab>
-            <Tab>Essay Editors ({essayEditors.length})</Tab>
-            <Tab>Counselors ({counselors.length})</Tab>
-            <Tab>Others ({others.length})</Tab>
-          </TabList>
+          <Box overflowX="auto" overflowY="hidden">
+            <TabList display="flex" minW="max-content" flexWrap={{ base: 'nowrap', md: 'wrap' }}>
+              <Tab whiteSpace="nowrap">All ({collaborators.length})</Tab>
+              <Tab whiteSpace="nowrap">Recommenders ({recommenders.length})</Tab>
+              <Tab whiteSpace="nowrap">Essay Editors ({essayEditors.length})</Tab>
+              <Tab whiteSpace="nowrap">Counselors ({counselors.length})</Tab>
+              <Tab whiteSpace="nowrap">Others ({others.length})</Tab>
+            </TabList>
+          </Box>
 
           <TabPanels>
             <TabPanel px={0}>

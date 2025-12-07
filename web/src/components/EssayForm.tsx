@@ -87,9 +87,9 @@ function EssayForm({ isOpen, onClose, applicationId, essay, onSuccess }: EssayFo
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} size="lg">
+    <Modal isOpen={isOpen} onClose={handleClose} size={{ base: 'full', md: 'lg' }} isCentered>
       <ModalOverlay />
-      <ModalContent>
+      <ModalContent mx={{ base: 0, md: 'auto' }} my={{ base: 0, md: 'auto' }} maxH={{ base: '100vh', md: '90vh' }} overflowY="auto">
         <form onSubmit={handleSubmit}>
           <ModalHeader>{isEditMode ? 'Edit Essay' : 'Add Essay'}</ModalHeader>
           <ModalCloseButton isDisabled={submitting} />

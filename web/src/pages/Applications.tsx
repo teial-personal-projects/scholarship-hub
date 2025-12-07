@@ -146,7 +146,7 @@ function Applications() {
 
   if (authLoading || loading) {
     return (
-      <Container maxW="7xl" py={{ base: '8', md: '12' }}>
+      <Container maxW="7xl" py={{ base: '4', md: '12' }} px={{ base: '4', md: '6' }}>
         <Stack spacing="8" align="center">
           <Spinner size="xl" />
           <Text>Loading applications...</Text>
@@ -157,7 +157,7 @@ function Applications() {
 
   if (error) {
     return (
-      <Container maxW="7xl" py={{ base: '8', md: '12' }}>
+      <Container maxW="7xl" py={{ base: '4', md: '12' }} px={{ base: '4', md: '6' }}>
         <Card>
           <CardBody>
             <Text color="red.500">{error}</Text>
@@ -168,21 +168,22 @@ function Applications() {
   }
 
   return (
-    <Container maxW="7xl" py={{ base: '8', md: '12' }}>
-      <Stack spacing="8">
+    <Container maxW="7xl" py={{ base: '4', md: '12' }} px={{ base: '4', md: '6' }}>
+      <Stack spacing={{ base: '4', md: '8' }}>
         {/* Header */}
-        <Flex justify="space-between" align="center" flexWrap="wrap" gap="4">
-          <Box>
-            <Heading size="lg" mb="2">
+        <Flex justify="space-between" align="start" flexWrap="wrap" gap="4">
+          <Box flex="1" minW="0">
+            <Heading size={{ base: 'md', md: 'lg' }} mb="2">
               Applications
             </Heading>
-            <Text color="gray.600">
+            <Text color="gray.600" fontSize={{ base: 'sm', md: 'md' }}>
               Manage all your scholarship applications in one place
             </Text>
           </Box>
           <Button
             colorScheme="blue"
             onClick={() => navigate('/applications/new')}
+            size={{ base: 'sm', md: 'md' }}
           >
             New Application
           </Button>
@@ -250,12 +251,13 @@ function Applications() {
               </Box>
             ) : (
               <Stack spacing="4">
-                <Box overflowX="auto">
-                  <Table variant="simple" size={{ base: 'sm', md: 'md' }}>
+                {/* Desktop Table View */}
+                <Box display={{ base: 'none', md: 'block' }} overflowX="auto">
+                  <Table variant="simple" size="md">
                     <Thead>
                       <Tr>
                         <Th>Scholarship Name</Th>
-                        <Th display={{ base: 'none', md: 'table-cell' }}>Organization</Th>
+                        <Th>Organization</Th>
                         <Th>Status</Th>
                         <Th>Due Date</Th>
                         <Th>Actions</Th>
@@ -265,9 +267,7 @@ function Applications() {
                       {paginatedApplications.map((app) => (
                         <Tr key={app.id}>
                           <Td fontWeight="medium">{app.scholarshipName}</Td>
-                          <Td display={{ base: 'none', md: 'table-cell' }}>
-                            {app.organization || '-'}
-                          </Td>
+                          <Td>{app.organization || '-'}</Td>
                           <Td>
                             <Badge colorScheme={getStatusColor(app.status)}>
                               {app.status}
@@ -308,6 +308,65 @@ function Applications() {
                     </Tbody>
                   </Table>
                 </Box>
+
+                {/* Mobile Card View */}
+                <Stack spacing="4" display={{ base: 'flex', md: 'none' }}>
+                  {paginatedApplications.map((app) => (
+                    <Card key={app.id} cursor="pointer" onClick={() => navigate(`/applications/${app.id}`)}>
+                      <CardBody>
+                        <Stack spacing="3">
+                          <Flex justify="space-between" align="start">
+                            <Box flex="1">
+                              <Text fontWeight="bold" fontSize="md" mb="1">
+                                {app.scholarshipName}
+                              </Text>
+                              {app.organization && (
+                                <Text fontSize="sm" color="gray.600" mb="2">
+                                  {app.organization}
+                                </Text>
+                              )}
+                            </Box>
+                            <Badge colorScheme={getStatusColor(app.status)}>
+                              {app.status}
+                            </Badge>
+                          </Flex>
+                          <HStack spacing="4" fontSize="sm" color="gray.600">
+                            <Text>
+                              <Text as="span" fontWeight="semibold">Due:</Text>{' '}
+                              {app.dueDate
+                                ? new Date(app.dueDate).toLocaleDateString()
+                                : '-'}
+                            </Text>
+                          </HStack>
+                          <Menu>
+                            <MenuButton
+                              as={Button}
+                              size="sm"
+                              variant="outline"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              Actions
+                            </MenuButton>
+                            <MenuList>
+                              <MenuItem onClick={() => navigate(`/applications/${app.id}`)}>
+                                View Details
+                              </MenuItem>
+                              <MenuItem onClick={() => navigate(`/applications/${app.id}/edit`)}>
+                                Edit
+                              </MenuItem>
+                              <MenuItem
+                                color="red.500"
+                                onClick={() => handleDeleteClick(app.id)}
+                              >
+                                Delete
+                              </MenuItem>
+                            </MenuList>
+                          </Menu>
+                        </Stack>
+                      </CardBody>
+                    </Card>
+                  ))}
+                </Stack>
 
                 {/* Pagination */}
                 {totalPages > 1 && (

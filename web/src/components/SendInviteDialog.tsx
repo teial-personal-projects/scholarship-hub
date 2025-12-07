@@ -131,9 +131,9 @@ const SendInviteDialog: React.FC<SendInviteDialogProps> = ({
   const isResend = collaboration.status === 'invited' && collaboration.invite;
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} size="md">
+    <Modal isOpen={isOpen} onClose={handleClose} size={{ base: 'full', md: 'md' }} isCentered>
       <ModalOverlay />
-      <ModalContent>
+      <ModalContent mx={{ base: 0, md: 'auto' }} my={{ base: 0, md: 'auto' }} maxH={{ base: '100vh', md: '90vh' }} overflowY="auto">
         <ModalHeader>{isResend ? 'Resend' : 'Send'} Collaboration Invitation</ModalHeader>
         <ModalCloseButton />
 

@@ -47,11 +47,11 @@ function ResetPassword() {
   const hasRecoverySession = Boolean(session);
 
   return (
-    <Container maxW="lg" py={{ base: '12', md: '24' }}>
-      <Stack spacing="8">
+    <Container maxW="lg" py={{ base: '8', md: '24' }} px={{ base: '4', md: '6' }}>
+      <Stack spacing={{ base: '6', md: '8' }}>
         <Stack spacing="6" align="center">
-          <Heading size="xl">Reset password</Heading>
-          <Text color="gray.600" textAlign="center">
+          <Heading size={{ base: 'lg', md: 'xl' }}>Reset password</Heading>
+          <Text color="gray.600" textAlign="center" fontSize={{ base: 'sm', md: 'md' }}>
             {hasRecoverySession
               ? 'Choose a new password for your account.'
               : 'Your reset link may have expired. Request a new password reset email to continue.'}

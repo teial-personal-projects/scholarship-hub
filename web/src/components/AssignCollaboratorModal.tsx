@@ -118,9 +118,9 @@ const AssignCollaboratorModal: React.FC<AssignCollaboratorModalProps> = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="md">
+    <Modal isOpen={isOpen} onClose={onClose} size={{ base: 'full', md: 'md' }} isCentered>
       <ModalOverlay />
-      <ModalContent>
+      <ModalContent mx={{ base: 0, md: 'auto' }} my={{ base: 0, md: 'auto' }} maxH={{ base: '100vh', md: '90vh' }} overflowY="auto">
         <form onSubmit={handleSubmit}>
           <ModalHeader>Assign Collaborator</ModalHeader>
           <ModalCloseButton />

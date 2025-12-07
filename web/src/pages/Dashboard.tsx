@@ -118,14 +118,14 @@ function Dashboard() {
   const firstName = profile?.firstName || 'Student';
 
   return (
-    <Container maxW="7xl" py={{ base: '8', md: '12' }}>
-      <Stack spacing="8">
+    <Container maxW="7xl" py={{ base: '4', md: '12' }} px={{ base: '4', md: '6' }}>
+      <Stack spacing={{ base: '4', md: '8' }}>
         {/* Welcome Section */}
         <Box>
-          <Heading size="lg" mb="2">
+          <Heading size={{ base: 'md', md: 'lg' }} mb="2">
             Welcome, {firstName}!
           </Heading>
-          <Text color="gray.600">Here's an overview of your scholarship applications.</Text>
+          <Text color="gray.600" fontSize={{ base: 'sm', md: 'md' }}>Here's an overview of your scholarship applications.</Text>
         </Box>
 
         {/* Reminders Section */}
@@ -136,6 +136,7 @@ function Dashboard() {
           <Button
             colorScheme="blue"
             onClick={() => navigate('/applications/new')}
+            size={{ base: 'sm', md: 'md' }}
           >
             New Application
           </Button>
@@ -169,12 +170,13 @@ function Dashboard() {
               </Box>
             ) : (
               <Stack spacing="4">
-                <Box overflowX="auto">
-                  <Table variant="simple" size={{ base: 'sm', md: 'md' }}>
+                {/* Desktop Table View */}
+                <Box overflowX="auto" display={{ base: 'none', md: 'block' }}>
+                  <Table variant="simple" size="md">
                     <Thead>
                       <Tr>
                         <Th>Scholarship Name</Th>
-                        <Th display={{ base: 'none', md: 'table-cell' }}>Organization</Th>
+                        <Th>Organization</Th>
                         <Th>Status</Th>
                         <Th>Due Date</Th>
                         <Th>Actions</Th>
@@ -184,9 +186,7 @@ function Dashboard() {
                       {paginatedApplications.map((app) => (
                         <Tr key={app.id}>
                           <Td fontWeight="medium">{app.scholarshipName}</Td>
-                          <Td display={{ base: 'none', md: 'table-cell' }}>
-                            {app.organization || '-'}
-                          </Td>
+                          <Td>{app.organization || '-'}</Td>
                           <Td>
                             <Badge
                               colorScheme={
@@ -221,6 +221,51 @@ function Dashboard() {
                     </Tbody>
                   </Table>
                 </Box>
+
+                {/* Mobile Card View */}
+                <Stack spacing="4" display={{ base: 'flex', md: 'none' }}>
+                  {paginatedApplications.map((app) => (
+                    <Card key={app.id} cursor="pointer" onClick={() => navigate(`/applications/${app.id}`)}>
+                      <CardBody>
+                        <Stack spacing="3">
+                          <Flex justify="space-between" align="start">
+                            <Box flex="1">
+                              <Text fontWeight="bold" fontSize="md" mb="1">
+                                {app.scholarshipName}
+                              </Text>
+                              {app.organization && (
+                                <Text fontSize="sm" color="gray.600" mb="2">
+                                  {app.organization}
+                                </Text>
+                              )}
+                            </Box>
+                            <Badge
+                              colorScheme={
+                                app.status === 'Submitted'
+                                  ? 'green'
+                                  : app.status === 'In Progress'
+                                  ? 'blue'
+                                  : app.status === 'Not Started'
+                                  ? 'gray'
+                                  : 'orange'
+                              }
+                            >
+                              {app.status}
+                            </Badge>
+                          </Flex>
+                          <HStack spacing="4" fontSize="sm" color="gray.600">
+                            <Text>
+                              <Text as="span" fontWeight="semibold">Due:</Text>{' '}
+                              {app.dueDate
+                                ? new Date(app.dueDate).toLocaleDateString()
+                                : '-'}
+                            </Text>
+                          </HStack>
+                        </Stack>
+                      </CardBody>
+                    </Card>
+                  ))}
+                </Stack>
 
                 {/* Pagination Controls */}
                 {totalPages > 1 && (

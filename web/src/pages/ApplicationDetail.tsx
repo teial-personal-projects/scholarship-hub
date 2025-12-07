@@ -35,7 +35,6 @@ import {
   AlertDialogHeader,
   AlertDialogContent,
   AlertDialogOverlay,
-  useToast,
   Modal,
   ModalOverlay,
   ModalContent,
@@ -57,7 +56,6 @@ function ApplicationDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { showSuccess, showError } = useToastHelpers();
-  const toast = useToast(); // Keep for info toast
 
   const [application, setApplication] = useState<ApplicationResponse | null>(null);
   const [essays, setEssays] = useState<EssayResponse[]>([]);
@@ -395,18 +393,6 @@ function ApplicationDetail() {
     }
   };
 
-  const getCollaborationTypeLabel = (type: string) => {
-    switch (type) {
-      case 'recommendation':
-        return 'Recommendation';
-      case 'essayReview':
-        return 'Essay Review';
-      case 'guidance':
-        return 'Guidance';
-      default:
-        return type;
-    }
-  };
 
   const getCollaborationStatusColor = (status: string) => {
     switch (status) {
@@ -452,33 +438,35 @@ function ApplicationDetail() {
   }
 
   return (
-    <Container maxW="7xl" py={{ base: '8', md: '12' }}>
-      <Stack spacing="6">
+    <Container maxW="7xl" py={{ base: '4', md: '12' }} px={{ base: '4', md: '6' }}>
+      <Stack spacing={{ base: '4', md: '6' }}>
         {/* Header */}
-        <Flex justify="space-between" align="center" flexWrap="wrap" gap="4">
-          <Box>
-            <Heading size="lg" mb="2">
+        <Flex justify="space-between" align="start" flexWrap="wrap" gap="4">
+          <Box flex="1" minW="0">
+            <Heading size={{ base: 'md', md: 'lg' }} mb="2">
               {application.scholarshipName}
             </Heading>
-            <HStack spacing="2">
-              <Badge colorScheme={getStatusColor(application.status)} fontSize="md">
+            <HStack spacing="2" flexWrap="wrap">
+              <Badge colorScheme={getStatusColor(application.status)} fontSize={{ base: 'sm', md: 'md' }}>
                 {application.status}
               </Badge>
               {application.targetType && (
-                <Badge colorScheme="purple">{application.targetType}</Badge>
+                <Badge colorScheme="purple" fontSize={{ base: 'sm', md: 'md' }}>{application.targetType}</Badge>
               )}
             </HStack>
           </Box>
-          <HStack spacing="3">
+          <HStack spacing="3" flexWrap="wrap">
             <Button
               colorScheme="blue"
               onClick={() => navigate(`/applications/${id}/edit`)}
+              size={{ base: 'sm', md: 'md' }}
             >
               Edit Application
             </Button>
             <Button
               variant="outline"
               onClick={() => navigate('/applications')}
+              size={{ base: 'sm', md: 'md' }}
             >
               Back to List
             </Button>
@@ -647,47 +635,96 @@ function ApplicationDetail() {
             {essays.length === 0 ? (
               <Text color="gray.500">No essays added yet</Text>
             ) : (
-              <Table variant="simple">
-                <Thead>
-                  <Tr>
-                    <Th>Theme</Th>
-                    <Th>Word Count</Th>
-                    <Th>Actions</Th>
-                  </Tr>
-                </Thead>
-                <Tbody>
+              <>
+                {/* Desktop Table View */}
+                <Box display={{ base: 'none', md: 'block' }} overflowX="auto">
+                  <Table variant="simple">
+                    <Thead>
+                      <Tr>
+                        <Th>Theme</Th>
+                        <Th>Word Count</Th>
+                        <Th>Actions</Th>
+                      </Tr>
+                    </Thead>
+                    <Tbody>
+                      {essays.map((essay) => (
+                        <Tr key={essay.id}>
+                          <Td>{essay.theme || 'Untitled'}</Td>
+                          <Td>{essay.wordCount || '-'}</Td>
+                          <Td>
+                            <Menu>
+                              <MenuButton
+                                as={IconButton}
+                                icon={<Text>⋮</Text>}
+                                variant="ghost"
+                                size="sm"
+                              />
+                              <MenuList>
+                                <MenuItem onClick={() => handleEditEssay(essay)}>View/Edit</MenuItem>
+                                {essay.essayLink && (
+                                  <MenuItem
+                                    as="a"
+                                    href={essay.essayLink}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                  >
+                                    Open Document ↗
+                                  </MenuItem>
+                                )}
+                                <MenuItem color="red.500" onClick={() => handleDeleteClick(essay.id)}>Delete</MenuItem>
+                              </MenuList>
+                            </Menu>
+                          </Td>
+                        </Tr>
+                      ))}
+                    </Tbody>
+                  </Table>
+                </Box>
+
+                {/* Mobile Card View */}
+                <Stack spacing="3" display={{ base: 'flex', md: 'none' }}>
                   {essays.map((essay) => (
-                    <Tr key={essay.id}>
-                      <Td>{essay.theme || 'Untitled'}</Td>
-                      <Td>{essay.wordCount || '-'}</Td>
-                      <Td>
-                        <Menu>
-                          <MenuButton
-                            as={IconButton}
-                            icon={<Text>⋮</Text>}
-                            variant="ghost"
-                            size="sm"
-                          />
-                          <MenuList>
-                            <MenuItem onClick={() => handleEditEssay(essay)}>View/Edit</MenuItem>
-                            {essay.essayLink && (
-                              <MenuItem
-                                as="a"
-                                href={essay.essayLink}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
-                                Open Document ↗
-                              </MenuItem>
+                    <Card key={essay.id}>
+                      <CardBody>
+                        <Flex justify="space-between" align="start">
+                          <Box flex="1">
+                            <Text fontWeight="bold" fontSize="md" mb="1">
+                              {essay.theme || 'Untitled'}
+                            </Text>
+                            {essay.wordCount && (
+                              <Text fontSize="sm" color="gray.600">
+                                {essay.wordCount} words
+                              </Text>
                             )}
-                            <MenuItem color="red.500" onClick={() => handleDeleteClick(essay.id)}>Delete</MenuItem>
-                          </MenuList>
-                        </Menu>
-                      </Td>
-                    </Tr>
+                          </Box>
+                          <Menu>
+                            <MenuButton
+                              as={IconButton}
+                              icon={<Text>⋮</Text>}
+                              variant="ghost"
+                              size="sm"
+                            />
+                            <MenuList>
+                              <MenuItem onClick={() => handleEditEssay(essay)}>View/Edit</MenuItem>
+                              {essay.essayLink && (
+                                <MenuItem
+                                  as="a"
+                                  href={essay.essayLink}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  Open Document ↗
+                                </MenuItem>
+                              )}
+                              <MenuItem color="red.500" onClick={() => handleDeleteClick(essay.id)}>Delete</MenuItem>
+                            </MenuList>
+                          </Menu>
+                        </Flex>
+                      </CardBody>
+                    </Card>
                   ))}
-                </Tbody>
-              </Table>
+                </Stack>
+              </>
             )}
           </CardBody>
         </Card>
@@ -717,38 +754,103 @@ function ApplicationDetail() {
                     <Heading size="sm" mb="3">
                       Recommendations ({collaborations.filter((c) => c.collaborationType === 'recommendation').length})
                     </Heading>
-                    <Table variant="simple" size="sm">
-                      <Thead>
-                        <Tr>
-                          <Th>Collaborator</Th>
-                          <Th>Status</Th>
-                          <Th>Due Date</Th>
-                          <Th>Actions</Th>
-                        </Tr>
-                      </Thead>
-                      <Tbody>
-                        {collaborations
-                          .filter((c) => c.collaborationType === 'recommendation')
-                          .map((collab) => {
-                            const collaborator = collaborators.get(collab.collaboratorId);
-                            return (
-                              <Tr key={collab.id}>
-                                <Td>
-                                  {collaborator 
-                                    ? `${collaborator.firstName} ${collaborator.lastName}` 
-                                    : 'Loading...'}
-                                </Td>
-                                <Td>
-                                  <Badge colorScheme={getCollaborationStatusColor(collab.status)}>
-                                    {collab.status}
-                                  </Badge>
-                                </Td>
-                                <Td>
-                                  {collab.nextActionDueDate
-                                    ? new Date(collab.nextActionDueDate).toLocaleDateString()
-                                    : '-'}
-                                </Td>
-                                <Td>
+                    {/* Desktop Table View */}
+                    <Box display={{ base: 'none', md: 'block' }} overflowX="auto">
+                      <Table variant="simple" size="sm">
+                        <Thead>
+                          <Tr>
+                            <Th>Collaborator</Th>
+                            <Th>Status</Th>
+                            <Th>Due Date</Th>
+                            <Th>Actions</Th>
+                          </Tr>
+                        </Thead>
+                        <Tbody>
+                          {collaborations
+                            .filter((c) => c.collaborationType === 'recommendation')
+                            .map((collab) => {
+                              const collaborator = collaborators.get(collab.collaboratorId);
+                              return (
+                                <Tr key={collab.id}>
+                                  <Td>
+                                    {collaborator 
+                                      ? `${collaborator.firstName} ${collaborator.lastName}` 
+                                      : 'Loading...'}
+                                  </Td>
+                                  <Td>
+                                    <Badge colorScheme={getCollaborationStatusColor(collab.status)}>
+                                      {collab.status}
+                                    </Badge>
+                                  </Td>
+                                  <Td>
+                                    {collab.nextActionDueDate
+                                      ? new Date(collab.nextActionDueDate).toLocaleDateString()
+                                      : '-'}
+                                  </Td>
+                                  <Td>
+                                    <Menu>
+                                      <MenuButton
+                                        as={IconButton}
+                                        icon={<Text>⋮</Text>}
+                                        variant="ghost"
+                                        size="sm"
+                                      />
+                                      <MenuList>
+                                        <MenuItem onClick={() => handleViewHistory(collab.id)}>
+                                          View Details
+                                        </MenuItem>
+                                        <MenuItem onClick={() => handleEditCollaboration(collab)}>
+                                          Edit
+                                        </MenuItem>
+                                        {collab.status === 'pending' && (
+                                          <MenuItem onClick={() => handleSendInvite(collab)}>
+                                            Send Invite
+                                          </MenuItem>
+                                        )}
+                                        {shouldShowResend(collab) && (
+                                          <MenuItem onClick={() => handleSendInvite(collab)}>
+                                            Resend Invite
+                                          </MenuItem>
+                                        )}
+                                        <MenuItem color="red.500" onClick={() => handleDeleteCollaborationClick(collab.id)}>
+                                          Remove
+                                        </MenuItem>
+                                      </MenuList>
+                                    </Menu>
+                                  </Td>
+                                </Tr>
+                              );
+                            })}
+                        </Tbody>
+                      </Table>
+                    </Box>
+                    {/* Mobile Card View */}
+                    <Stack spacing="3" display={{ base: 'flex', md: 'none' }}>
+                      {collaborations
+                        .filter((c) => c.collaborationType === 'recommendation')
+                        .map((collab) => {
+                          const collaborator = collaborators.get(collab.collaboratorId);
+                          return (
+                            <Card key={collab.id}>
+                              <CardBody>
+                                <Flex justify="space-between" align="start">
+                                  <Box flex="1">
+                                    <Text fontWeight="bold" fontSize="md" mb="1">
+                                      {collaborator 
+                                        ? `${collaborator.firstName} ${collaborator.lastName}` 
+                                        : 'Loading...'}
+                                    </Text>
+                                    <HStack spacing="2" mb="2">
+                                      <Badge colorScheme={getCollaborationStatusColor(collab.status)}>
+                                        {collab.status}
+                                      </Badge>
+                                    </HStack>
+                                    {collab.nextActionDueDate && (
+                                      <Text fontSize="sm" color="gray.600">
+                                        Due: {new Date(collab.nextActionDueDate).toLocaleDateString()}
+                                      </Text>
+                                    )}
+                                  </Box>
                                   <Menu>
                                     <MenuButton
                                       as={IconButton}
@@ -763,7 +865,7 @@ function ApplicationDetail() {
                                       <MenuItem onClick={() => handleEditCollaboration(collab)}>
                                         Edit
                                       </MenuItem>
-                                      {(collab.status === 'pending' || collab.status === 'not_invited') && (
+                                      {collab.status === 'pending' && (
                                         <MenuItem onClick={() => handleSendInvite(collab)}>
                                           Send Invite
                                         </MenuItem>
@@ -778,12 +880,12 @@ function ApplicationDetail() {
                                       </MenuItem>
                                     </MenuList>
                                   </Menu>
-                                </Td>
-                              </Tr>
-                            );
-                          })}
-                      </Tbody>
-                    </Table>
+                                </Flex>
+                              </CardBody>
+                            </Card>
+                          );
+                        })}
+                    </Stack>
                   </Box>
                 )}
 
@@ -793,41 +895,110 @@ function ApplicationDetail() {
                     <Heading size="sm" mb="3">
                       Essay Reviews ({collaborations.filter((c) => c.collaborationType === 'essayReview').length})
                     </Heading>
-                    <Table variant="simple" size="sm">
-                      <Thead>
-                        <Tr>
-                          <Th>Collaborator</Th>
-                          <Th>Essay</Th>
-                          <Th>Status</Th>
-                          <Th>Due Date</Th>
-                          <Th>Actions</Th>
-                        </Tr>
-                      </Thead>
-                      <Tbody>
-                        {collaborations
-                          .filter((c) => c.collaborationType === 'essayReview')
-                          .map((collab) => {
-                            const collaborator = collaborators.get(collab.collaboratorId);
-                            const essay = essays.find((e) => e.id === collab.essayId);
-                            return (
-                              <Tr key={collab.id}>
-                                <Td>
-                                  {collaborator 
-                                    ? `${collaborator.firstName} ${collaborator.lastName}` 
-                                    : 'Loading...'}
-                                </Td>
-                                <Td>{essay?.title || 'Unknown Essay'}</Td>
-                                <Td>
-                                  <Badge colorScheme={getCollaborationStatusColor(collab.status)}>
-                                    {collab.status}
-                                  </Badge>
-                                </Td>
-                                <Td>
-                                  {collab.nextActionDueDate
-                                    ? new Date(collab.nextActionDueDate).toLocaleDateString()
-                                    : '-'}
-                                </Td>
-                                <Td>
+                    {/* Desktop Table View */}
+                    <Box display={{ base: 'none', md: 'block' }} overflowX="auto">
+                      <Table variant="simple" size="sm">
+                        <Thead>
+                          <Tr>
+                            <Th>Collaborator</Th>
+                            <Th>Essay</Th>
+                            <Th>Status</Th>
+                            <Th>Due Date</Th>
+                            <Th>Actions</Th>
+                          </Tr>
+                        </Thead>
+                        <Tbody>
+                          {collaborations
+                            .filter((c) => c.collaborationType === 'essayReview')
+                            .map((collab) => {
+                              const collaborator = collaborators.get(collab.collaboratorId);
+                              const essay = essays.find((e) => e.id === collab.essayId);
+                              return (
+                                <Tr key={collab.id}>
+                                  <Td>
+                                    {collaborator 
+                                      ? `${collaborator.firstName} ${collaborator.lastName}` 
+                                      : 'Loading...'}
+                                  </Td>
+                                  <Td>{essay?.theme || 'Unknown Essay'}</Td>
+                                  <Td>
+                                    <Badge colorScheme={getCollaborationStatusColor(collab.status)}>
+                                      {collab.status}
+                                    </Badge>
+                                  </Td>
+                                  <Td>
+                                    {collab.nextActionDueDate
+                                      ? new Date(collab.nextActionDueDate).toLocaleDateString()
+                                      : '-'}
+                                  </Td>
+                                  <Td>
+                                    <Menu>
+                                      <MenuButton
+                                        as={IconButton}
+                                        icon={<Text>⋮</Text>}
+                                        variant="ghost"
+                                        size="sm"
+                                      />
+                                      <MenuList>
+                                        <MenuItem onClick={() => handleViewHistory(collab.id)}>
+                                          View Details
+                                        </MenuItem>
+                                        <MenuItem onClick={() => handleEditCollaboration(collab)}>
+                                          Edit
+                                        </MenuItem>
+                                        {collab.status === 'pending' && (
+                                          <MenuItem onClick={() => handleSendInvite(collab)}>
+                                            Send Invite
+                                          </MenuItem>
+                                        )}
+                                        {shouldShowResend(collab) && (
+                                          <MenuItem onClick={() => handleSendInvite(collab)}>
+                                            Resend Invite
+                                          </MenuItem>
+                                        )}
+                                        <MenuItem color="red.500" onClick={() => handleDeleteCollaborationClick(collab.id)}>
+                                          Remove
+                                        </MenuItem>
+                                      </MenuList>
+                                    </Menu>
+                                  </Td>
+                                </Tr>
+                              );
+                            })}
+                        </Tbody>
+                      </Table>
+                    </Box>
+                    {/* Mobile Card View */}
+                    <Stack spacing="3" display={{ base: 'flex', md: 'none' }}>
+                      {collaborations
+                        .filter((c) => c.collaborationType === 'essayReview')
+                        .map((collab) => {
+                          const collaborator = collaborators.get(collab.collaboratorId);
+                          const essay = essays.find((e) => e.id === collab.essayId);
+                          return (
+                            <Card key={collab.id}>
+                              <CardBody>
+                                <Flex justify="space-between" align="start">
+                                  <Box flex="1">
+                                    <Text fontWeight="bold" fontSize="md" mb="1">
+                                      {collaborator 
+                                        ? `${collaborator.firstName} ${collaborator.lastName}` 
+                                        : 'Loading...'}
+                                    </Text>
+                                    <Text fontSize="sm" color="gray.600" mb="2">
+                                      Essay: {essay?.theme || 'Unknown Essay'}
+                                    </Text>
+                                    <HStack spacing="2" mb="2">
+                                      <Badge colorScheme={getCollaborationStatusColor(collab.status)}>
+                                        {collab.status}
+                                      </Badge>
+                                    </HStack>
+                                    {collab.nextActionDueDate && (
+                                      <Text fontSize="sm" color="gray.600">
+                                        Due: {new Date(collab.nextActionDueDate).toLocaleDateString()}
+                                      </Text>
+                                    )}
+                                  </Box>
                                   <Menu>
                                     <MenuButton
                                       as={IconButton}
@@ -842,7 +1013,7 @@ function ApplicationDetail() {
                                       <MenuItem onClick={() => handleEditCollaboration(collab)}>
                                         Edit
                                       </MenuItem>
-                                      {(collab.status === 'pending' || collab.status === 'not_invited') && (
+                                      {collab.status === 'pending' && (
                                         <MenuItem onClick={() => handleSendInvite(collab)}>
                                           Send Invite
                                         </MenuItem>
@@ -857,12 +1028,12 @@ function ApplicationDetail() {
                                       </MenuItem>
                                     </MenuList>
                                   </Menu>
-                                </Td>
-                              </Tr>
-                            );
-                          })}
-                      </Tbody>
-                    </Table>
+                                </Flex>
+                              </CardBody>
+                            </Card>
+                          );
+                        })}
+                    </Stack>
                   </Box>
                 )}
 
@@ -872,38 +1043,103 @@ function ApplicationDetail() {
                     <Heading size="sm" mb="3">
                       Guidance & Counseling ({collaborations.filter((c) => c.collaborationType === 'guidance').length})
                     </Heading>
-                    <Table variant="simple" size="sm">
-                      <Thead>
-                        <Tr>
-                          <Th>Collaborator</Th>
-                          <Th>Status</Th>
-                          <Th>Due Date</Th>
-                          <Th>Actions</Th>
-                        </Tr>
-                      </Thead>
-                      <Tbody>
-                        {collaborations
-                          .filter((c) => c.collaborationType === 'guidance')
-                          .map((collab) => {
-                            const collaborator = collaborators.get(collab.collaboratorId);
-                            return (
-                              <Tr key={collab.id}>
-                                <Td>
-                                  {collaborator 
-                                    ? `${collaborator.firstName} ${collaborator.lastName}` 
-                                    : 'Loading...'}
-                                </Td>
-                                <Td>
-                                  <Badge colorScheme={getCollaborationStatusColor(collab.status)}>
-                                    {collab.status}
-                                  </Badge>
-                                </Td>
-                                <Td>
-                                  {collab.nextActionDueDate
-                                    ? new Date(collab.nextActionDueDate).toLocaleDateString()
-                                    : '-'}
-                                </Td>
-                                <Td>
+                    {/* Desktop Table View */}
+                    <Box display={{ base: 'none', md: 'block' }} overflowX="auto">
+                      <Table variant="simple" size="sm">
+                        <Thead>
+                          <Tr>
+                            <Th>Collaborator</Th>
+                            <Th>Status</Th>
+                            <Th>Due Date</Th>
+                            <Th>Actions</Th>
+                          </Tr>
+                        </Thead>
+                        <Tbody>
+                          {collaborations
+                            .filter((c) => c.collaborationType === 'guidance')
+                            .map((collab) => {
+                              const collaborator = collaborators.get(collab.collaboratorId);
+                              return (
+                                <Tr key={collab.id}>
+                                  <Td>
+                                    {collaborator 
+                                      ? `${collaborator.firstName} ${collaborator.lastName}` 
+                                      : 'Loading...'}
+                                  </Td>
+                                  <Td>
+                                    <Badge colorScheme={getCollaborationStatusColor(collab.status)}>
+                                      {collab.status}
+                                    </Badge>
+                                  </Td>
+                                  <Td>
+                                    {collab.nextActionDueDate
+                                      ? new Date(collab.nextActionDueDate).toLocaleDateString()
+                                      : '-'}
+                                  </Td>
+                                  <Td>
+                                    <Menu>
+                                      <MenuButton
+                                        as={IconButton}
+                                        icon={<Text>⋮</Text>}
+                                        variant="ghost"
+                                        size="sm"
+                                      />
+                                      <MenuList>
+                                        <MenuItem onClick={() => handleViewHistory(collab.id)}>
+                                          View Details
+                                        </MenuItem>
+                                        <MenuItem onClick={() => handleEditCollaboration(collab)}>
+                                          Edit
+                                        </MenuItem>
+                                        {collab.status === 'pending' && (
+                                          <MenuItem onClick={() => handleSendInvite(collab)}>
+                                            Send Invite
+                                          </MenuItem>
+                                        )}
+                                        {shouldShowResend(collab) && (
+                                          <MenuItem onClick={() => handleSendInvite(collab)}>
+                                            Resend Invite
+                                          </MenuItem>
+                                        )}
+                                        <MenuItem color="red.500" onClick={() => handleDeleteCollaborationClick(collab.id)}>
+                                          Remove
+                                        </MenuItem>
+                                      </MenuList>
+                                    </Menu>
+                                  </Td>
+                                </Tr>
+                              );
+                            })}
+                        </Tbody>
+                      </Table>
+                    </Box>
+                    {/* Mobile Card View */}
+                    <Stack spacing="3" display={{ base: 'flex', md: 'none' }}>
+                      {collaborations
+                        .filter((c) => c.collaborationType === 'guidance')
+                        .map((collab) => {
+                          const collaborator = collaborators.get(collab.collaboratorId);
+                          return (
+                            <Card key={collab.id}>
+                              <CardBody>
+                                <Flex justify="space-between" align="start">
+                                  <Box flex="1">
+                                    <Text fontWeight="bold" fontSize="md" mb="1">
+                                      {collaborator 
+                                        ? `${collaborator.firstName} ${collaborator.lastName}` 
+                                        : 'Loading...'}
+                                    </Text>
+                                    <HStack spacing="2" mb="2">
+                                      <Badge colorScheme={getCollaborationStatusColor(collab.status)}>
+                                        {collab.status}
+                                      </Badge>
+                                    </HStack>
+                                    {collab.nextActionDueDate && (
+                                      <Text fontSize="sm" color="gray.600">
+                                        Due: {new Date(collab.nextActionDueDate).toLocaleDateString()}
+                                      </Text>
+                                    )}
+                                  </Box>
                                   <Menu>
                                     <MenuButton
                                       as={IconButton}
@@ -918,7 +1154,7 @@ function ApplicationDetail() {
                                       <MenuItem onClick={() => handleEditCollaboration(collab)}>
                                         Edit
                                       </MenuItem>
-                                      {(collab.status === 'pending' || collab.status === 'not_invited') && (
+                                      {collab.status === 'pending' && (
                                         <MenuItem onClick={() => handleSendInvite(collab)}>
                                           Send Invite
                                         </MenuItem>
@@ -933,12 +1169,12 @@ function ApplicationDetail() {
                                       </MenuItem>
                                     </MenuList>
                                   </Menu>
-                                </Td>
-                              </Tr>
-                            );
-                          })}
-                      </Tbody>
-                    </Table>
+                                </Flex>
+                              </CardBody>
+                            </Card>
+                          );
+                        })}
+                    </Stack>
                   </Box>
                 )}
               </Stack>

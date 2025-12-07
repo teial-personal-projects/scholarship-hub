@@ -141,7 +141,7 @@ function CollaboratorInvite() {
 
   if (loading) {
     return (
-      <Container maxW="2xl" py={{ base: '8', md: '12' }}>
+      <Container maxW="2xl" py={{ base: '4', md: '12' }} px={{ base: '4', md: '6' }}>
         <Stack spacing="8" align="center">
           <Spinner size="xl" />
           <Text>Loading invitation...</Text>
@@ -152,7 +152,7 @@ function CollaboratorInvite() {
 
   if (error || !inviteDetails) {
     return (
-      <Container maxW="2xl" py={{ base: '8', md: '12' }}>
+      <Container maxW="2xl" py={{ base: '4', md: '12' }} px={{ base: '4', md: '6' }}>
         <Alert
           status="error"
           variant="subtle"
@@ -178,15 +178,15 @@ function CollaboratorInvite() {
   }
 
   return (
-    <Container maxW="2xl" py={{ base: '8', md: '12' }}>
+    <Container maxW="2xl" py={{ base: '4', md: '12' }} px={{ base: '4', md: '6' }}>
       <Card>
         <CardBody>
-          <Stack spacing="6">
+          <Stack spacing={{ base: '4', md: '6' }}>
             <Box textAlign="center">
-              <Heading size="lg" mb="2">
+              <Heading size={{ base: 'md', md: 'lg' }} mb="2">
                 Collaboration Invitation
               </Heading>
-              <Text color="gray.600">
+              <Text color="gray.600" fontSize={{ base: 'sm', md: 'md' }}>
                 You've been invited to help a student with their scholarship application
               </Text>
             </Box>
@@ -275,14 +275,15 @@ function CollaboratorInvite() {
             )}
 
             {/* Action Buttons */}
-            <HStack spacing={3} justify="center">
+            <Stack spacing={3} direction={{ base: 'column', md: 'row' }} justify="center">
               <Button
                 variant="outline"
                 onClick={handleDecline}
                 isLoading={declining}
                 loadingText="Declining..."
                 isDisabled={accepting}
-                size="lg"
+                size={{ base: 'md', md: 'lg' }}
+                width={{ base: '100%', md: 'auto' }}
               >
                 Decline
               </Button>
@@ -292,11 +293,12 @@ function CollaboratorInvite() {
                 isLoading={accepting}
                 loadingText="Accepting..."
                 isDisabled={declining}
-                size="lg"
+                size={{ base: 'md', md: 'lg' }}
+                width={{ base: '100%', md: 'auto' }}
               >
                 {user ? 'Accept Invitation' : 'Log In to Accept'}
               </Button>
-            </HStack>
+            </Stack>
 
             {/* Expiration Notice */}
             {inviteDetails.expiresAt && (

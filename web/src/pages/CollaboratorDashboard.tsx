@@ -31,6 +31,10 @@ import {
   ModalBody,
   ModalCloseButton,
   useDisclosure,
+  Card,
+  CardBody,
+  Flex,
+  HStack,
 } from '@chakra-ui/react';
 import { useCollaborations } from '../hooks/useCollaborations';
 import type { CollaborationResponse } from '@scholarship-hub/shared';
@@ -92,64 +96,109 @@ function CollaboratorDashboard() {
     }
 
     return (
-      <Table variant="simple">
-        <Thead>
-          <Tr>
-            <Th>Student</Th>
-            <Th>Application</Th>
-            <Th>Status</Th>
-            <Th>Due Date</Th>
-            <Th>Actions</Th>
-          </Tr>
-        </Thead>
-        <Tbody>
+      <>
+        {/* Desktop Table View */}
+        <Box display={{ base: 'none', md: 'block' }} overflowX="auto">
+          <Table variant="simple">
+            <Thead>
+              <Tr>
+                <Th>Student</Th>
+                <Th>Application</Th>
+                <Th>Status</Th>
+                <Th>Due Date</Th>
+                <Th>Actions</Th>
+              </Tr>
+            </Thead>
+            <Tbody>
+              {collaborationsList.map((collab) => (
+                <Tr key={collab.id}>
+                  <Td fontWeight="semibold">
+                    {/* Student name would come from user profile */}
+                    Student #{collab.userId}
+                  </Td>
+                  <Td>
+                    {/* Application name would come from joined data */}
+                    Application #{collab.applicationId}
+                    {collab.essayId && (
+                      <Text fontSize="sm" color="gray.500">
+                        Essay #{collab.essayId}
+                      </Text>
+                    )}
+                  </Td>
+                  <Td>
+                    <Badge colorScheme={getStatusColor(collab.status)}>
+                      {getStatusLabel(collab.status)}
+                    </Badge>
+                  </Td>
+                  <Td>
+                    {collab.nextActionDueDate ? (
+                      new Date(collab.nextActionDueDate).toLocaleDateString()
+                    ) : (
+                      <Text color="gray.400">-</Text>
+                    )}
+                  </Td>
+                  <Td>
+                    <Button
+                      size="sm"
+                      colorScheme="blue"
+                      variant="outline"
+                      onClick={() => handleViewHistory(collab.id)}
+                    >
+                      View Details
+                    </Button>
+                  </Td>
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
+        </Box>
+
+        {/* Mobile Card View */}
+        <Stack spacing="3" display={{ base: 'flex', md: 'none' }}>
           {collaborationsList.map((collab) => (
-            <Tr key={collab.id}>
-              <Td fontWeight="semibold">
-                {/* Student name would come from user profile */}
-                Student #{collab.userId}
-              </Td>
-              <Td>
-                {/* Application name would come from joined data */}
-                Application #{collab.applicationId}
-                {collab.essayId && (
-                  <Text fontSize="sm" color="gray.500">
-                    Essay #{collab.essayId}
-                  </Text>
-                )}
-              </Td>
-              <Td>
-                <Badge colorScheme={getStatusColor(collab.status)}>
-                  {getStatusLabel(collab.status)}
-                </Badge>
-              </Td>
-              <Td>
-                {collab.nextActionDueDate ? (
-                  new Date(collab.nextActionDueDate).toLocaleDateString()
-                ) : (
-                  <Text color="gray.400">-</Text>
-                )}
-              </Td>
-              <Td>
-                <Button
-                  size="sm"
-                  colorScheme="blue"
-                  variant="outline"
-                  onClick={() => handleViewHistory(collab.id)}
-                >
-                  View Details
-                </Button>
-              </Td>
-            </Tr>
+            <Card key={collab.id}>
+              <CardBody>
+                <Stack spacing="3">
+                  <Flex justify="space-between" align="start">
+                    <Box flex="1">
+                      <Text fontWeight="bold" fontSize="md" mb="1">
+                        Student #{collab.userId}
+                      </Text>
+                      <Text fontSize="sm" color="gray.600" mb="2">
+                        Application #{collab.applicationId}
+                        {collab.essayId && ` • Essay #${collab.essayId}`}
+                      </Text>
+                    </Box>
+                    <Badge colorScheme={getStatusColor(collab.status)}>
+                      {getStatusLabel(collab.status)}
+                    </Badge>
+                  </Flex>
+                  {collab.nextActionDueDate && (
+                    <Text fontSize="sm" color="gray.600">
+                      Due: {new Date(collab.nextActionDueDate).toLocaleDateString()}
+                    </Text>
+                  )}
+                  <Button
+                    size="sm"
+                    colorScheme="blue"
+                    variant="outline"
+                    onClick={() => handleViewHistory(collab.id)}
+                    width="100%"
+                  >
+                    View Details
+                  </Button>
+                </Stack>
+              </CardBody>
+            </Card>
           ))}
-        </Tbody>
-      </Table>
+        </Stack>
+      </>
     );
   };
 
   if (loading) {
     return (
-      <Container maxW="7xl" py={{ base: '8', md: '12' }}>
+      <Container maxW="7xl" py={{ base: '4', md: '12' }} px={{ base: '4', md: '6' }}>
         <Stack spacing="8" align="center">
           <Spinner size="xl" />
           <Text>Loading collaborations...</Text>
@@ -159,24 +208,26 @@ function CollaboratorDashboard() {
   }
 
   return (
-    <Container maxW="7xl" py={{ base: '8', md: '12' }}>
-      <Stack spacing="6">
+    <Container maxW="7xl" py={{ base: '4', md: '12' }} px={{ base: '4', md: '6' }}>
+      <Stack spacing={{ base: '4', md: '6' }}>
         {/* Header */}
         <Box>
-          <Heading size="lg" mb="2">My Collaborations</Heading>
-          <Text color="gray.600">
+          <Heading size={{ base: 'md', md: 'lg' }} mb="2">My Collaborations</Heading>
+          <Text color="gray.600" fontSize={{ base: 'sm', md: 'md' }}>
             Manage your recommendations, essay reviews, and guidance sessions
           </Text>
         </Box>
 
         {/* Tabs for different collaboration types */}
         <Tabs colorScheme="blue">
-          <TabList>
-            <Tab>All ({collaborations.length})</Tab>
-            <Tab>Recommendations ({recommendations.length})</Tab>
-            <Tab>Essay Reviews ({essayReviews.length})</Tab>
-            <Tab>Guidance ({guidance.length})</Tab>
-          </TabList>
+          <Box overflowX="auto" overflowY="hidden">
+            <TabList display="flex" minW="max-content" flexWrap={{ base: 'nowrap', md: 'wrap' }}>
+              <Tab whiteSpace="nowrap">All ({collaborations.length})</Tab>
+              <Tab whiteSpace="nowrap">Recommendations ({recommendations.length})</Tab>
+              <Tab whiteSpace="nowrap">Essay Reviews ({essayReviews.length})</Tab>
+              <Tab whiteSpace="nowrap">Guidance ({guidance.length})</Tab>
+            </TabList>
+          </Box>
 
           <TabPanels>
             <TabPanel px={0}>
@@ -196,9 +247,9 @@ function CollaboratorDashboard() {
       </Stack>
 
       {/* Collaboration History Modal */}
-      <Modal isOpen={isHistoryOpen} onClose={onHistoryClose} size="lg">
+      <Modal isOpen={isHistoryOpen} onClose={onHistoryClose} size={{ base: 'full', md: 'lg' }} isCentered>
         <ModalOverlay />
-        <ModalContent>
+        <ModalContent mx={{ base: 0, md: 'auto' }} my={{ base: 0, md: 'auto' }} maxH={{ base: '100vh', md: '90vh' }} overflowY="auto">
           <ModalHeader>Collaboration History</ModalHeader>
           <ModalCloseButton />
           <ModalBody pb={6}>
