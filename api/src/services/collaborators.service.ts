@@ -9,6 +9,7 @@ import {
   DB_ERROR_CODES,
   isDbErrorCode,
 } from '../constants/db-errors.js';
+import { sanitizePhoneNumber, sanitizeEmail } from '@scholarship-hub/shared/utils/validation';
 
 /**
  * Get all collaborators for a user
@@ -59,16 +60,38 @@ export const createCollaborator = async (
     phoneNumber?: string;
   }
 ) => {
+  // Sanitize and validate email
+  const sanitizedEmail = sanitizeEmail(collaboratorData.emailAddress);
+  
+  // Sanitize and validate phone number (store in E.164 format)
+  let sanitizedPhone: string | undefined;
+  if (collaboratorData.phoneNumber) {
+    try {
+      sanitizedPhone = sanitizePhoneNumber(collaboratorData.phoneNumber, {
+        format: 'E164', // Store in international format
+      });
+    } catch (error) {
+      throw new AppError(
+        error instanceof Error ? error.message : 'Invalid phone number format',
+        400
+      );
+    }
+  }
+
   // Convert camelCase to snake_case
   const dbData: Record<string, unknown> = {
     user_id: userId,
-    first_name: collaboratorData.firstName,
-    last_name: collaboratorData.lastName,
-    email_address: collaboratorData.emailAddress,
+    first_name: collaboratorData.firstName.trim(),
+    last_name: collaboratorData.lastName.trim(),
+    email_address: sanitizedEmail,
   };
 
-  if (collaboratorData.relationship !== undefined) dbData.relationship = collaboratorData.relationship;
-  if (collaboratorData.phoneNumber !== undefined) dbData.phone_number = collaboratorData.phoneNumber;
+  if (collaboratorData.relationship !== undefined) {
+    dbData.relationship = collaboratorData.relationship.trim();
+  }
+  if (sanitizedPhone !== undefined) {
+    dbData.phone_number = sanitizedPhone;
+  }
 
   const { data, error } = await supabase
     .from('collaborators')
@@ -98,14 +121,44 @@ export const updateCollaborator = async (
   // First verify the collaborator belongs to the user
   await getCollaboratorById(collaboratorId, userId);
 
-  // Convert camelCase to snake_case
+  // Convert camelCase to snake_case and sanitize inputs
   const dbUpdates: Record<string, unknown> = {};
 
-  if (updates.firstName !== undefined) dbUpdates.first_name = updates.firstName;
-  if (updates.lastName !== undefined) dbUpdates.last_name = updates.lastName;
-  if (updates.emailAddress !== undefined) dbUpdates.email_address = updates.emailAddress;
-  if (updates.relationship !== undefined) dbUpdates.relationship = updates.relationship;
-  if (updates.phoneNumber !== undefined) dbUpdates.phone_number = updates.phoneNumber;
+  if (updates.firstName !== undefined) dbUpdates.first_name = updates.firstName.trim();
+  if (updates.lastName !== undefined) dbUpdates.last_name = updates.lastName.trim();
+  
+  if (updates.emailAddress !== undefined) {
+    try {
+      dbUpdates.email_address = sanitizeEmail(updates.emailAddress);
+    } catch (error) {
+      throw new AppError(
+        error instanceof Error ? error.message : 'Invalid email format',
+        400
+      );
+    }
+  }
+  
+  if (updates.relationship !== undefined) {
+    dbUpdates.relationship = updates.relationship.trim();
+  }
+  
+  if (updates.phoneNumber !== undefined) {
+    if (updates.phoneNumber === '' || updates.phoneNumber === null) {
+      // Allow clearing phone number
+      dbUpdates.phone_number = null;
+    } else {
+      try {
+        dbUpdates.phone_number = sanitizePhoneNumber(updates.phoneNumber, {
+          format: 'E164', // Store in international format
+        });
+      } catch (error) {
+        throw new AppError(
+          error instanceof Error ? error.message : 'Invalid phone number format',
+          400
+        );
+      }
+    }
+  }
 
   const { data, error } = await supabase
     .from('collaborators')

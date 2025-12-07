@@ -5,6 +5,8 @@ import {
   isDbErrorCode,
 } from '../constants/db-errors.js';
 import type { DashboardReminders } from '@scholarship-hub/shared';
+import { sanitizePhoneNumber } from '@scholarship-hub/shared/utils/validation';
+import { AppError } from '../middleware/error-handler.js';
 
 /**
  * Get user profile by user ID
@@ -43,13 +45,36 @@ export const updateUserProfile = async (
     collaborationRemindersEnabled?: boolean;
   }
 ) => {
-  // Convert camelCase to snake_case for database
+  // Convert camelCase to snake_case for database and sanitize inputs
   const dbUpdates: Record<string, unknown> = {};
-  if (updates.firstName !== undefined) dbUpdates.first_name = updates.firstName;
-  if (updates.lastName !== undefined) dbUpdates.last_name = updates.lastName;
-  if (updates.phoneNumber !== undefined) dbUpdates.phone_number = updates.phoneNumber;
-  if (updates.applicationRemindersEnabled !== undefined) dbUpdates.application_reminders_enabled = updates.applicationRemindersEnabled;
-  if (updates.collaborationRemindersEnabled !== undefined) dbUpdates.collaboration_reminders_enabled = updates.collaborationRemindersEnabled;
+  
+  if (updates.firstName !== undefined) dbUpdates.first_name = updates.firstName.trim();
+  if (updates.lastName !== undefined) dbUpdates.last_name = updates.lastName.trim();
+  
+  if (updates.phoneNumber !== undefined) {
+    if (updates.phoneNumber === '' || updates.phoneNumber === null) {
+      // Allow clearing phone number
+      dbUpdates.phone_number = null;
+    } else {
+      try {
+        dbUpdates.phone_number = sanitizePhoneNumber(updates.phoneNumber, {
+          format: 'E164', // Store in international format
+        });
+      } catch (error) {
+        throw new AppError(
+          error instanceof Error ? error.message : 'Invalid phone number format',
+          400
+        );
+      }
+    }
+  }
+  
+  if (updates.applicationRemindersEnabled !== undefined) {
+    dbUpdates.application_reminders_enabled = updates.applicationRemindersEnabled;
+  }
+  if (updates.collaborationRemindersEnabled !== undefined) {
+    dbUpdates.collaboration_reminders_enabled = updates.collaborationRemindersEnabled;
+  }
 
   const { data, error } = await supabase
     .from('user_profiles')

@@ -1,7 +1,18 @@
 import { Request, Response } from 'express';
+import { z } from 'zod';
 import * as usersService from '../services/users.service.js';
 import { asyncHandler } from '../middleware/error-handler.js';
 import { toCamelCase } from '@scholarship-hub/shared/utils/case-conversion';
+import { nameSchema, phoneSchema } from '@scholarship-hub/shared/utils/validation';
+
+// Validation schemas
+const updateUserProfileSchema = z.object({
+  firstName: nameSchema.optional(),
+  lastName: nameSchema.optional(),
+  phoneNumber: phoneSchema().optional(),
+  applicationRemindersEnabled: z.boolean().optional(),
+  collaborationRemindersEnabled: z.boolean().optional(),
+});
 
 /**
  * GET /api/users/me
@@ -36,7 +47,18 @@ export const updateMe = asyncHandler(async (req: Request, res: Response) => {
     return;
   }
 
-  const { firstName, lastName, phoneNumber, applicationRemindersEnabled, collaborationRemindersEnabled } = req.body;
+  // Validate request body
+  const validationResult = updateUserProfileSchema.safeParse(req.body);
+  
+  if (!validationResult.success) {
+    res.status(400).json({
+      error: 'Validation Error',
+      message: validationResult.error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', '),
+    });
+    return;
+  }
+
+  const { firstName, lastName, phoneNumber, applicationRemindersEnabled, collaborationRemindersEnabled } = validationResult.data;
 
   const updated = await usersService.updateUserProfile(req.user.userId, {
     firstName,
