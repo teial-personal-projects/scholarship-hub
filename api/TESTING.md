@@ -4,6 +4,11 @@
 
 The API requires authentication via Supabase JWT tokens for all protected endpoints.
 
+For breakpoint debugging in test files, you can also:
+Use the JavaScript Debug Terminal (Ctrl+Shift+P → "JavaScript Debug Terminal"), then run npm test in that terminal
+
+Set breakpoints in your test files; they will work with these configurations
+
 ## Running the API
 
 ```bash
