@@ -25,6 +25,7 @@ import {
   TagLabel,
   Wrap,
 } from '@chakra-ui/react';
+import { Global } from '@emotion/react';
 import { apiGet, apiPatch } from '../services/api';
 import type { UserProfile } from '@scholarship-hub/shared';
 import { useToastHelpers } from '../utils/toast';
@@ -219,9 +220,20 @@ function Profile() {
   }
 
   return (
-    <Container maxW="4xl" py={{ base: '4', md: '12' }} px={{ base: '4', md: '6' }}>
-      <Stack spacing={{ base: '4', md: '8' }}>
-        <Heading size={{ base: 'md', md: 'lg' }}>Profile & Preferences</Heading>
+    <>
+      <Global
+        styles={{
+          'select, option': {
+            fontSize: '18px !important',
+            '@media (max-width: 768px)': {
+              fontSize: '18px !important',
+            },
+          },
+        }}
+      />
+      <Container maxW="4xl" py={{ base: '4', md: '12' }} px={{ base: '4', md: '6' }}>
+        <Stack spacing={{ base: '4', md: '8' }}>
+          <Heading size={{ base: 'md', md: 'lg' }}>Profile & Preferences</Heading>
 
         {/* Profile Information */}
         <Card>
@@ -295,16 +307,17 @@ function Profile() {
             <Stack spacing="6">
               <SimpleGrid columns={{ base: 1, md: 2 }} spacing="6">
                 <FormControl>
-                  <FormLabel fontSize={{ base: 'md', md: 'sm' }}>Target Type</FormLabel>
+                  <FormLabel fontSize={{ base: 'lg', md: 'sm' }} fontWeight={{ base: 'semibold', md: 'normal' }}>Target Type</FormLabel>
                   <Select
                     value={targetType}
                     onChange={(e) => setTargetType(e.target.value)}
                     placeholder="Select target type"
                     size={{ base: 'lg', md: 'md' }}
-                    fontSize={{ base: 'md', md: 'sm' }}
+                    fontSize={{ base: 'lg', md: 'sm' }}
+                    height={{ base: '48px', md: 'auto' }}
                   >
                     {TARGET_TYPES.map((type) => (
-                      <option key={type} value={type}>
+                      <option key={type} value={type} style={{ fontSize: '18px', padding: '12px' }}>
                         {type}
                       </option>
                     ))}
@@ -312,16 +325,17 @@ function Profile() {
                 </FormControl>
 
                 <FormControl>
-                  <FormLabel fontSize={{ base: 'md', md: 'sm' }}>Academic Level</FormLabel>
+                  <FormLabel fontSize={{ base: 'lg', md: 'sm' }} fontWeight={{ base: 'semibold', md: 'normal' }}>Academic Level</FormLabel>
                   <Select
                     value={academicLevel}
                     onChange={(e) => setAcademicLevel(e.target.value)}
                     placeholder="Select academic level"
                     size={{ base: 'lg', md: 'md' }}
-                    fontSize={{ base: 'md', md: 'sm' }}
+                    fontSize={{ base: 'lg', md: 'sm' }}
+                    height={{ base: '48px', md: 'auto' }}
                   >
                     {ACADEMIC_LEVELS.map((level) => (
-                      <option key={level} value={level}>
+                      <option key={level} value={level} style={{ fontSize: '18px', padding: '12px' }}>
                         {level}
                       </option>
                     ))}
@@ -331,16 +345,17 @@ function Profile() {
 
               <SimpleGrid columns={{ base: 1, md: 2 }} spacing="6">
                 <FormControl>
-                  <FormLabel fontSize={{ base: 'md', md: 'sm' }}>Gender</FormLabel>
+                  <FormLabel fontSize={{ base: 'lg', md: 'sm' }} fontWeight={{ base: 'semibold', md: 'normal' }}>Gender</FormLabel>
                   <Select
                     value={gender}
                     onChange={(e) => setGender(e.target.value)}
                     placeholder="Select gender"
                     size={{ base: 'lg', md: 'md' }}
-                    fontSize={{ base: 'md', md: 'sm' }}
+                    fontSize={{ base: 'lg', md: 'sm' }}
+                    height={{ base: '48px', md: 'auto' }}
                   >
                     {GENDER_OPTIONS.map((g) => (
-                      <option key={g} value={g}>
+                      <option key={g} value={g} style={{ fontSize: '18px', padding: '12px' }}>
                         {g}
                       </option>
                     ))}
@@ -348,16 +363,17 @@ function Profile() {
                 </FormControl>
 
                 <FormControl>
-                  <FormLabel fontSize={{ base: 'md', md: 'sm' }}>Ethnicity</FormLabel>
+                  <FormLabel fontSize={{ base: 'lg', md: 'sm' }} fontWeight={{ base: 'semibold', md: 'normal' }}>Ethnicity</FormLabel>
                   <Select
                     value={ethnicity}
                     onChange={(e) => setEthnicity(e.target.value)}
                     placeholder="Select ethnicity"
                     size={{ base: 'lg', md: 'md' }}
-                    fontSize={{ base: 'md', md: 'sm' }}
+                    fontSize={{ base: 'lg', md: 'sm' }}
+                    height={{ base: '48px', md: 'auto' }}
                   >
                     {ETHNICITY_OPTIONS.map((e) => (
-                      <option key={e} value={e}>
+                      <option key={e} value={e} style={{ fontSize: '18px', padding: '12px' }}>
                         {e}
                       </option>
                     ))}
@@ -401,11 +417,12 @@ function Profile() {
                     placeholder="Select subject area to add"
                     flex="1"
                     size={{ base: 'lg', md: 'md' }}
-                    fontSize={{ base: 'md', md: 'sm' }}
+                    fontSize={{ base: 'lg', md: 'sm' }}
+                    height={{ base: '48px', md: 'auto' }}
                   >
                     {SUBJECT_AREAS.filter((area) => !subjectAreas.includes(area)).map(
                       (area) => (
-                        <option key={area} value={area} style={{ fontSize: '16px' }}>
+                        <option key={area} value={area} style={{ fontSize: '18px', padding: '12px' }}>
                           {area}
                         </option>
                       )
@@ -416,6 +433,7 @@ function Profile() {
                     isDisabled={!newSubjectArea}
                     size={{ base: 'lg', md: 'md' }}
                     width={{ base: '100%', md: 'auto' }}
+                    fontSize={{ base: 'lg', md: 'md' }}
                   >
                     Add
                   </Button>
@@ -508,7 +526,8 @@ function Profile() {
           </Button>
         </Box>
       </Stack>
-    </Container>
+      </Container>
+    </>
   );
 }
 
