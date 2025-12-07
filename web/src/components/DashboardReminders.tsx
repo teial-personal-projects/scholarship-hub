@@ -105,10 +105,9 @@ function DashboardReminders() {
 
   const hasOverdueItems = reminders.stats.totalOverdue > 0;
   const hasUpcomingItems = reminders.stats.totalUpcoming > 0;
-  const hasPendingCollabs = reminders.collaborations.pendingResponse.length > 0;
 
   // If no reminders, show positive message
-  if (!hasOverdueItems && !hasUpcomingItems && !hasPendingCollabs) {
+  if (!hasOverdueItems && !hasUpcomingItems) {
     return (
       <Alert status="success">
         <AlertIcon />
@@ -132,11 +131,6 @@ function DashboardReminders() {
             {hasUpcomingItems && (
               <Badge key="upcoming" colorScheme="blue" fontSize="md" px="3" py="1" borderRadius="full">
                 {reminders.stats.totalUpcoming} Due Soon
-              </Badge>
-            )}
-            {hasPendingCollabs && (
-              <Badge key="pending" colorScheme="gray" fontSize="md" px="3" py="1" borderRadius="full">
-                {reminders.collaborations.pendingResponse.length} Pending Responses
               </Badge>
             )}
           </HStack>
@@ -253,62 +247,6 @@ function DashboardReminders() {
                     </Box>
                   );
                 })}
-              </Stack>
-            </CardBody>
-          </Collapse>
-        </Card>
-      )}
-
-      {/* Pending Collaborations */}
-      {reminders.collaborations.pendingResponse.length > 0 && (
-        <Card borderColor="gray.300" borderWidth="1px">
-          <CardHeader pb="2">
-            <Button
-              variant="ghost"
-              onClick={toggleCollaborations}
-              width="100%"
-              justifyContent="space-between"
-              rightIcon={<Text>{showCollaborations ? '▼' : '▶'}</Text>}
-            >
-              <Heading size="sm" color="gray.600">
-                Pending Collaborator Responses ({reminders.collaborations.pendingResponse.length})
-              </Heading>
-            </Button>
-          </CardHeader>
-          <Collapse in={showCollaborations}>
-            <CardBody pt="0">
-              <Stack spacing="3">
-                {reminders.collaborations.pendingResponse.map((collab) => (
-                  <Box
-                    key={collab.id}
-                    p="3"
-                    bg="gray.50"
-                    borderRadius="md"
-                    borderWidth="1px"
-                    borderColor="gray.200"
-                  >
-                    <HStack justify="space-between" flexWrap="wrap" gap="2">
-                      <Box flex="1">
-                        <Text fontWeight="medium">
-                          {collab.collaborationType === 'recommendation' && 'Recommendation Request'}
-                          {collab.collaborationType === 'essayReview' && 'Essay Review Request'}
-                          {collab.collaborationType === 'guidance' && 'Guidance Request'}
-                        </Text>
-                        <Text fontSize="sm" color="gray.600">
-                          Status: {collab.status}
-                        </Text>
-                      </Box>
-                      <Link
-                        color="blue.500"
-                        fontSize="sm"
-                        onClick={() => navigate(`/collaborations/${collab.id}`)}
-                        cursor="pointer"
-                      >
-                        View Details
-                      </Link>
-                    </HStack>
-                  </Box>
-                ))}
               </Stack>
             </CardBody>
           </Collapse>

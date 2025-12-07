@@ -33,6 +33,7 @@ import { apiGet } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import DashboardReminders from '../components/DashboardReminders';
 import DashboardCollaborations from '../components/DashboardCollaborations';
+import DashboardPendingResponses from '../components/DashboardPendingResponses';
 import type { UserProfile, ApplicationResponse } from '@scholarship-hub/shared';
 import { useToastHelpers } from '../utils/toast';
 
@@ -635,6 +636,9 @@ function Dashboard() {
 
           {/* Collaborations Section */}
           <DashboardCollaborations />
+
+          {/* Pending Responses Section */}
+          <DashboardPendingResponses />
 
           {/* Reminders Section */}
           <DashboardReminders />
