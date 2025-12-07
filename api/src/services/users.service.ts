@@ -39,6 +39,8 @@ export const updateUserProfile = async (
     firstName?: string;
     lastName?: string;
     phoneNumber?: string;
+    applicationRemindersEnabled?: boolean;
+    collaborationRemindersEnabled?: boolean;
   }
 ) => {
   // Convert camelCase to snake_case for database
@@ -46,6 +48,8 @@ export const updateUserProfile = async (
   if (updates.firstName !== undefined) dbUpdates.first_name = updates.firstName;
   if (updates.lastName !== undefined) dbUpdates.last_name = updates.lastName;
   if (updates.phoneNumber !== undefined) dbUpdates.phone_number = updates.phoneNumber;
+  if (updates.applicationRemindersEnabled !== undefined) dbUpdates.application_reminders_enabled = updates.applicationRemindersEnabled;
+  if (updates.collaborationRemindersEnabled !== undefined) dbUpdates.collaboration_reminders_enabled = updates.collaborationRemindersEnabled;
 
   const { data, error } = await supabase
     .from('user_profiles')

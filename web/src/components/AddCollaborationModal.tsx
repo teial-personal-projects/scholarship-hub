@@ -160,8 +160,9 @@ function AddCollaborationModal({
       if (err instanceof Error) {
         errorMessage = err.message;
         // Include error details if available (for debugging)
-        if ((err as any).errorDetails?.originalError && process.env.NODE_ENV === 'development') {
-          errorMessage += `\n\nDetails: ${JSON.stringify((err as any).errorDetails.originalError, null, 2)}`;
+        const errorWithDetails = err as Error & { errorDetails?: { originalError?: unknown } };
+        if (errorWithDetails.errorDetails?.originalError && process.env.NODE_ENV === 'development') {
+          errorMessage += `\n\nDetails: ${JSON.stringify(errorWithDetails.errorDetails.originalError, null, 2)}`;
         }
       }
       showError('Error', errorMessage);
@@ -197,7 +198,7 @@ function AddCollaborationModal({
               >
                 {collaborators.map((collab) => (
                   <option key={collab.id} value={collab.id}>
-                    {collab.name} ({collab.emailAddress}) - {collab.relationship}
+                    {collab.firstName} {collab.lastName} ({collab.emailAddress}) - {collab.relationship || 'No relationship'}
                   </option>
                 ))}
               </Select>
@@ -231,7 +232,7 @@ function AddCollaborationModal({
                   >
                     {essays.map((essay) => (
                       <option key={essay.id} value={essay.id}>
-                        {essay.title}
+                        {essay.theme || 'Untitled Essay'}
                       </option>
                     ))}
                   </Select>

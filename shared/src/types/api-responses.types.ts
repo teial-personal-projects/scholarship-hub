@@ -22,6 +22,8 @@ export interface UserProfile {
   lastName: string | null;
   emailAddress: string;
   phoneNumber: string | null;
+  applicationRemindersEnabled?: boolean;
+  collaborationRemindersEnabled?: boolean;
   createdAt: string;
   updatedAt: string;
   searchPreferences?: UserSearchPreferencesResponse | null;

@@ -36,12 +36,14 @@ export const updateMe = asyncHandler(async (req: Request, res: Response) => {
     return;
   }
 
-  const { firstName, lastName, phoneNumber } = req.body;
+  const { firstName, lastName, phoneNumber, applicationRemindersEnabled, collaborationRemindersEnabled } = req.body;
 
   const updated = await usersService.updateUserProfile(req.user.userId, {
     firstName,
     lastName,
     phoneNumber,
+    applicationRemindersEnabled,
+    collaborationRemindersEnabled,
   });
 
   // Convert to camelCase
