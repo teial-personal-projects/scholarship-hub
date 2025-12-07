@@ -132,13 +132,13 @@ function Applications() {
     switch (status) {
       case 'Submitted':
       case 'Awarded':
-        return 'green';
+        return 'success';
       case 'In Progress':
-        return 'blue';
+        return 'accent';
       case 'Not Started':
         return 'gray';
       case 'Not Awarded':
-        return 'red';
+        return 'error';
       default:
         return 'orange';
     }
@@ -168,29 +168,38 @@ function Applications() {
   }
 
   return (
-    <Container maxW="7xl" py={{ base: '4', md: '12' }} px={{ base: '4', md: '6' }}>
-      <Stack spacing={{ base: '4', md: '8' }}>
-        {/* Header */}
-        <Flex justify="space-between" align="start" flexWrap="wrap" gap="4">
-          <Box flex="1" minW="0">
-            <Heading size={{ base: 'md', md: 'lg' }} mb="2">
-              Applications
-            </Heading>
-            <Text color="gray.600" fontSize={{ base: 'sm', md: 'md' }}>
-              Manage all your scholarship applications in one place
-            </Text>
-          </Box>
-          <Button
-            colorScheme="blue"
-            onClick={() => navigate('/applications/new')}
-            size={{ base: 'sm', md: 'md' }}
+    <Box bg="gray.50" minH="100vh" pb="8">
+      <Container maxW="7xl" py={{ base: '4', md: '8' }} px={{ base: '4', md: '6' }}>
+        <Stack spacing={{ base: '6', md: '8' }}>
+          {/* Header - Minimal Academic Style */}
+          <Box
+            bg="brand.500"
+            borderRadius="xl"
+            p={{ base: '6', md: '8' }}
+            color="white"
+            boxShadow="md"
           >
-            New Application
-          </Button>
-        </Flex>
+            <Flex justify="space-between" align="start" flexWrap="wrap" gap="4">
+              <Box flex="1" minW="0">
+                <Heading size={{ base: 'lg', md: 'xl' }} mb="2" fontWeight="bold">
+                  My Scholarship Applications
+                </Heading>
+                <Text fontSize={{ base: 'sm', md: 'md' }} opacity={0.9}>
+                  Manage all your scholarship applications in one place
+                </Text>
+              </Box>
+              <Button
+                colorScheme="accent"
+                onClick={() => navigate('/applications/new')}
+                size={{ base: 'sm', md: 'md' }}
+              >
+                New Application
+              </Button>
+            </Flex>
+          </Box>
 
         {/* Filters */}
-        <Card>
+        <Card variant="academic" bg="highlight.50">
           <CardBody>
             <HStack spacing="4" flexWrap="wrap">
               <Box flex="1" minW="200px">
@@ -198,12 +207,20 @@ function Applications() {
                   placeholder="Search by name or organization..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
+                  borderColor="brand.200"
+                  focusBorderColor="brand.500"
+                  bg="white"
+                  _hover={{ borderColor: 'brand.300' }}
                 />
               </Box>
               <Box minW="150px">
                 <Select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
+                  borderColor="brand.200"
+                  focusBorderColor="brand.500"
+                  bg="white"
+                  _hover={{ borderColor: 'brand.300' }}
                 >
                   <option value="all">All Statuses</option>
                   <option value="Not Started">Not Started</option>
@@ -218,31 +235,44 @@ function Applications() {
         </Card>
 
         {/* Applications Table */}
-        <Card>
-          <CardHeader>
+        <Card variant="academic" bg="white">
+          <CardHeader
+            bg="highlight.50"
+            borderTopRadius="xl"
+            borderBottom="1px solid"
+            borderColor="brand.200"
+          >
             <Flex justify="space-between" align="center" flexWrap="wrap" gap="4">
-              <Heading size="md">
+              <Heading size="md" color="brand.700">
                 {filteredApplications.length} Application{filteredApplications.length !== 1 ? 's' : ''}
               </Heading>
               {filteredApplications.length > 0 && (
-                <Text color="gray.600" fontSize="sm">
-                  Showing {((currentPage - 1) * itemsPerPage) + 1}-
-                  {Math.min(currentPage * itemsPerPage, filteredApplications.length)} of {filteredApplications.length}
-                </Text>
+                <Badge colorScheme="accent" fontSize="sm" px="3" py="1" borderRadius="full">
+                  Showing {((currentPage - 1) * itemsPerPage) + 1}-{Math.min(currentPage * itemsPerPage, filteredApplications.length)} of {filteredApplications.length}
+                </Badge>
               )}
             </Flex>
           </CardHeader>
           <CardBody>
             {filteredApplications.length === 0 ? (
-              <Box textAlign="center" py="8">
-                <Text color="gray.500" mb="4">
+              <Box textAlign="center" py="12">
+                <Box fontSize="5xl" mb="4" color="brand.500">
+                  {searchTerm || statusFilter !== 'all' ? '🔍' : '📝'}
+                </Box>
+                <Heading size="md" color="brand.700" mb="2">
                   {searchTerm || statusFilter !== 'all'
-                    ? 'No applications match your filters'
-                    : "You don't have any applications yet"}
+                    ? 'No applications found'
+                    : "Start Your Application Journey"}
+                </Heading>
+                <Text color="gray.600" mb="6" maxW="md" mx="auto">
+                  {searchTerm || statusFilter !== 'all'
+                    ? "Try adjusting your filters to see more results."
+                    : "You don't have any applications yet. Create your first application to get started!"}
                 </Text>
                 {!searchTerm && statusFilter === 'all' && (
                   <Button
-                    colorScheme="blue"
+                    colorScheme="accent"
+                    size="lg"
                     onClick={() => navigate('/applications/new')}
                   >
                     Create Your First Application
@@ -265,15 +295,28 @@ function Applications() {
                     </Thead>
                     <Tbody>
                       {paginatedApplications.map((app) => (
-                        <Tr key={app.id}>
-                          <Td fontWeight="medium">{app.scholarshipName}</Td>
-                          <Td>{app.organization || '-'}</Td>
+                        <Tr
+                          key={app.id}
+                          _hover={{
+                            bg: 'highlight.50',
+                            cursor: 'pointer',
+                          }}
+                          onClick={() => navigate(`/applications/${app.id}`)}
+                        >
+                          <Td fontWeight="medium" color="brand.700">{app.scholarshipName}</Td>
+                          <Td color="gray.600">{app.organization || '-'}</Td>
                           <Td>
-                            <Badge colorScheme={getStatusColor(app.status)}>
+                            <Badge
+                              colorScheme={getStatusColor(app.status)}
+                              borderRadius="full"
+                              px="3"
+                              py="1"
+                              fontWeight="semibold"
+                            >
                               {app.status}
                             </Badge>
                           </Td>
-                          <Td>
+                          <Td color="gray.700">
                             {app.dueDate
                               ? new Date(app.dueDate).toLocaleDateString()
                               : '-'}
@@ -286,6 +329,8 @@ function Applications() {
                                 variant="ghost"
                                 size="sm"
                                 aria-label="Actions"
+                                onClick={(e) => e.stopPropagation()}
+                                _hover={{ bg: 'highlight.100' }}
                               />
                               <MenuList>
                                 <MenuItem onClick={() => navigate(`/applications/${app.id}`)}>
@@ -295,7 +340,7 @@ function Applications() {
                                   Edit
                                 </MenuItem>
                                 <MenuItem
-                                  color="red.500"
+                                  color="error.500"
                                   onClick={() => handleDeleteClick(app.id)}
                                 >
                                   Delete
@@ -312,12 +357,23 @@ function Applications() {
                 {/* Mobile Card View */}
                 <Stack spacing="4" display={{ base: 'flex', md: 'none' }}>
                   {paginatedApplications.map((app) => (
-                    <Card key={app.id} cursor="pointer" onClick={() => navigate(`/applications/${app.id}`)}>
+                    <Card
+                      key={app.id}
+                      cursor="pointer"
+                      onClick={() => navigate(`/applications/${app.id}`)}
+                      variant="academic"
+                      bg="highlight.50"
+                      _hover={{
+                        transform: 'translateY(-2px)',
+                        boxShadow: 'lg',
+                      }}
+                      transition="all 0.3s"
+                    >
                       <CardBody>
                         <Stack spacing="3">
                           <Flex justify="space-between" align="start">
                             <Box flex="1">
-                              <Text fontWeight="bold" fontSize="md" mb="1">
+                              <Text fontWeight="bold" fontSize="md" mb="1" color="gray.800">
                                 {app.scholarshipName}
                               </Text>
                               {app.organization && (
@@ -326,7 +382,13 @@ function Applications() {
                                 </Text>
                               )}
                             </Box>
-                            <Badge colorScheme={getStatusColor(app.status)}>
+                            <Badge
+                              colorScheme={getStatusColor(app.status)}
+                              borderRadius="full"
+                              px="3"
+                              py="1"
+                              fontWeight="semibold"
+                            >
                               {app.status}
                             </Badge>
                           </Flex>
@@ -343,6 +405,7 @@ function Applications() {
                               as={Button}
                               size="sm"
                               variant="outline"
+                              colorScheme="brand"
                               onClick={(e) => e.stopPropagation()}
                             >
                               Actions
@@ -355,7 +418,7 @@ function Applications() {
                                 Edit
                               </MenuItem>
                               <MenuItem
-                                color="red.500"
+                                color="error.500"
                                 onClick={() => handleDeleteClick(app.id)}
                               >
                                 Delete
@@ -408,8 +471,9 @@ function Applications() {
                               <Button
                                 size="sm"
                                 onClick={() => handlePageChange(page)}
-                                colorScheme={currentPage === page ? 'blue' : 'gray'}
+                                colorScheme={currentPage === page ? 'accent' : 'gray'}
                                 variant={currentPage === page ? 'solid' : 'outline'}
+                                borderRadius="md"
                               >
                                 {page}
                               </Button>
@@ -461,6 +525,7 @@ function Applications() {
         </AlertDialogOverlay>
       </AlertDialog>
     </Container>
+    </Box>
   );
 }
 

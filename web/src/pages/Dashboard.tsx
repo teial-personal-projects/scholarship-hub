@@ -8,6 +8,7 @@ import {
   Text,
   Stack,
   HStack,
+  VStack,
   Card,
   CardBody,
   CardHeader,
@@ -22,6 +23,11 @@ import {
   Link,
   Flex,
   IconButton,
+  SimpleGrid,
+  Stat,
+  StatLabel,
+  StatNumber,
+  StatHelpText,
 } from '@chakra-ui/react';
 import { apiGet } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -71,6 +77,14 @@ function Dashboard() {
     fetchData();
   }, [user, showError]);
 
+  // Calculate statistics (must be before early returns)
+  const stats = useMemo(() => {
+    const saved = applications.filter(app => app.status === 'Not Started').length;
+    const inProgress = applications.filter(app => app.status === 'In Progress').length;
+    const submitted = applications.filter(app => app.status === 'Submitted' || app.status === 'Awarded' || app.status === 'Not Awarded').length;
+    return { saved, inProgress, submitted, total: applications.length };
+  }, [applications]);
+
   // Pagination calculations (must be before early returns)
   const totalPages = Math.ceil(applications.length / itemsPerPage);
   const paginatedApplications = useMemo(() => {
@@ -118,51 +132,134 @@ function Dashboard() {
   const firstName = profile?.firstName || 'Student';
 
   return (
-    <Container maxW="7xl" py={{ base: '4', md: '12' }} px={{ base: '4', md: '6' }}>
-      <Stack spacing={{ base: '4', md: '8' }}>
-        {/* Welcome Section */}
-        <Box>
-          <Heading size={{ base: 'md', md: 'lg' }} mb="2">
-            Welcome, {firstName}!
-          </Heading>
-          <Text color="gray.600" fontSize={{ base: 'sm', md: 'md' }}>Here's an overview of your scholarship applications.</Text>
-        </Box>
-
-        {/* Reminders Section */}
-        <DashboardReminders />
-
-        {/* Actions */}
-        <HStack spacing="4">
-          <Button
-            colorScheme="blue"
-            onClick={() => navigate('/applications/new')}
-            size={{ base: 'sm', md: 'md' }}
+    <Box bg="gray.50" minH="100vh" pb="8">
+      <Container maxW="7xl" py={{ base: '4', md: '8' }} px={{ base: '4', md: '6' }}>
+        <Stack spacing={{ base: '6', md: '8' }}>
+          {/* Welcome Section - Minimal Academic Style */}
+          <Box
+            bg="brand.500"
+            borderRadius="xl"
+            p={{ base: '6', md: '8' }}
+            color="white"
+            boxShadow="md"
           >
-            New Application
-          </Button>
-        </HStack>
+            <VStack align="start" spacing="2">
+              <Heading size={{ base: 'lg', md: 'xl' }} fontWeight="bold">
+                Welcome back, {firstName}!
+              </Heading>
+              <Text fontSize={{ base: 'sm', md: 'md' }} opacity={0.9}>
+                Here's an overview of your scholarship applications
+              </Text>
+            </VStack>
+          </Box>
+
+          {/* Statistics Cards - Minimal Academic Style */}
+          <SimpleGrid columns={{ base: 1, sm: 3 }} spacing={{ base: '4', md: '6' }}>
+            <Card variant="academic" bg="highlight.50">
+              <CardBody>
+                <Stat>
+                  <StatLabel color="brand.700" fontWeight="semibold" fontSize="sm" mb="1">
+                    Saved
+                  </StatLabel>
+                  <StatNumber color="brand.500" fontSize={{ base: '2xl', md: '3xl' }} fontWeight="bold">
+                    {stats.saved}
+                  </StatNumber>
+                  <StatHelpText color="gray.600" fontSize="xs" m="0">
+                    Scholarships to explore
+                  </StatHelpText>
+                </Stat>
+              </CardBody>
+            </Card>
+
+            <Card variant="academic" bg="highlight.50">
+              <CardBody>
+                <Stat>
+                  <StatLabel color="brand.700" fontWeight="semibold" fontSize="sm" mb="1">
+                    In Progress
+                  </StatLabel>
+                  <StatNumber color="accent.400" fontSize={{ base: '2xl', md: '3xl' }} fontWeight="bold">
+                    {stats.inProgress}
+                  </StatNumber>
+                  <StatHelpText color="gray.600" fontSize="xs" m="0">
+                    Applications underway
+                  </StatHelpText>
+                </Stat>
+              </CardBody>
+            </Card>
+
+            <Card variant="academic" bg="highlight.50">
+              <CardBody>
+                <Stat>
+                  <StatLabel color="brand.700" fontWeight="semibold" fontSize="sm" mb="1">
+                    Submitted
+                  </StatLabel>
+                  <StatNumber color="brand.500" fontSize={{ base: '2xl', md: '3xl' }} fontWeight="bold">
+                    {stats.submitted}
+                  </StatNumber>
+                  <StatHelpText color="gray.600" fontSize="xs" m="0">
+                    Applications sent
+                  </StatHelpText>
+                </Stat>
+              </CardBody>
+            </Card>
+          </SimpleGrid>
+
+          {/* Reminders Section */}
+          <DashboardReminders />
+
+          {/* Actions */}
+          <HStack spacing="4" flexWrap="wrap">
+            <Button
+              colorScheme="accent"
+              size={{ base: 'md', md: 'lg' }}
+              onClick={() => navigate('/applications/new')}
+            >
+              New Application
+            </Button>
+            <Button
+              variant="outline"
+              colorScheme="brand"
+              size={{ base: 'md', md: 'lg' }}
+              onClick={() => navigate('/search')}
+            >
+              Browse Scholarships
+            </Button>
+          </HStack>
 
         {/* Applications Section */}
-        <Card>
-          <CardHeader>
+        <Card variant="academic" bg="white">
+          <CardHeader
+            bg="highlight.50"
+            borderTopRadius="xl"
+            borderBottom="1px solid"
+            borderColor="brand.200"
+          >
             <Flex justify="space-between" align="center" flexWrap="wrap" gap="4">
-              <Heading size="md">Your Applications</Heading>
+              <Heading size="md" color="brand.700">
+                Your Applications
+              </Heading>
               {applications.length > 0 && (
-                <Text color="gray.600" fontSize="sm">
-                  Showing {((currentPage - 1) * itemsPerPage) + 1}-
-                  {Math.min(currentPage * itemsPerPage, applications.length)} of {applications.length}
-                </Text>
+                <Badge colorScheme="accent" fontSize="sm" px="3" py="1" borderRadius="full">
+                  {applications.length} total
+                </Badge>
               )}
             </Flex>
           </CardHeader>
           <CardBody>
             {applications.length === 0 ? (
-              <Box textAlign="center" py="8">
-                <Text color="gray.500" mb="4">
-                  You don't have any applications yet.
+              <Box textAlign="center" py="12">
+                <Box fontSize="5xl" mb="4" color="brand.500">
+                  🎓
+                </Box>
+                <Heading size="md" color="brand.700" mb="2">
+                  Start Your Scholarship Journey
+                </Heading>
+                <Text color="gray.600" mb="6" maxW="md" mx="auto">
+                  You don't have any applications yet. Create your first application to get started!
                 </Text>
                 <Button
-                  colorScheme="blue"
+                  colorScheme="accent"
+                  size="lg"
                   onClick={() => navigate('/applications/new')}
                 >
                   Create Your First Application
@@ -184,36 +281,52 @@ function Dashboard() {
                     </Thead>
                     <Tbody>
                       {paginatedApplications.map((app) => (
-                        <Tr key={app.id}>
-                          <Td fontWeight="medium">{app.scholarshipName}</Td>
-                          <Td>{app.organization || '-'}</Td>
+                        <Tr
+                          key={app.id}
+                          _hover={{
+                            bg: 'highlight.50',
+                            cursor: 'pointer',
+                          }}
+                          onClick={() => navigate(`/applications/${app.id}`)}
+                        >
+                          <Td fontWeight="medium" color="brand.700">{app.scholarshipName}</Td>
+                          <Td color="gray.600">{app.organization || '-'}</Td>
                           <Td>
                             <Badge
                               colorScheme={
-                                app.status === 'Submitted'
-                                  ? 'green'
+                                app.status === 'Submitted' || app.status === 'Awarded'
+                                  ? 'success'
                                   : app.status === 'In Progress'
-                                  ? 'blue'
+                                  ? 'accent'
                                   : app.status === 'Not Started'
                                   ? 'gray'
                                   : 'orange'
                               }
+                              borderRadius="full"
+                              px="3"
+                              py="1"
+                              fontWeight="semibold"
                             >
                               {app.status}
                             </Badge>
                           </Td>
-                          <Td>
+                          <Td color="gray.700">
                             {app.dueDate
                               ? new Date(app.dueDate).toLocaleDateString()
                               : '-'}
                           </Td>
                           <Td>
                             <Link
-                              color="blue.500"
-                              onClick={() => navigate(`/applications/${app.id}`)}
+                              color="accent.400"
+                              fontWeight="semibold"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/applications/${app.id}`);
+                              }}
                               cursor="pointer"
+                              _hover={{ color: 'accent.500', textDecoration: 'underline' }}
                             >
-                              View
+                              View →
                             </Link>
                           </Td>
                         </Tr>
@@ -225,12 +338,23 @@ function Dashboard() {
                 {/* Mobile Card View */}
                 <Stack spacing="4" display={{ base: 'flex', md: 'none' }}>
                   {paginatedApplications.map((app) => (
-                    <Card key={app.id} cursor="pointer" onClick={() => navigate(`/applications/${app.id}`)}>
+                    <Card
+                      key={app.id}
+                      cursor="pointer"
+                      onClick={() => navigate(`/applications/${app.id}`)}
+                      variant="academic"
+                      bg="highlight.50"
+                      _hover={{
+                        transform: 'translateY(-2px)',
+                        boxShadow: 'lg',
+                      }}
+                      transition="all 0.3s"
+                    >
                       <CardBody>
                         <Stack spacing="3">
                           <Flex justify="space-between" align="start">
                             <Box flex="1">
-                              <Text fontWeight="bold" fontSize="md" mb="1">
+                              <Text fontWeight="bold" fontSize="md" mb="1" color="gray.800">
                                 {app.scholarshipName}
                               </Text>
                               {app.organization && (
@@ -241,14 +365,18 @@ function Dashboard() {
                             </Box>
                             <Badge
                               colorScheme={
-                                app.status === 'Submitted'
-                                  ? 'green'
+                                app.status === 'Submitted' || app.status === 'Awarded'
+                                  ? 'success'
                                   : app.status === 'In Progress'
-                                  ? 'blue'
+                                  ? 'accent'
                                   : app.status === 'Not Started'
                                   ? 'gray'
                                   : 'orange'
                               }
+                              borderRadius="full"
+                              px="3"
+                              py="1"
+                              fontWeight="semibold"
                             >
                               {app.status}
                             </Badge>
@@ -310,8 +438,9 @@ function Dashboard() {
                               <Button
                                 size="sm"
                                 onClick={() => handlePageChange(page)}
-                                colorScheme={currentPage === page ? 'blue' : 'gray'}
+                                colorScheme={currentPage === page ? 'accent' : 'gray'}
                                 variant={currentPage === page ? 'solid' : 'outline'}
+                                borderRadius="md"
                               >
                                 {page}
                               </Button>
@@ -335,6 +464,7 @@ function Dashboard() {
         </Card>
       </Stack>
     </Container>
+    </Box>
   );
 }
 
