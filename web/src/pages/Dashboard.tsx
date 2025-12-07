@@ -32,6 +32,7 @@ import {
 import { apiGet } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import DashboardReminders from '../components/DashboardReminders';
+import DashboardCollaborations from '../components/DashboardCollaborations';
 import type { UserProfile, ApplicationResponse } from '@scholarship-hub/shared';
 import { useToastHelpers } from '../utils/toast';
 
@@ -204,9 +205,6 @@ function Dashboard() {
             </Card>
           </SimpleGrid>
 
-          {/* Reminders Section */}
-          <DashboardReminders />
-
           {/* Actions */}
           <HStack spacing="4" flexWrap="wrap">
             <Button
@@ -226,7 +224,7 @@ function Dashboard() {
             </Button>
           </HStack>
 
-        {/* Applications Section */}
+          {/* Applications Section */}
         <Card variant="academic" bg="white">
           <CardHeader
             bg="highlight.50"
@@ -462,6 +460,12 @@ function Dashboard() {
             )}
           </CardBody>
         </Card>
+
+          {/* Collaborations Section */}
+          <DashboardCollaborations />
+
+          {/* Reminders Section */}
+          <DashboardReminders />
       </Stack>
     </Container>
     </Box>
