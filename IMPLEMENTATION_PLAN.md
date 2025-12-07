@@ -2145,18 +2145,26 @@ scholarship-hub/
   - `npm run test:ui` - Run tests with interactive UI
   - `npm run test:coverage` - Run tests with coverage report
 
-### TODO 7.6: Create Frontend Test Utilities & Mocks
-- [ ] Create `web/src/test/helpers/render.tsx`:
-  - Custom render function with providers (AuthProvider, Router, etc.)
-  - Helper to render with authenticated user
-- [ ] Create `web/src/test/mocks/api.ts`:
-  - Mock API responses using MSW (Mock Service Worker)
-  - Mock all API endpoints
-- [ ] Create `web/src/test/mocks/supabase.ts`:
-  - Mock Supabase client for frontend
-- [ ] Create `web/src/test/fixtures/`:
-  - Sample data matching backend fixtures
-  - Helper functions to generate test data
+### TODO 7.6: Create Frontend Test Utilities & Mocks ✅ COMPLETED
+- ✅ Created `web/src/test/helpers/render.tsx`:
+  - renderWithProviders() - Wraps components with ChakraProvider and BrowserRouter
+  - renderWithAuth() - Renders with authenticated user, mocks localStorage
+  - cleanupAuth() - Helper to clean up after auth tests
+  - Re-exports all @testing-library/react utilities
+- ✅ Created `web/src/test/mocks/api.ts`:
+  - mockApiResponses - Mock data for all API endpoints (users, applications, essays, collaborators, collaborations)
+  - mockApiService - Mocked API service with get, post, patch, delete methods
+  - mockApiGet, mockApiPost, mockApiPatch, mockApiDelete - Individual mock functions
+  - resetApiMocks() - Helper to reset all API mocks between tests
+- ✅ Created `web/src/test/mocks/supabase.ts`:
+  - mockAuthUser, mockSession - Sample auth data
+  - mockSupabaseAuth - Mocked auth methods (getSession, getUser, signIn, signUp, signOut, onAuthStateChange)
+  - createMockSupabaseClient() - Factory for mock Supabase client
+  - resetSupabaseMocks() - Helper to reset Supabase mocks
+- ✅ Created `web/src/test/fixtures/index.ts`:
+  - Complete fixtures matching backend: mockUsers, mockApplications, mockEssays, mockCollaborators, mockCollaborations
+  - Helper functions: createMockUser, createMockApplication, createMockEssay, createMockCollaborator, createMockCollaboration
+  - TypeScript types from @scholarship-hub/shared for type safety
 
 ### TODO 7.7: Write Frontend Component Tests
 - [ ] Test reusable components:
