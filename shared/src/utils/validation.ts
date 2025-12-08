@@ -248,8 +248,16 @@ export function validateEnum<T extends string>(
  * Common validation schemas using Zod
  */
 
-// Email schema
-export const emailSchema = z.string().email().max(255).transform(val => val.trim().toLowerCase());
+// Email schema - preprocess to trim and lowercase, then validate
+export const emailSchema = z.preprocess(
+  (val) => {
+    if (typeof val === 'string') {
+      return val.trim().toLowerCase();
+    }
+    return val;
+  },
+  z.string().email().max(255)
+);
 
 // URL schema
 export const urlSchema = z.string().url().max(2048).transform(val => val.trim());
