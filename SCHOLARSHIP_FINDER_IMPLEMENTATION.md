@@ -1432,6 +1432,669 @@ Users interact with scraped data through:
 
 ---
 
+## Phase 9: Advanced Discovery Features
+
+**Goal**: Implement advanced discovery methods to find scholarships from non-traditional sources
+
+This phase extends the basic AI discovery with more sophisticated techniques for finding scholarships from social media, news sources, and through intelligent website analysis.
+
+### 9.1: Enhanced Google Search API Integration
+
+Create `scholarship-finder/src/discovery/google_search.py`:
+
+```python
+"""
+Enhanced Google Search API Integration
+Advanced search queries to find scholarship pages
+"""
+import os
+from typing import List, Dict
+from googleapiclient.discovery import build
+import time
+
+class GoogleScholarshipSearch:
+    def __init__(self):
+        self.api_key = os.getenv('GOOGLE_API_KEY')
+        self.cx = os.getenv('GOOGLE_CUSTOM_SEARCH_CX')
+        self.service = build('customsearch', 'v1', developerKey=self.api_key)
+
+    def generate_advanced_queries(self, location: str = None, field: str = None) -> List[str]:
+        """
+        Generate advanced search queries to find scholarships
+
+        These queries are designed to:
+        - Exclude aggregator sites (Fastweb, Scholarships.com)
+        - Target original sources (organizations, foundations)
+        - Find local/regional opportunities
+        """
+        base_queries = [
+            # Direct scholarship pages, excluding aggregators
+            '"scholarship application" site:*.com -site:fastweb.com -site:scholarships.com -site:cappex.com',
+            '"scholarship application" site:*.org -site:fastweb.com -site:scholarships.com',
+
+            # Annual scholarships from professional organizations
+            '"annual scholarship" "law firm" OR "medical practice" OR "accounting firm"',
+            '"annual scholarship" "engineering firm" OR "architecture firm"',
+
+            # URL-based searches (likely to be dedicated scholarship pages)
+            'inurl:scholarship site:*.org',
+            'inurl:scholarships site:*.edu',
+            'inurl:giving site:*.com',
+            'inurl:foundation site:*.org',
+
+            # Community and local businesses
+            '"student scholarship" "local business"',
+            '"community scholarship" "foundation"',
+
+            # Professional associations
+            '"student member" scholarship site:*.org',
+            '"professional association" scholarship',
+
+            # Corporate foundations
+            '"corporate foundation" scholarship',
+            'site:foundation.*.com scholarship',
+        ]
+
+        # Add location-specific queries
+        if location:
+            location_queries = [
+                f'"scholarship" "{location}" "high school" OR "college"',
+                f'"student scholarship" "{location}" -site:fastweb.com',
+                f'site:*.{location.lower()}.us scholarship',
+            ]
+            base_queries.extend(location_queries)
+
+        # Add field-specific queries
+        if field:
+            field_queries = [
+                f'"{field}" scholarship site:*.org',
+                f'"{field}" "student award" -site:fastweb.com',
+            ]
+            base_queries.extend(field_queries)
+
+        return base_queries
+
+    def search_with_query(self, query: str, num_results: int = 10) -> List[Dict]:
+        """
+        Execute a single search query and return results
+        """
+        try:
+            result = self.service.cse().list(
+                q=query,
+                cx=self.cx,
+                num=num_results
+            ).execute()
+
+            items = result.get('items', [])
+
+            scholarships = []
+            for item in items:
+                scholarships.append({
+                    'title': item.get('title'),
+                    'url': item.get('link'),
+                    'snippet': item.get('snippet'),
+                    'source_query': query
+                })
+
+            return scholarships
+
+        except Exception as e:
+            print(f"Search error for query '{query}': {e}")
+            return []
+
+    def discover_scholarships(self, location: str = None, field: str = None,
+                            max_results: int = 50) -> List[Dict]:
+        """
+        Main discovery function using advanced Google searches
+
+        Returns list of potential scholarship URLs to be verified by AI
+        """
+        queries = self.generate_advanced_queries(location, field)
+        all_results = []
+        seen_urls = set()
+
+        for query in queries:
+            if len(all_results) >= max_results:
+                break
+
+            print(f"Searching: {query[:80]}...")
+            results = self.search_with_query(query)
+
+            # Deduplicate by URL
+            for result in results:
+                url = result['url']
+                if url not in seen_urls:
+                    seen_urls.add(url)
+                    all_results.append(result)
+
+            # Rate limiting (Google Custom Search has strict limits)
+            time.sleep(1)
+
+        print(f"Found {len(all_results)} unique URLs")
+        return all_results[:max_results]
+```
+
+### 9.2: Social Media & News Scraping
+
+Create `scholarship-finder/src/discovery/news_social.py`:
+
+```python
+"""
+Social Media & News Source Discovery
+Find scholarship announcements from LinkedIn, Twitter, press releases, and local news
+"""
+import requests
+from bs4 import BeautifulSoup
+from typing import List, Dict
+import json
+from datetime import datetime, timedelta
+
+class NewsAndSocialDiscovery:
+    def __init__(self):
+        self.headers = {
+            'User-Agent': 'Mozilla/5.0 (compatible; ScholarshipBot/1.0)'
+        }
+
+    def search_press_releases(self, keywords: List[str] = None) -> List[Dict]:
+        """
+        Search press release aggregators for scholarship announcements
+
+        Sources:
+        - PR Newswire
+        - Business Wire
+        - PRWeb
+        """
+        if keywords is None:
+            keywords = ['scholarship', 'student award', 'education grant']
+
+        results = []
+
+        # PR Newswire search
+        for keyword in keywords:
+            try:
+                url = f"https://www.prnewswire.com/news-releases/education-latest-news/education-list/?keyword={keyword}"
+                response = requests.get(url, headers=self.headers, timeout=10)
+                soup = BeautifulSoup(response.text, 'html.parser')
+
+                # Parse press release listings
+                articles = soup.find_all('div', class_='card')[:10]  # Limit to 10 per keyword
+
+                for article in articles:
+                    title_elem = article.find('h3')
+                    link_elem = article.find('a')
+                    date_elem = article.find('time')
+
+                    if title_elem and link_elem:
+                        results.append({
+                            'title': title_elem.get_text(strip=True),
+                            'url': 'https://www.prnewswire.com' + link_elem.get('href'),
+                            'date': date_elem.get('datetime') if date_elem else None,
+                            'source': 'PR Newswire',
+                            'type': 'press_release'
+                        })
+
+            except Exception as e:
+                print(f"Error searching PR Newswire for '{keyword}': {e}")
+
+        return results
+
+    def search_local_news(self, location: str, keywords: List[str] = None) -> List[Dict]:
+        """
+        Search local news sites for scholarship announcements
+
+        Strategy:
+        - Use Google News search with location filter
+        - Parse results for scholarship announcements
+        """
+        if keywords is None:
+            keywords = ['scholarship announced', 'scholarship program', 'student award']
+
+        results = []
+
+        for keyword in keywords:
+            try:
+                # Google News search URL
+                query = f"{keyword} {location}"
+                url = f"https://news.google.com/search?q={query}&hl=en-US&gl=US&ceid=US:en"
+
+                response = requests.get(url, headers=self.headers, timeout=10)
+                soup = BeautifulSoup(response.text, 'html.parser')
+
+                # Parse news articles (structure may vary)
+                articles = soup.find_all('article')[:5]
+
+                for article in articles:
+                    title_elem = article.find('h3') or article.find('h4')
+                    link_elem = article.find('a')
+
+                    if title_elem and link_elem:
+                        results.append({
+                            'title': title_elem.get_text(strip=True),
+                            'url': 'https://news.google.com' + link_elem.get('href'),
+                            'source': 'Google News',
+                            'location': location,
+                            'type': 'news_article'
+                        })
+
+            except Exception as e:
+                print(f"Error searching local news for '{keyword}': {e}")
+
+        return results
+
+    def search_linkedin_posts(self, keyword: str = "scholarship") -> List[Dict]:
+        """
+        Search LinkedIn for scholarship announcements
+
+        NOTE: LinkedIn has strict API access. This is a placeholder for:
+        - LinkedIn API integration (requires company/developer account)
+        - Or web scraping (requires authentication, may violate ToS)
+
+        Alternative approach:
+        - Use Google to search LinkedIn: site:linkedin.com scholarship announcement
+        """
+        # Placeholder - would require LinkedIn API credentials
+        print("⚠️  LinkedIn search requires API access or authentication")
+        print("   Alternative: Use Google search with site:linkedin.com filter")
+
+        return []
+
+    def discover_from_all_sources(self, location: str = None) -> List[Dict]:
+        """
+        Aggregate scholarship leads from all news and social sources
+        """
+        all_results = []
+
+        # Press releases
+        print("🔍 Searching press releases...")
+        press_results = self.search_press_releases()
+        all_results.extend(press_results)
+
+        # Local news (if location provided)
+        if location:
+            print(f"🔍 Searching local news in {location}...")
+            news_results = self.search_local_news(location)
+            all_results.extend(news_results)
+
+        # LinkedIn (placeholder)
+        # linkedin_results = self.search_linkedin_posts()
+        # all_results.extend(linkedin_results)
+
+        print(f"   Found {len(all_results)} potential leads from news/social")
+        return all_results
+```
+
+### 9.3: Website Structure Analysis
+
+Create `scholarship-finder/src/discovery/website_analyzer.py`:
+
+```python
+"""
+Website Structure Analysis
+Use AI to understand website structure and identify likely scholarship pages
+"""
+from typing import List, Dict, Optional
+import requests
+from bs4 import BeautifulSoup
+from urllib.parse import urljoin, urlparse
+import openai
+import os
+
+class WebsiteAnalyzer:
+    def __init__(self):
+        self.client = openai.OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+        self.headers = {
+            'User-Agent': 'Mozilla/5.0 (compatible; ScholarshipBot/1.0)'
+        }
+
+    def analyze_site_structure(self, domain: str) -> Dict:
+        """
+        Analyze website structure to identify scholarship-related pages
+
+        Strategy:
+        1. Fetch homepage and sitemap
+        2. Identify navigation structure
+        3. Use AI to predict likely scholarship URLs
+        4. Generate targeted scraping strategy
+        """
+        try:
+            # Fetch homepage
+            homepage_url = f"https://{domain}"
+            response = requests.get(homepage_url, headers=self.headers, timeout=10)
+            soup = BeautifulSoup(response.text, 'html.parser')
+
+            # Extract navigation links
+            nav_links = self._extract_navigation_links(soup, homepage_url)
+
+            # Use AI to identify scholarship-related paths
+            scholarship_paths = self._ai_identify_scholarship_paths(domain, nav_links)
+
+            return {
+                'domain': domain,
+                'homepage_url': homepage_url,
+                'total_nav_links': len(nav_links),
+                'potential_scholarship_urls': scholarship_paths,
+                'analysis_strategy': self._generate_scraping_strategy(scholarship_paths)
+            }
+
+        except Exception as e:
+            print(f"Error analyzing {domain}: {e}")
+            return None
+
+    def _extract_navigation_links(self, soup: BeautifulSoup, base_url: str) -> List[Dict]:
+        """
+        Extract all navigation links from the page
+        """
+        links = []
+
+        # Find all links in nav, header, footer
+        for tag in soup.find_all(['nav', 'header', 'footer']):
+            for link in tag.find_all('a', href=True):
+                href = link.get('href')
+                text = link.get_text(strip=True)
+
+                # Convert to absolute URL
+                absolute_url = urljoin(base_url, href)
+
+                # Only include same-domain links
+                if urlparse(absolute_url).netloc == urlparse(base_url).netloc:
+                    links.append({
+                        'url': absolute_url,
+                        'text': text,
+                        'path': urlparse(absolute_url).path
+                    })
+
+        return links
+
+    def _ai_identify_scholarship_paths(self, domain: str, nav_links: List[Dict]) -> List[str]:
+        """
+        Use AI to identify which navigation paths are likely to contain scholarship info
+        """
+        # Create summary of navigation structure
+        nav_summary = "\n".join([
+            f"- {link['path']} ('{link['text']}')"
+            for link in nav_links[:50]  # Limit to 50 to stay within token limits
+        ])
+
+        prompt = f"""
+Analyze this website navigation structure from {domain} and identify URLs that are most likely to contain scholarship or financial aid information.
+
+Navigation paths:
+{nav_summary}
+
+Common scholarship page patterns:
+- /scholarships, /scholarship
+- /giving, /foundation
+- /students/financial-aid
+- /community/scholarships
+- /about/giving
+
+Return a JSON array of the most promising paths (up to 5), ordered by likelihood.
+Format: ["path1", "path2", ...]
+
+If none seem scholarship-related, return an empty array.
+"""
+
+        try:
+            response = self.client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system", "content": "You are a web analysis assistant."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.1,
+                max_tokens=200
+            )
+
+            result = response.choices[0].message.content.strip()
+
+            # Parse JSON response
+            import json
+            paths = json.loads(result)
+
+            # Convert paths to full URLs
+            scholarship_urls = [
+                f"https://{domain}{path}" for path in paths
+            ]
+
+            return scholarship_urls
+
+        except Exception as e:
+            print(f"AI analysis error: {e}")
+
+            # Fallback: Use pattern matching
+            scholarship_keywords = [
+                'scholarship', 'scholarships', 'giving', 'foundation',
+                'financial-aid', 'student-support', 'grants'
+            ]
+
+            fallback_urls = []
+            for link in nav_links:
+                path_lower = link['path'].lower()
+                if any(keyword in path_lower for keyword in scholarship_keywords):
+                    fallback_urls.append(link['url'])
+
+            return fallback_urls[:5]
+
+    def _generate_scraping_strategy(self, scholarship_urls: List[str]) -> Dict:
+        """
+        Generate a targeted scraping strategy based on identified URLs
+        """
+        if not scholarship_urls:
+            return {
+                'strategy': 'no_scholarship_pages',
+                'recommendation': 'Skip this domain or try general page search'
+            }
+
+        return {
+            'strategy': 'targeted_scraping',
+            'urls_to_scrape': scholarship_urls,
+            'priority': 'high' if len(scholarship_urls) > 0 else 'low',
+            'recommendation': f'Scrape {len(scholarship_urls)} identified scholarship pages'
+        }
+
+    def analyze_organizations(self, organization_list: List[str]) -> List[Dict]:
+        """
+        Analyze multiple organizations to find scholarship opportunities
+
+        Example organizations:
+        - Local law firms
+        - Medical practices
+        - Engineering companies
+        - Community foundations
+        """
+        results = []
+
+        for org in organization_list:
+            print(f"Analyzing {org}...")
+            analysis = self.analyze_site_structure(org)
+            if analysis:
+                results.append(analysis)
+
+        return results
+```
+
+### 9.4: Integration & Orchestration
+
+Create `scholarship-finder/src/discovery/advanced_discovery.py`:
+
+```python
+"""
+Advanced Discovery Orchestrator
+Combines all advanced discovery methods
+"""
+from .google_search import GoogleScholarshipSearch
+from .news_social import NewsAndSocialDiscovery
+from .website_analyzer import WebsiteAnalyzer
+from ..ai_discovery.discovery_engine import AIDiscoveryEngine
+from typing import List, Dict
+
+class AdvancedDiscoveryOrchestrator:
+    def __init__(self, db_connection):
+        self.db = db_connection
+        self.google_search = GoogleScholarshipSearch()
+        self.news_social = NewsAndSocialDiscovery()
+        self.website_analyzer = WebsiteAnalyzer()
+        self.ai_discovery = AIDiscoveryEngine(db_connection)
+
+    def discover_comprehensive(self,
+                              location: str = None,
+                              field: str = None,
+                              max_total: int = 100) -> List[Dict]:
+        """
+        Comprehensive discovery using all available methods
+        """
+        all_leads = []
+
+        # 1. Enhanced Google Search
+        print("\n📍 Phase 1: Advanced Google Search")
+        google_results = self.google_search.discover_scholarships(
+            location=location,
+            field=field,
+            max_results=50
+        )
+        all_leads.extend(google_results)
+
+        # 2. News & Social Media
+        print("\n📰 Phase 2: News & Social Media")
+        news_results = self.news_social.discover_from_all_sources(location=location)
+        all_leads.extend(news_results)
+
+        # 3. Website Structure Analysis (for promising domains)
+        print("\n🔬 Phase 3: Website Structure Analysis")
+        # Extract unique domains from leads
+        domains = set()
+        for lead in all_leads:
+            url = lead.get('url', '')
+            if url:
+                from urllib.parse import urlparse
+                domain = urlparse(url).netloc
+                domains.add(domain)
+
+        # Analyze top domains
+        for domain in list(domains)[:10]:  # Limit to top 10
+            analysis = self.website_analyzer.analyze_site_structure(domain)
+            if analysis and analysis.get('potential_scholarship_urls'):
+                for url in analysis['potential_scholarship_urls']:
+                    all_leads.append({
+                        'url': url,
+                        'title': f"Scholarship page on {domain}",
+                        'source': 'website_analysis',
+                        'domain': domain
+                    })
+
+        # 4. AI Verification & Extraction
+        print("\n🤖 Phase 4: AI Verification & Data Extraction")
+        verified_scholarships = []
+
+        for i, lead in enumerate(all_leads[:max_total], 1):
+            print(f"   Verifying {i}/{min(len(all_leads), max_total)}: {lead.get('title', 'Unknown')[:50]}")
+
+            url = lead.get('url')
+            if not url:
+                continue
+
+            try:
+                # Fetch page content
+                import requests
+                response = requests.get(url, timeout=10, headers={
+                    'User-Agent': 'Mozilla/5.0 (compatible; ScholarshipBot/1.0)'
+                })
+                html = response.text
+
+                # Verify it's a scholarship page
+                if self.ai_discovery.verify_scholarship_page(url, html):
+                    # Extract structured data
+                    scholarship_data = self.ai_discovery.extract_scholarship_data(url, html)
+                    if scholarship_data:
+                        scholarship_data['discovery_method'] = lead.get('source', 'unknown')
+                        verified_scholarships.append(scholarship_data)
+
+            except Exception as e:
+                print(f"      Error processing {url}: {e}")
+                continue
+
+        print(f"\n✅ Discovered {len(verified_scholarships)} verified scholarships")
+        return verified_scholarships
+```
+
+### 9.5: Usage & Configuration
+
+Add to `scholarship-finder/finder_main.py`:
+
+```python
+# Add advanced discovery mode
+from src.discovery.advanced_discovery import AdvancedDiscoveryOrchestrator
+
+def run_advanced_discovery(location=None, field=None):
+    """Run advanced discovery with all methods"""
+    db = DatabaseConnection()
+    db.connect()
+
+    orchestrator = AdvancedDiscoveryOrchestrator(db)
+
+    scholarships = orchestrator.discover_comprehensive(
+        location=location,
+        field=field,
+        max_total=100
+    )
+
+    # Save to database using deduplication engine
+    dedup = DeduplicationEngine(db)
+    saved_count = 0
+
+    for scholarship in scholarships:
+        is_duplicate, existing_id = dedup.check_duplicate(scholarship)
+        if not is_duplicate:
+            # Insert new scholarship
+            db.insert_scholarship(scholarship)
+            saved_count += 1
+
+    print(f"\n💾 Saved {saved_count} new scholarships to database")
+    db.close()
+```
+
+### Cost Estimates for Advanced Discovery
+
+**Google Custom Search API:**
+- 100 queries/day free
+- $5 per 1,000 queries after that
+- Estimated: 50-100 queries per discovery run
+- Monthly cost (daily runs): ~$0 (within free tier) to $15/month
+
+**OpenAI API:**
+- GPT-3.5-turbo: ~$0.001 per verification
+- GPT-4o-mini: ~$0.01 per extraction
+- Estimated: 100 verifications + 50 extractions per run
+- Monthly cost (daily runs): ~$15-30/month
+
+**Total estimated cost for advanced discovery: $15-45/month**
+
+### Ethical & Legal Considerations
+
+**Important Notes:**
+1. **Robots.txt Compliance**: Always check robots.txt before scraping
+2. **Rate Limiting**: Implement delays between requests (1-2 seconds minimum)
+3. **Terms of Service**: Review ToS for each source
+4. **LinkedIn/Social Media**: API access required; web scraping may violate ToS
+5. **Attribution**: Always attribute scholarship sources correctly
+6. **Privacy**: Don't collect personal information from pages
+
+### Implementation Checklist
+
+- [ ] Set up Google Custom Search API credentials
+- [ ] Implement enhanced Google search queries
+- [ ] Add press release monitoring
+- [ ] Implement local news search
+- [ ] Create website structure analyzer
+- [ ] Integrate AI verification for all sources
+- [ ] Set up orchestrator to coordinate all methods
+- [ ] Add configuration for location/field targeting
+- [ ] Implement rate limiting and error handling
+- [ ] Test with sample organizations
+- [ ] Monitor API costs and adjust accordingly
+
+---
+
 ## Next Steps
 
 1. Implement database migrations (Phase 1)
@@ -1440,6 +2103,7 @@ Users interact with scraped data through:
 4. Test AI discovery with one category (Phase 4)
 5. Set up basic scheduler (Phase 6)
 6. Integrate existing scraper code (Phase 8)
+7. **Implement advanced discovery features (Phase 9)** ← NEW
 
 After this is working, move to **SCHOLARSHIP_SEARCH_IMPLEMENTATION.md** for the user-facing features.
 
@@ -1450,3 +2114,5 @@ After this is working, move to **SCHOLARSHIP_SEARCH_IMPLEMENTATION.md** for the 
 - Existing scraper location: `/Users/teial/Tutorials/scholarship-tracker/scraper/`
 - Main implementation: `IMPLEMENTATION_PLAN.md`
 - Search & discovery: `SCHOLARSHIP_SEARCH_IMPLEMENTATION.md`
+- Google Custom Search API: https://developers.google.com/custom-search
+- OpenAI API: https://platform.openai.com/docs
