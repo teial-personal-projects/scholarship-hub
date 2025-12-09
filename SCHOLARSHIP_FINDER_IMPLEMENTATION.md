@@ -1,0 +1,1452 @@
+# Scholarship Finder Implementation Plan
+
+**Goal**: Build an automated scholarship discovery system that finds, verifies, and maintains a database of scholarships from multiple sources.
+
+---
+
+## Table of Contents
+
+1. [Overview](#overview)
+2. [Architecture](#architecture)
+3. [Database Schema](#database-schema)
+4. [Implementation Steps](#implementation-steps)
+5. [AI-Powered Discovery](#ai-powered-discovery)
+6. [Deduplication Strategy](#deduplication-strategy)
+7. [Scheduling & Scalability](#scheduling--scalability)
+8. [Cost Optimization](#cost-optimization)
+
+---
+
+## Overview
+
+### Components
+
+1. **Scholarship Finder Service** - Discovers scholarships from multiple sources
+2. **Scraper Module** - Scrapes known scholarship websites
+3. **AI Discovery Module** - Uses AI to find scholarships from non-traditional sources
+4. **Deduplication Engine** - Prevents duplicate scholarships
+5. **Expiration Manager** - Marks and hides expired scholarships
+6. **Job Scheduler** - Runs discovery jobs at intervals
+
+### Tech Stack Decision
+
+**Recommendation: Keep Python for Scholarship Finder, Integrate with Node.js API**
+
+**Why Python:**
+- Your existing scraper is already in Python and working well
+- Better AI/ML libraries (OpenAI SDK, Beautiful Soup, Selenium)
+- Excellent scraping ecosystem
+- Easier data processing
+
+**Integration Strategy:**
+- Scholarship Finder runs as a standalone Python service
+- Writes directly to the same PostgreSQL/MySQL database
+- Node.js API reads from the same scholarships table
+- Communication through shared database (no HTTP calls needed)
+
+---
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Scholarship Finder Service               │
+│                         (Python)                             │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐     │
+│  │   Scraper    │  │ AI Discovery │  │  Expiration  │     │
+│  │   Module     │  │    Module    │  │   Manager    │     │
+│  └──────────────┘  └──────────────┘  └──────────────┘     │
+│         │                 │                   │             │
+│         └─────────────────┼───────────────────┘             │
+│                           ▼                                  │
+│                  ┌──────────────────┐                       │
+│                  │  Deduplication   │                       │
+│                  │     Engine       │                       │
+│                  └──────────────────┘                       │
+│                           │                                  │
+└───────────────────────────┼──────────────────────────────────┘
+                            ▼
+                ┌─────────────────────────┐
+                │   PostgreSQL/MySQL      │
+                │   (Shared Database)     │
+                │                         │
+                │  - scholarships         │
+                │  - scholarship_sources  │
+                │  - finder_jobs          │
+                │  - user_scholarships    │
+                └─────────────────────────┘
+                            ▲
+                            │
+┌───────────────────────────┼──────────────────────────────────┐
+│              Node.js API Server (Existing)                   │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐     │
+│  │ Scholarship  │  │    Search    │  │    User      │     │
+│  │    API       │  │     API      │  │  Preferences │     │
+│  └──────────────┘  └──────────────┘  └──────────────┘     │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+                            ▲
+                            │
+                            ▼
+                    ┌───────────────┐
+                    │  React Web    │
+                    │   Frontend    │
+                    └───────────────┘
+```
+
+---
+
+## Database Schema
+
+### New Tables
+
+#### 1. `scholarships` Table
+```sql
+CREATE TABLE scholarships (
+  id SERIAL PRIMARY KEY,
+
+  -- Core Information
+  name VARCHAR(500) NOT NULL,
+  organization VARCHAR(300),
+  amount DECIMAL(10, 2),
+  description TEXT,
+  eligibility TEXT,
+  requirements TEXT,
+
+  -- URLs
+  url TEXT NOT NULL UNIQUE, -- Primary URL for deduplication
+  application_url TEXT,
+  source_url TEXT, -- Where we found it
+
+  -- Dates
+  deadline DATE,
+  deadline_type VARCHAR(50), -- 'fixed', 'rolling', 'varies'
+  recurring BOOLEAN DEFAULT FALSE, -- Annual scholarship
+
+  -- Classification
+  category VARCHAR(100), -- STEM, Business, etc.
+  target_type VARCHAR(50), -- Merit, Need-Based, etc.
+  education_level VARCHAR(100), -- Undergraduate, Graduate, etc.
+  field_of_study VARCHAR(200),
+
+  -- Deduplication
+  checksum VARCHAR(64) UNIQUE, -- SHA-256 of org+name+amount+deadline
+
+  -- Status
+  status VARCHAR(50) DEFAULT 'active', -- active, expired, invalid
+  verified BOOLEAN DEFAULT FALSE,
+
+  -- Metadata
+  source_type VARCHAR(50), -- 'scraper', 'ai_discovery', 'manual'
+  source_name VARCHAR(100), -- Which scraper/source found it
+  discovered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  last_verified_at TIMESTAMP,
+  expires_at TIMESTAMP, -- Auto-calculated from deadline
+
+  -- Search Optimization
+  search_vector TSVECTOR, -- For full-text search
+
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Indexes
+CREATE INDEX idx_scholarships_checksum ON scholarships(checksum);
+CREATE INDEX idx_scholarships_status ON scholarships(status);
+CREATE INDEX idx_scholarships_deadline ON scholarships(deadline);
+CREATE INDEX idx_scholarships_category ON scholarships(category);
+CREATE INDEX idx_scholarships_organization ON scholarships(organization);
+CREATE INDEX idx_scholarships_search_vector ON scholarships USING GIN(search_vector);
+CREATE INDEX idx_scholarships_expires_at ON scholarships(expires_at);
+```
+
+#### 2. `scholarship_sources` Table
+```sql
+CREATE TABLE scholarship_sources (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(200) NOT NULL UNIQUE,
+  url TEXT NOT NULL,
+  source_type VARCHAR(50), -- 'website', 'search_engine', 'api'
+
+  -- Scraping Configuration
+  scraper_class VARCHAR(100), -- Python class name
+  enabled BOOLEAN DEFAULT TRUE,
+  priority INTEGER DEFAULT 5, -- 1-10, higher = more important
+
+  -- Rate Limiting
+  rate_limit_per_hour INTEGER DEFAULT 100,
+  last_scraped_at TIMESTAMP,
+
+  -- Performance Metrics
+  total_scholarships_found INTEGER DEFAULT 0,
+  success_rate DECIMAL(5, 2) DEFAULT 100.00,
+  average_response_time INTEGER, -- milliseconds
+
+  -- Status
+  status VARCHAR(50) DEFAULT 'active',
+  error_count INTEGER DEFAULT 0,
+  last_error TEXT,
+  last_error_at TIMESTAMP,
+
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+#### 3. `finder_jobs` Table
+```sql
+CREATE TABLE finder_jobs (
+  id SERIAL PRIMARY KEY,
+  job_type VARCHAR(50) NOT NULL, -- 'scraper', 'ai_discovery', 'expiration_check'
+  source_id INTEGER REFERENCES scholarship_sources(id),
+
+  -- Execution
+  status VARCHAR(50) DEFAULT 'pending', -- pending, running, completed, failed
+  started_at TIMESTAMP,
+  completed_at TIMESTAMP,
+  duration_seconds INTEGER,
+
+  -- Results
+  scholarships_found INTEGER DEFAULT 0,
+  scholarships_new INTEGER DEFAULT 0,
+  scholarships_updated INTEGER DEFAULT 0,
+  scholarships_expired INTEGER DEFAULT 0,
+
+  -- Error Handling
+  error_message TEXT,
+  retry_count INTEGER DEFAULT 0,
+  max_retries INTEGER DEFAULT 3,
+
+  -- Metadata
+  config JSONB, -- Job-specific configuration
+  results JSONB, -- Detailed results
+
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_finder_jobs_status ON finder_jobs(status);
+CREATE INDEX idx_finder_jobs_created_at ON finder_jobs(created_at);
+```
+
+#### 4. `user_scholarships` Table
+```sql
+CREATE TABLE user_scholarships (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  scholarship_id INTEGER NOT NULL REFERENCES scholarships(id) ON DELETE CASCADE,
+
+  -- Status
+  status VARCHAR(50) DEFAULT 'suggested', -- suggested, viewed, saved, applied, dismissed
+
+  -- Interaction
+  viewed_at TIMESTAMP,
+  saved_at TIMESTAMP,
+  dismissed_at TIMESTAMP,
+  notes TEXT,
+
+  -- Matching
+  match_score DECIMAL(5, 2), -- 0-100, how well it matches user preferences
+  match_reasons JSONB, -- Why it was suggested
+
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+  UNIQUE(user_id, scholarship_id)
+);
+
+CREATE INDEX idx_user_scholarships_user_id ON user_scholarships(user_id);
+CREATE INDEX idx_user_scholarships_status ON user_scholarships(status);
+CREATE INDEX idx_user_scholarships_match_score ON user_scholarships(match_score);
+```
+
+---
+
+## Implementation Steps
+
+### Phase 1: Database Setup & Migration
+
+**Goal**: Set up new tables in the existing database
+
+#### Step 1.1: Create Migration Files
+
+```bash
+cd scholarship-hub
+npm run migration:create add_scholarships_tables
+```
+
+Create migration in `api/migrations/`:
+
+```typescript
+// api/migrations/YYYYMMDD_add_scholarships_tables.ts
+import { Knex } from 'knex';
+
+export async function up(knex: Knex): Promise<void> {
+  // Create scholarships table
+  await knex.schema.createTable('scholarships', (table) => {
+    table.increments('id').primary();
+
+    // Core information
+    table.string('name', 500).notNullable();
+    table.string('organization', 300);
+    table.decimal('amount', 10, 2);
+    table.text('description');
+    table.text('eligibility');
+    table.text('requirements');
+
+    // URLs
+    table.text('url').notNullable().unique();
+    table.text('application_url');
+    table.text('source_url');
+
+    // Dates
+    table.date('deadline');
+    table.string('deadline_type', 50);
+    table.boolean('recurring').defaultTo(false);
+
+    // Classification
+    table.string('category', 100);
+    table.string('target_type', 50);
+    table.string('education_level', 100);
+    table.string('field_of_study', 200);
+
+    // Deduplication
+    table.string('checksum', 64).unique();
+
+    // Status
+    table.string('status', 50).defaultTo('active');
+    table.boolean('verified').defaultTo(false);
+
+    // Metadata
+    table.string('source_type', 50);
+    table.string('source_name', 100);
+    table.timestamp('discovered_at').defaultTo(knex.fn.now());
+    table.timestamp('last_verified_at');
+    table.timestamp('expires_at');
+
+    table.timestamps(true, true);
+
+    // Indexes
+    table.index('checksum');
+    table.index('status');
+    table.index('deadline');
+    table.index('category');
+    table.index('organization');
+    table.index('expires_at');
+  });
+
+  // Create other tables (scholarship_sources, finder_jobs, user_scholarships)
+  // ... (similar structure)
+}
+
+export async function down(knex: Knex): Promise<void> {
+  await knex.schema.dropTableIfExists('user_scholarships');
+  await knex.schema.dropTableIfExists('finder_jobs');
+  await knex.schema.dropTableIfExists('scholarship_sources');
+  await knex.schema.dropTableIfExists('scholarships');
+}
+```
+
+#### Step 1.2: Run Migration
+
+```bash
+npm run migrate:latest --workspace=api
+```
+
+---
+
+### Phase 2: Move & Integrate Scholarship Finder
+
+**Goal**: Move the Python scholarship finder into the project and configure it
+
+#### Step 2.1: Create scholarship-finder Directory
+
+```bash
+cd scholarship-hub
+mkdir -p scholarship-finder
+```
+
+#### Step 2.2: Copy Existing Scraper Code
+
+```bash
+# Copy from your existing scraper
+cp -r /Users/teial/Tutorials/scholarship-tracker/scraper/* scholarship-finder/
+
+# Rename for clarity
+mv scholarship-finder/src/scrapers scholarship-finder/src/scholarship_finder
+mv scholarship-finder/main.py scholarship-finder/finder_main.py
+```
+
+#### Step 2.3: Update Database Connection
+
+Create `scholarship-finder/src/database/connection.py`:
+
+```python
+"""
+Database connection for Scholarship Finder
+Connects to the same database as the Node.js API
+"""
+import os
+import psycopg2
+from psycopg2.extras import RealDictCursor
+from typing import Optional
+from dotenv import load_dotenv
+
+# Load environment from root .env
+load_dotenv(os.path.join(os.path.dirname(__file__), '../../../.env'))
+
+class DatabaseConnection:
+    def __init__(self):
+        self.connection = None
+        self.cursor = None
+
+    def connect(self):
+        """Connect to PostgreSQL database (same as Node.js API)"""
+        try:
+            self.connection = psycopg2.connect(
+                host=os.getenv('SUPABASE_HOST', 'localhost'),
+                port=int(os.getenv('SUPABASE_PORT', '5432')),
+                user=os.getenv('SUPABASE_USER'),
+                password=os.getenv('SUPABASE_PASSWORD'),
+                database=os.getenv('SUPABASE_DATABASE'),
+                cursor_factory=RealDictCursor
+            )
+            self.cursor = self.connection.cursor()
+            return True
+        except Exception as e:
+            print(f"❌ Database connection error: {e}")
+            return False
+
+    def close(self):
+        """Close database connection"""
+        if self.cursor:
+            self.cursor.close()
+        if self.connection:
+            self.connection.close()
+
+    def insert_scholarship(self, scholarship: dict) -> Optional[int]:
+        """Insert or update scholarship"""
+        # Implementation in next step
+        pass
+```
+
+#### Step 2.4: Update Dependencies
+
+Create `scholarship-finder/requirements.txt`:
+
+```txt
+# Existing dependencies
+beautifulsoup4==4.12.2
+requests==2.31.0
+openai==1.3.0
+google-api-python-client==2.108.0
+python-dotenv==1.0.0
+
+# Database (PostgreSQL instead of MySQL)
+psycopg2-binary==2.9.9
+
+# Scraping
+selenium==4.15.0
+playwright==1.40.0
+
+# Utilities
+tqdm==4.66.1
+python-dateutil==2.8.2
+```
+
+---
+
+### Phase 3: Implement Deduplication Engine
+
+**Goal**: Prevent duplicate scholarships using checksums and fuzzy matching
+
+#### Step 3.1: Create Deduplication Module
+
+Create `scholarship-finder/src/deduplication/engine.py`:
+
+```python
+"""
+Scholarship Deduplication Engine
+Uses checksums and fuzzy matching to prevent duplicates
+"""
+import hashlib
+from typing import Dict, Optional, Tuple
+from difflib import SequenceMatcher
+from datetime import datetime
+
+class DeduplicationEngine:
+    def __init__(self, db_connection):
+        self.db = db_connection
+        self.similarity_threshold = 0.85  # 85% similarity = duplicate
+
+    def generate_checksum(self, scholarship: dict) -> str:
+        """
+        Generate SHA-256 checksum from key fields
+        Format: org_name + scholarship_name + amount + deadline
+        """
+        components = [
+            (scholarship.get('organization') or '').lower().strip(),
+            (scholarship.get('name') or '').lower().strip(),
+            str(scholarship.get('amount') or '0'),
+            str(scholarship.get('deadline') or '')
+        ]
+
+        checksum_string = '|'.join(components)
+        return hashlib.sha256(checksum_string.encode()).hexdigest()
+
+    def check_duplicate(self, scholarship: dict) -> Tuple[bool, Optional[int]]:
+        """
+        Check if scholarship is a duplicate
+        Returns: (is_duplicate, existing_id)
+        """
+        # 1. Check exact checksum match (fastest)
+        checksum = self.generate_checksum(scholarship)
+
+        self.db.cursor.execute(
+            "SELECT id FROM scholarships WHERE checksum = %s AND status != 'invalid'",
+            (checksum,)
+        )
+        result = self.db.cursor.fetchone()
+        if result:
+            return (True, result['id'])
+
+        # 2. Check URL match (second fastest)
+        if scholarship.get('url'):
+            self.db.cursor.execute(
+                "SELECT id FROM scholarships WHERE url = %s AND status != 'invalid'",
+                (scholarship['url'],)
+            )
+            result = self.db.cursor.fetchone()
+            if result:
+                return (True, result['id'])
+
+        # 3. Fuzzy match on name + organization (slowest, but catches variations)
+        similar_id = self._find_similar_scholarship(scholarship)
+        if similar_id:
+            return (True, similar_id)
+
+        return (False, None)
+
+    def _find_similar_scholarship(self, scholarship: dict) -> Optional[int]:
+        """
+        Find similar scholarships using fuzzy string matching
+        Only checks recent scholarships for performance
+        """
+        org = (scholarship.get('organization') or '').lower().strip()
+        name = (scholarship.get('name') or '').lower().strip()
+
+        if not org or not name:
+            return None
+
+        # Only check scholarships from same organization
+        self.db.cursor.execute("""
+            SELECT id, name, organization
+            FROM scholarships
+            WHERE LOWER(organization) LIKE %s
+            AND status != 'invalid'
+            AND discovered_at > NOW() - INTERVAL '6 months'
+            LIMIT 50
+        """, (f'%{org}%',))
+
+        candidates = self.db.cursor.fetchall()
+
+        for candidate in candidates:
+            candidate_name = (candidate['name'] or '').lower().strip()
+            candidate_org = (candidate['organization'] or '').lower().strip()
+
+            # Calculate similarity scores
+            name_similarity = SequenceMatcher(None, name, candidate_name).ratio()
+            org_similarity = SequenceMatcher(None, org, candidate_org).ratio()
+
+            # Weighted average (name is more important)
+            overall_similarity = (name_similarity * 0.7) + (org_similarity * 0.3)
+
+            if overall_similarity >= self.similarity_threshold:
+                return candidate['id']
+
+        return None
+
+    def merge_scholarship_data(self, existing: dict, new: dict) -> dict:
+        """
+        Merge new scholarship data with existing
+        Keeps most complete/recent information
+        """
+        merged = existing.copy()
+
+        # Update fields if new data is more complete
+        for field in ['description', 'eligibility', 'requirements',
+                      'application_url', 'amount']:
+            if new.get(field) and not existing.get(field):
+                merged[field] = new[field]
+            elif new.get(field) and len(str(new[field])) > len(str(existing.get(field, ''))):
+                merged[field] = new[field]
+
+        # Always update deadline if it's newer
+        if new.get('deadline'):
+            new_deadline = new['deadline']
+            existing_deadline = existing.get('deadline')
+            if not existing_deadline or new_deadline > existing_deadline:
+                merged['deadline'] = new_deadline
+
+        # Update last_verified timestamp
+        merged['last_verified_at'] = datetime.utcnow()
+
+        return merged
+```
+
+---
+
+### Phase 4: Implement AI-Powered Discovery
+
+**Goal**: Use AI to discover scholarships from non-traditional sources
+
+#### Step 4.1: Create AI Discovery Module
+
+Create `scholarship-finder/src/ai_discovery/discovery_engine.py`:
+
+```python
+"""
+AI-Powered Scholarship Discovery
+Finds scholarships from businesses, organizations, and non-traditional sources
+"""
+import os
+from typing import List, Dict, Optional
+from openai import OpenAI
+import requests
+from bs4 import BeautifulSoup
+import json
+
+class AIDiscoveryEngine:
+    def __init__(self, db_connection):
+        self.db = db_connection
+        self.client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+        self.google_api_key = os.getenv('GOOGLE_API_KEY')
+        self.google_cx = os.getenv('GOOGLE_CUSTOM_SEARCH_CX')
+
+    def generate_search_queries(self, category: str, keywords: List[str]) -> List[str]:
+        """
+        Use GPT to generate targeted search queries for a category
+        """
+        prompt = f"""
+Generate 5 Google search queries to find scholarship opportunities in the {category} industry.
+
+Focus on:
+- Company scholarships
+- Professional association scholarships
+- Industry-specific scholarships
+- Lesser-known opportunities
+
+Keywords to incorporate: {', '.join(keywords)}
+
+Return ONLY the search queries, one per line, without numbering or explanation.
+"""
+
+        response = self.client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are a scholarship research assistant."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.7,
+            max_tokens=200
+        )
+
+        queries = response.choices[0].message.content.strip().split('\n')
+        return [q.strip().strip('"').strip("'") for q in queries if q.strip()]
+
+    def search_google(self, query: str, num_results: int = 10) -> List[Dict]:
+        """
+        Search Google using Custom Search API
+        """
+        url = "https://www.googleapis.com/customsearch/v1"
+        params = {
+            'key': self.google_api_key,
+            'cx': self.google_cx,
+            'q': query,
+            'num': num_results
+        }
+
+        try:
+            response = requests.get(url, params=params, timeout=10)
+            response.raise_for_status()
+            data = response.json()
+
+            results = []
+            for item in data.get('items', []):
+                results.append({
+                    'title': item.get('title'),
+                    'url': item.get('link'),
+                    'snippet': item.get('snippet')
+                })
+
+            return results
+        except Exception as e:
+            print(f"⚠️  Google search error: {e}")
+            return []
+
+    def verify_scholarship_page(self, url: str, html: str) -> bool:
+        """
+        Use AI to verify if a page actually contains scholarship information
+        """
+        # Extract text content
+        soup = BeautifulSoup(html, 'html.parser')
+
+        # Remove scripts, styles, etc.
+        for tag in soup(['script', 'style', 'nav', 'footer', 'header']):
+            tag.decompose()
+
+        text = soup.get_text(separator=' ', strip=True)
+        text = ' '.join(text.split())[:3000]  # Limit to 3000 chars
+
+        prompt = f"""
+Analyze this webpage text and determine if it describes a scholarship, grant, or financial aid opportunity.
+
+URL: {url}
+Text: {text}
+
+Respond with ONLY "YES" or "NO".
+
+YES if:
+- Describes a specific scholarship/grant with clear eligibility
+- Has application information or deadlines
+- Offers financial assistance for education
+
+NO if:
+- General scholarship search/database site
+- Blog post or news article about scholarships
+- Loan information or paid services
+- No specific scholarship details
+"""
+
+        try:
+            response = self.client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system", "content": "You are a scholarship verification assistant."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.1,
+                max_tokens=10
+            )
+
+            answer = response.choices[0].message.content.strip().upper()
+            return answer == "YES"
+        except Exception as e:
+            print(f"⚠️  AI verification error: {e}")
+            return False
+
+    def extract_scholarship_data(self, url: str, html: str) -> Optional[Dict]:
+        """
+        Use AI to extract structured scholarship data from HTML
+        """
+        soup = BeautifulSoup(html, 'html.parser')
+        text = soup.get_text(separator=' ', strip=True)
+        text = ' '.join(text.split())[:4000]
+
+        prompt = f"""
+Extract scholarship information from this webpage.
+
+URL: {url}
+Text: {text}
+
+Return a JSON object with these fields (use null for missing data):
+{{
+  "name": "Scholarship name",
+  "organization": "Organization offering it",
+  "amount": 1000,
+  "deadline": "YYYY-MM-DD or null",
+  "deadline_type": "fixed|rolling|varies",
+  "description": "Brief description",
+  "eligibility": "Who can apply",
+  "requirements": "Application requirements",
+  "application_url": "URL to apply",
+  "category": "STEM|Business|Healthcare|etc",
+  "field_of_study": "Specific field if mentioned",
+  "education_level": "Undergraduate|Graduate|High School|etc"
+}}
+
+Return ONLY valid JSON, no explanation.
+"""
+
+        try:
+            response = self.client.chat.completions.create(
+                model="gpt-4o-mini",  # More capable for extraction
+                messages=[
+                    {"role": "system", "content": "You extract scholarship data into JSON format."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.1,
+                max_tokens=800
+            )
+
+            json_str = response.choices[0].message.content.strip()
+
+            # Remove markdown code blocks if present
+            if json_str.startswith('```'):
+                json_str = json_str.split('```')[1]
+                if json_str.startswith('json'):
+                    json_str = json_str[4:]
+
+            data = json.loads(json_str)
+            data['url'] = url
+            data['source_url'] = url
+            data['source_type'] = 'ai_discovery'
+
+            return data
+        except Exception as e:
+            print(f"⚠️  AI extraction error: {e}")
+            return None
+
+    def discover_scholarships(self, category: str, keywords: List[str],
+                            max_results: int = 50) -> List[Dict]:
+        """
+        Main discovery pipeline for a category
+        """
+        print(f"\n🔍 Discovering {category} scholarships...")
+
+        # 1. Generate search queries
+        queries = self.generate_search_queries(category, keywords)
+        print(f"   Generated {len(queries)} search queries")
+
+        scholarships = []
+        urls_checked = set()
+
+        # 2. Search and verify
+        for query in queries[:3]:  # Limit to 3 queries per category
+            print(f"   Searching: {query}")
+            search_results = self.search_google(query, num_results=10)
+
+            for result in search_results:
+                url = result['url']
+
+                if url in urls_checked or len(scholarships) >= max_results:
+                    continue
+
+                urls_checked.add(url)
+
+                # Fetch page
+                try:
+                    response = requests.get(url, timeout=10, headers={
+                        'User-Agent': 'Mozilla/5.0 (compatible; ScholarshipBot/1.0)'
+                    })
+                    html = response.text
+
+                    # Verify it's a scholarship page
+                    if not self.verify_scholarship_page(url, html):
+                        continue
+
+                    # Extract data
+                    data = self.extract_scholarship_data(url, html)
+                    if data:
+                        scholarships.append(data)
+                        print(f"   ✅ Found: {data.get('name')}")
+                except Exception as e:
+                    print(f"   ⚠️  Error fetching {url}: {e}")
+                    continue
+
+        print(f"   Total found: {len(scholarships)}")
+        return scholarships
+```
+
+**Note**: This AI discovery approach is cost-effective because:
+- Uses GPT-3.5-turbo for search queries (~$0.001 per query)
+- Uses GPT-4-turbo for extraction (~$0.01 per page)
+- Typical cost per category: $0.50-2.00
+- Run monthly: ~$10-40/month for all categories
+
+---
+
+### Phase 5: Expiration Manager
+
+**Goal**: Automatically mark expired scholarships
+
+#### Step 5.1: Create Expiration Manager
+
+Create `scholarship-finder/src/expiration/manager.py`:
+
+```python
+"""
+Expiration Manager
+Automatically marks expired scholarships and archives them
+"""
+from datetime import datetime, timedelta
+from typing import Dict, List
+
+class ExpirationManager:
+    def __init__(self, db_connection):
+        self.db = db_connection
+
+    def check_and_mark_expired(self) -> Dict[str, int]:
+        """
+        Check all active scholarships and mark expired ones
+        Returns stats on how many were marked
+        """
+        stats = {
+            'checked': 0,
+            'marked_expired': 0,
+            'errors': 0
+        }
+
+        # Find scholarships with past deadlines
+        self.db.cursor.execute("""
+            UPDATE scholarships
+            SET status = 'expired',
+                updated_at = NOW()
+            WHERE status = 'active'
+            AND deadline < CURRENT_DATE
+            AND deadline IS NOT NULL
+            RETURNING id, name
+        """)
+
+        expired = self.db.cursor.fetchall()
+        stats['marked_expired'] = len(expired)
+
+        for scholarship in expired:
+            print(f"   ⏰ Expired: {scholarship['name']}")
+
+        self.db.connection.commit()
+
+        return stats
+
+    def calculate_expiration_date(self, deadline: datetime) -> datetime:
+        """
+        Calculate when a scholarship should be marked as expired
+        Usually deadline + 30 days grace period
+        """
+        if not deadline:
+            return None
+
+        return deadline + timedelta(days=30)
+
+    def archive_old_expired_scholarships(self, days_old: int = 365) -> int:
+        """
+        Archive scholarships that have been expired for a long time
+        This keeps the database clean
+        """
+        cutoff_date = datetime.utcnow() - timedelta(days=days_old)
+
+        self.db.cursor.execute("""
+            UPDATE scholarships
+            SET status = 'archived'
+            WHERE status = 'expired'
+            AND updated_at < %s
+            RETURNING id
+        """, (cutoff_date,))
+
+        archived = self.db.cursor.fetchall()
+        self.db.connection.commit()
+
+        return len(archived)
+
+    def reactivate_recurring_scholarships(self) -> int:
+        """
+        Reactivate scholarships that are recurring (annual)
+        """
+        # This would check if a scholarship is marked as recurring
+        # and if a year has passed, create a new entry with updated deadline
+
+        self.db.cursor.execute("""
+            SELECT id, name, organization, deadline
+            FROM scholarships
+            WHERE recurring = true
+            AND status = 'expired'
+            AND deadline >= CURRENT_DATE - INTERVAL '1 year'
+        """)
+
+        recurring = self.db.cursor.fetchall()
+        reactivated = 0
+
+        for scholarship in recurring:
+            # Check if we already have this scholarship for the next year
+            next_year_deadline = scholarship['deadline'].replace(
+                year=scholarship['deadline'].year + 1
+            )
+
+            self.db.cursor.execute("""
+                SELECT id FROM scholarships
+                WHERE organization = %s
+                AND name = %s
+                AND deadline = %s
+            """, (scholarship['organization'], scholarship['name'], next_year_deadline))
+
+            if not self.db.cursor.fetchone():
+                # Create new entry for next year
+                self.db.cursor.execute("""
+                    INSERT INTO scholarships (
+                        name, organization, deadline, recurring, status
+                    ) VALUES (%s, %s, %s, true, 'active')
+                """, (scholarship['name'], scholarship['organization'], next_year_deadline))
+                reactivated += 1
+
+        self.db.connection.commit()
+        return reactivated
+```
+
+---
+
+### Phase 6: Job Scheduler
+
+**Goal**: Run the scholarship finder on a schedule without AWS
+
+#### Option 1: Simple Cron Job (Free, Recommended for Start)
+
+Create `scholarship-finder/scheduler/run_finder.sh`:
+
+```bash
+#!/bin/bash
+
+# Scholarship Finder - Cron Job Runner
+# Add to crontab: 0 */6 * * * /path/to/run_finder.sh
+
+cd /Users/teial/Tutorials/scholarship-hub/scholarship-finder
+
+# Activate virtual environment
+source venv/bin/activate
+
+# Run with logging
+python finder_main.py --mode scheduled >> logs/finder_$(date +\%Y\%m\%d).log 2>&1
+```
+
+Add to crontab:
+```bash
+crontab -e
+
+# Add this line (runs every 6 hours):
+0 */6 * * * /Users/teial/Tutorials/scholarship-hub/scholarship-finder/scheduler/run_finder.sh
+```
+
+#### Option 2: Node.js Scheduler (Integrated with API)
+
+Create `api/src/jobs/scholarship-finder.job.ts`:
+
+```typescript
+/**
+ * Scholarship Finder Job Scheduler
+ * Runs Python scholarship finder on a schedule
+ */
+import { spawn } from 'child_process';
+import path from 'path';
+import { createFinderJob, updateFinderJob } from '../services/finder-jobs.service';
+
+export class ScholarshipFinderJob {
+  private pythonPath: string;
+  private scriptPath: string;
+
+  constructor() {
+    const projectRoot = path.resolve(__dirname, '../../../..');
+    this.pythonPath = path.join(projectRoot, 'scholarship-finder/venv/bin/python');
+    this.scriptPath = path.join(projectRoot, 'scholarship-finder/finder_main.py');
+  }
+
+  async runScraper(scraperName: string): Promise<void> {
+    console.log(`🔄 Starting scholarship finder: ${scraperName}`);
+
+    // Create job record
+    const job = await createFinderJob({
+      jobType: 'scraper',
+      sourceName: scraperName,
+      status: 'pending'
+    });
+
+    try {
+      // Update to running
+      await updateFinderJob(job.id, { status: 'running', startedAt: new Date() });
+
+      // Run Python scraper
+      const result = await this.runPythonScript(['--scraper', scraperName]);
+
+      // Update to completed
+      await updateFinderJob(job.id, {
+        status: 'completed',
+        completedAt: new Date(),
+        results: result
+      });
+
+      console.log(`✅ Scholarship finder completed: ${scraperName}`);
+    } catch (error) {
+      console.error(`❌ Scholarship finder failed: ${scraperName}`, error);
+
+      await updateFinderJob(job.id, {
+        status: 'failed',
+        errorMessage: error.message,
+        completedAt: new Date()
+      });
+    }
+  }
+
+  private runPythonScript(args: string[]): Promise<any> {
+    return new Promise((resolve, reject) => {
+      const python = spawn(this.pythonPath, [this.scriptPath, ...args]);
+
+      let output = '';
+      let error = '';
+
+      python.stdout.on('data', (data) => {
+        output += data.toString();
+        console.log(data.toString());
+      });
+
+      python.stderr.on('data', (data) => {
+        error += data.toString();
+        console.error(data.toString());
+      });
+
+      python.on('close', (code) => {
+        if (code !== 0) {
+          reject(new Error(`Python script exited with code ${code}: ${error}`));
+        } else {
+          try {
+            const result = JSON.parse(output);
+            resolve(result);
+          } catch {
+            resolve({ output });
+          }
+        }
+      });
+    });
+  }
+}
+
+// Schedule jobs using node-cron
+import cron from 'node-cron';
+
+export function scheduleScholarshipFinder() {
+  const finder = new ScholarshipFinderJob();
+
+  // Run general scraper every 6 hours
+  cron.schedule('0 */6 * * *', () => {
+    finder.runScraper('general');
+  });
+
+  // Run AI discovery weekly (Sunday at 2 AM)
+  cron.schedule('0 2 * * 0', () => {
+    finder.runScraper('ai_discovery');
+  });
+
+  // Check expirations daily at 3 AM
+  cron.schedule('0 3 * * *', () => {
+    finder.runScraper('expiration_check');
+  });
+
+  console.log('📅 Scholarship finder jobs scheduled');
+}
+```
+
+---
+
+## Cost Optimization
+
+### Free/Low-Cost Options
+
+1. **Hosting**: Run on your development machine or a cheap VPS ($5/month)
+2. **Database**: Use Supabase free tier (500MB, sufficient for start)
+3. **Scheduler**: Cron jobs (free) or node-cron (free)
+4. **APIs**:
+   - OpenAI: ~$10-20/month (GPT-3.5-turbo is cheap)
+   - Google Custom Search: 100 queries/day free
+   - Web scraping: Free (just need good rate limiting)
+
+### Scaling Strategy
+
+**Start Small** (Months 1-3):
+- Run every 6 hours
+- Process 2-3 categories
+- ~$15/month total cost
+
+**Scale Up** (Months 4-6):
+- Move to cloud VPS if needed ($10/month)
+- Add more categories
+- Run more frequently
+- ~$30/month total cost
+
+**Production** (Months 7+):
+- Consider managed services if volume increases
+- Add monitoring (free tier options available)
+- Optimize based on actual usage
+
+---
+
+---
+
+## Scraper Integration Details
+
+**Status**: This section contains all scraper-related implementation details. The scraper integration will be revisited once the core scholarship application tracking features are stable.
+
+### Existing Scraper
+
+- **Location**: `/Users/teial/Tutorials/scholarship-tracker/scraper/`
+- **Language**: Python
+- **Features**: AI discovery scraper logic, existing configurations
+- **Status**: Working in old project, needs migration to new stack
+
+### Project Structure (Scraper Components)
+
+```
+scholarship-hub/
+├── scholarship-finder/          # Python scholarship scraper
+│   ├── requirements.txt
+│   ├── README.md
+│   ├── finder_main.py
+│   ├── src/
+│   │   ├── scholarship_finder/
+│   │   │   ├── ai_discovery.py
+│   │   │   └── base_scraper.py
+│   │   ├── deduplication/
+│   │   │   └── engine.py
+│   │   ├── database/
+│   │   │   └── connection.py
+│   │   └── expiration/
+│   │       └── manager.py
+│   ├── scheduler/
+│   │   └── run_finder.sh
+│   └── tests/
+```
+
+### Migration Steps
+
+#### 8.1: Review Existing Scraper
+
+- [ ] Copy scraper from existing project to new location:
+  ```bash
+  mkdir -p scholarship-finder/src/{scholarship_finder,deduplication,database,expiration}
+  cp -r /Users/teial/Tutorials/scholarship-tracker/scraper/* scholarship-finder/
+  ```
+- [ ] Review files copied:
+  - AI discovery scraper logic
+  - Existing scraper configurations
+  - Requirements and dependencies
+- [ ] Document current scraper capabilities in `scholarship-finder/README.md`
+- [ ] Review what needs to be updated for Supabase PostgreSQL
+
+#### 8.2: Update Scraper to Use PostgreSQL
+
+- [ ] Install PostgreSQL driver: `pip install psycopg2-binary` or `asyncpg`
+- [ ] Update database connection to use Supabase PostgreSQL connection string
+- [ ] Update table names to match new schema
+- [ ] Create `scholarship-finder/.env` file with Supabase credentials:
+  ```
+  SUPABASE_URL=https://xxx.supabase.co
+  SUPABASE_SERVICE_KEY=xxx
+  DATABASE_URL=postgresql://user:pass@host:5432/db
+  ```
+
+#### 8.3: Implement Enhanced Deduplication
+
+The deduplication engine (see Phase 3) includes:
+- Fingerprint/checksum generation
+- Exact URL matching
+- Fuzzy string matching for similar scholarships
+- Data merging for duplicates
+
+Create fingerprint function:
+```python
+import hashlib
+
+def create_fingerprint(scholarship: dict) -> str:
+    """
+    Create unique fingerprint for scholarship to detect duplicates.
+    Uses: title + organization + deadline + award amount
+    """
+    # Normalize strings (lowercase, strip whitespace)
+    title = scholarship.get('title', '').lower().strip()
+    org = scholarship.get('organization', '').lower().strip()
+    deadline = scholarship.get('deadline', '').strip()
+    award = str(scholarship.get('min_award', 0))
+
+    key = f"{title}|{org}|{deadline}|{award}"
+    return hashlib.sha256(key.encode()).hexdigest()
+```
+
+Before inserting to `scholarships`:
+- Insert to `scholarship_raw_results` with fingerprint
+- Check if fingerprint exists → skip if duplicate
+- Otherwise, upsert to `scholarships` table
+- Handle updates: if fingerprint matches but data changed, update existing record
+
+#### 8.4: Enhance Scraper Categories
+
+- [ ] Review current categories (STEM, Healthcare, etc.)
+- [ ] Add more categories or customize based on user feedback
+- [ ] Make categories configurable via config file
+- [ ] Add subject area mapping to match `subject_areas` table
+
+#### 8.5: Schedule Scraper Runs
+
+Set up cron job or GitHub Actions workflow to run scraper:
+- Daily or weekly
+- Run all categories
+- Log results to file or monitoring service
+- Monitor for errors and send alerts
+
+Example cron job:
+```bash
+# Run daily at 2 AM
+0 2 * * * cd /path/to/scholarship-finder && ./scheduler/run_finder.sh >> logs/scraper.log 2>&1
+```
+
+Example GitHub Action:
+```yaml
+name: Run Scholarship Finder
+on:
+  schedule:
+    - cron: '0 2 * * *'  # Daily at 2 AM UTC
+  workflow_dispatch:  # Manual trigger
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          cd scholarship-finder
+          pip install -r requirements.txt
+      - name: Run finder
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          cd scholarship-finder
+          python finder_main.py
+```
+
+#### 8.6: Backend - Scraper Stats API
+
+Create endpoint: `GET /api/admin/scraper/stats`
+
+Return statistics:
+```typescript
+{
+  totalScholarships: number;
+  lastScraperRun: Date;
+  scholarshipsBySource: {
+    source: string;
+    count: number;
+  }[];
+  recentlyAdded: Scholarship[];
+}
+```
+
+Optional admin features:
+- Create admin dashboard to trigger scraper manually
+- Create endpoint: `POST /api/admin/scraper/trigger` (admin only)
+
+---
+
+## Integration Points
+
+### 1. Scraper → Database
+
+The scraper writes directly to PostgreSQL:
+1. Insert raw data into `scholarship_raw_results` (if tracking raw data)
+2. Check for duplicates via checksum/fingerprint
+3. Insert/update `scholarships` table
+4. Update timestamps and metadata
+
+### 2. Backend → Scraper Data
+
+Backend API reads from `scholarships` table:
+- Search endpoint uses fingerprint-deduplicated data
+- Users see only processed, cleaned scholarships
+- Admin endpoints can access raw scraper results for debugging
+
+### 3. User → Scraped Data
+
+Users interact with scraped data through:
+- Search & discovery features
+- Browse scholarships page
+- Saved searches (notify when new scholarships match)
+
+---
+
+## Testing Strategy
+
+### Unit Tests
+- Test fingerprint generation with various inputs
+- Test deduplication logic
+- Test data transformation (raw → processed)
+
+### Integration Tests
+- Test database connection
+- Test full scrape → store workflow
+- Test error handling (network errors, malformed data)
+
+### Manual Testing
+- Run scraper on small dataset
+- Verify no duplicates created
+- Verify data quality in database
+- Test scheduled runs
+
+---
+
+## Monitoring & Maintenance
+
+### Metrics to Track
+- Number of scholarships scraped per run
+- Number of duplicates detected
+- Errors encountered
+- Time per source
+- Database growth rate
+
+### Alerts
+- Scraper failed to run
+- High error rate (>10%)
+- No new scholarships found (potential issue)
+- Database connection failures
+
+### Maintenance Tasks
+- Review and update scraper selectors (websites change)
+- Add new sources
+- Clean up old raw results (retention policy)
+- Optimize performance
+
+---
+
+## Future Enhancements
+
+### Phase 1 (Basic)
+- Copy existing scraper
+- Update for PostgreSQL
+- Implement deduplication
+- Schedule basic runs
+
+### Phase 2 (Enhanced)
+- Add more sources
+- Improve data quality (ML-based cleaning)
+- Better categorization
+- Add scholarship verification
+
+### Phase 3 (Advanced)
+- User-requested sources
+- Real-time scraping triggers
+- Scholarship change detection
+- Quality scoring algorithm
+- Community-contributed sources
+
+---
+
+## Next Steps
+
+1. Implement database migrations (Phase 1)
+2. Set up Python scholarship finder (Phase 2)
+3. Test deduplication engine (Phase 3)
+4. Test AI discovery with one category (Phase 4)
+5. Set up basic scheduler (Phase 6)
+6. Integrate existing scraper code (Phase 8)
+
+After this is working, move to **SCHOLARSHIP_SEARCH_IMPLEMENTATION.md** for the user-facing features.
+
+---
+
+## References
+
+- Existing scraper location: `/Users/teial/Tutorials/scholarship-tracker/scraper/`
+- Main implementation: `IMPLEMENTATION_PLAN.md`
+- Search & discovery: `SCHOLARSHIP_SEARCH_IMPLEMENTATION.md`
