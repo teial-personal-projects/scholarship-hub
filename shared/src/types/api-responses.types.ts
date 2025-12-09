@@ -126,6 +126,14 @@ export interface CollaborationResponse {
 }
 
 /**
+ * Collaboration response with potential snake_case field names
+ * Used for defensive handling of API responses that may use either camelCase or snake_case
+ */
+export type CollaborationResponseWithSnakeCase = CollaborationResponse & {
+  collaboration_type?: string;
+};
+
+/**
  * Collaborator (from GET /api/collaborators)
  */
 export interface CollaboratorResponse {

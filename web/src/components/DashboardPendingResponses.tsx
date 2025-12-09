@@ -26,7 +26,7 @@ import {
 } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
 import { apiGet } from '../services/api';
-import type { ApplicationResponse, CollaborationResponse, CollaboratorResponse, DashboardReminders } from '@scholarship-hub/shared';
+import type { ApplicationResponse, CollaborationResponse, CollaborationResponseWithSnakeCase, CollaboratorResponse, DashboardReminders } from '@scholarship-hub/shared';
 
 function DashboardPendingResponses() {
   const navigate = useNavigate();
@@ -62,9 +62,9 @@ function DashboardPendingResponses() {
         pending.forEach(collab => {
           collaboratorIds.add(collab.collaboratorId);
           // Check if collaborator data is embedded in response
-          const collabAny = collab as any;
-          if (collabAny.collaborator && collabAny.collaborator.id) {
-            collaboratorIds.delete(collabAny.collaborator.id); // Will add from embedded data
+          const collabWithEmbedded = collab as CollaborationResponse & { collaborator?: CollaboratorResponse };
+          if (collabWithEmbedded.collaborator && collabWithEmbedded.collaborator.id) {
+            collaboratorIds.delete(collabWithEmbedded.collaborator.id); // Will add from embedded data
           }
         });
 
@@ -72,9 +72,9 @@ function DashboardPendingResponses() {
         
         // First, check for embedded collaborator data in collaboration responses
         pending.forEach(collab => {
-          const collabAny = collab as any;
-          if (collabAny.collaborator && collabAny.collaborator.id) {
-            collaboratorMap.set(collabAny.collaborator.id, collabAny.collaborator);
+          const collabWithEmbedded = collab as CollaborationResponse & { collaborator?: CollaboratorResponse };
+          if (collabWithEmbedded.collaborator && collabWithEmbedded.collaborator.id) {
+            collaboratorMap.set(collabWithEmbedded.collaborator.id, collabWithEmbedded.collaborator);
           }
         });
 
@@ -105,7 +105,8 @@ function DashboardPendingResponses() {
   const recommendations = useMemo(() => {
     return pendingResponses.filter(c => {
       // Check both camelCase and snake_case field names (defensive)
-      const type = c.collaborationType || (c as any).collaboration_type;
+      const typedCollab = c as CollaborationResponseWithSnakeCase;
+      const type = typedCollab.collaborationType || typedCollab.collaboration_type;
       return type === 'recommendation';
     });
   }, [pendingResponses]);
@@ -113,7 +114,8 @@ function DashboardPendingResponses() {
   const essays = useMemo(() => {
     return pendingResponses.filter(c => {
       // Check both camelCase and snake_case field names (defensive)
-      const type = c.collaborationType || (c as any).collaboration_type;
+      const typedCollab = c as CollaborationResponseWithSnakeCase;
+      const type = typedCollab.collaborationType || typedCollab.collaboration_type;
       return type === 'essayReview';
     });
   }, [pendingResponses]);

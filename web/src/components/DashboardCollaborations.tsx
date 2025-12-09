@@ -26,7 +26,7 @@ import {
 } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
 import { apiGet } from '../services/api';
-import type { ApplicationResponse, CollaborationResponse, CollaboratorResponse } from '@scholarship-hub/shared';
+import type { ApplicationResponse, CollaborationResponse, CollaborationResponseWithSnakeCase, CollaboratorResponse } from '@scholarship-hub/shared';
 
 function DashboardCollaborations() {
   const navigate = useNavigate();
@@ -60,9 +60,9 @@ function DashboardCollaborations() {
               collabs.forEach(collab => {
                 collaboratorIds.add(collab.collaboratorId);
                 // Check if collaborator data is embedded in response
-                const collabAny = collab as any;
-                if (collabAny.collaborator && collabAny.collaborator.id) {
-                  collaboratorIds.delete(collabAny.collaborator.id); // Will add from embedded data
+                const collabWithEmbedded = collab as CollaborationResponse & { collaborator?: CollaboratorResponse };
+                if (collabWithEmbedded.collaborator && collabWithEmbedded.collaborator.id) {
+                  collaboratorIds.delete(collabWithEmbedded.collaborator.id); // Will add from embedded data
                 }
               });
             }
@@ -75,11 +75,14 @@ function DashboardCollaborations() {
         
         // Debug: Check what collaboration types we have
         if (allCollaborations.length > 0) {
-          console.log('Fetched collaborations:', allCollaborations.map(c => ({
-            id: c.id,
-            collaborationType: c.collaborationType,
-            rawType: (c as any).collaboration_type,
-          })));
+          console.log('Fetched collaborations:', allCollaborations.map(c => {
+            const typedCollab = c as CollaborationResponseWithSnakeCase;
+            return {
+              id: c.id,
+              collaborationType: c.collaborationType,
+              rawType: typedCollab.collaboration_type,
+            };
+          }));
         }
 
         // Fetch collaborator details
@@ -87,9 +90,9 @@ function DashboardCollaborations() {
         
         // First, check for embedded collaborator data in collaboration responses
         allCollaborations.forEach(collab => {
-          const collabAny = collab as any;
-          if (collabAny.collaborator && collabAny.collaborator.id) {
-            collaboratorMap.set(collabAny.collaborator.id, collabAny.collaborator);
+          const collabWithEmbedded = collab as CollaborationResponse & { collaborator?: CollaboratorResponse };
+          if (collabWithEmbedded.collaborator && collabWithEmbedded.collaborator.id) {
+            collaboratorMap.set(collabWithEmbedded.collaborator.id, collabWithEmbedded.collaborator);
           }
         });
 
@@ -120,18 +123,22 @@ function DashboardCollaborations() {
   const recommendations = useMemo(() => {
     const filtered = collaborations.filter(c => {
       // Check both camelCase and snake_case field names (defensive)
-      const type = c.collaborationType || (c as any).collaboration_type;
+      const typedCollab = c as CollaborationResponseWithSnakeCase;
+      const type = typedCollab.collaborationType || typedCollab.collaboration_type;
       return type === 'recommendation';
     });
     
     // Debug: Log if we have collaborations but no recommendations
     if (collaborations.length > 0 && filtered.length === 0) {
-      console.warn('No recommendations found. All collaborations:', collaborations.map(c => ({
-        id: c.id,
-        collaborationType: c.collaborationType,
-        collaboration_type: (c as any).collaboration_type,
-        allKeys: Object.keys(c),
-      })));
+      console.warn('No recommendations found. All collaborations:', collaborations.map(c => {
+        const typedCollab = c as CollaborationResponseWithSnakeCase;
+        return {
+          id: c.id,
+          collaborationType: c.collaborationType,
+          collaboration_type: typedCollab.collaboration_type,
+          allKeys: Object.keys(c),
+        };
+      }));
     }
     
     return filtered;
@@ -140,7 +147,8 @@ function DashboardCollaborations() {
   const essays = useMemo(() => {
     return collaborations.filter(c => {
       // Check both camelCase and snake_case field names (defensive)
-      const type = c.collaborationType || (c as any).collaboration_type;
+      const typedCollab = c as CollaborationResponseWithSnakeCase;
+      const type = typedCollab.collaborationType || typedCollab.collaboration_type;
       return type === 'essayReview';
     });
   }, [collaborations]);
