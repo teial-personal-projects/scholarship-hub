@@ -16,11 +16,16 @@ class DeduplicationEngine:
         """
         Generate SHA-256 checksum from key fields
         Format: org_name + scholarship_name + amount + deadline
+
+        Handles both legacy 'amount' field and new 'min_award' field
         """
+        # Get amount - try min_award first, then amount
+        amount = scholarship.get('min_award') or scholarship.get('amount') or '0'
+
         components = [
             (scholarship.get('organization') or '').lower().strip(),
             (scholarship.get('name') or '').lower().strip(),
-            str(scholarship.get('amount') or '0'),
+            str(amount),
             str(scholarship.get('deadline') or '')
         ]
 
@@ -108,17 +113,31 @@ class DeduplicationEngine:
 
         # Update fields if new data is more complete
         for field in ['description', 'eligibility', 'requirements',
-                      'application_url', 'amount']:
+                      'application_url', 'apply_url', 'organization_website']:
             if new.get(field) and not existing.get(field):
                 merged[field] = new[field]
             elif new.get(field) and len(str(new[field])) > len(str(existing.get(field, ''))):
                 merged[field] = new[field]
 
+        # Handle amount fields (both legacy and new schema)
+        # Update min_award/max_award if new data is present
+        if new.get('min_award') and not existing.get('min_award'):
+            merged['min_award'] = new['min_award']
+        if new.get('max_award') and not existing.get('max_award'):
+            merged['max_award'] = new['max_award']
+        # Handle legacy 'amount' field
+        if new.get('amount'):
+            if not existing.get('min_award'):
+                merged['min_award'] = new['amount']
+            if not existing.get('max_award'):
+                merged['max_award'] = new['amount']
+
         # Always update deadline if it's newer
         if new.get('deadline'):
             new_deadline = new['deadline']
             existing_deadline = existing.get('deadline')
-            if not existing_deadline or new_deadline > existing_deadline:
+            # Handle both date objects and strings
+            if not existing_deadline or str(new_deadline) > str(existing_deadline):
                 merged['deadline'] = new_deadline
 
         # Update last_verified timestamp

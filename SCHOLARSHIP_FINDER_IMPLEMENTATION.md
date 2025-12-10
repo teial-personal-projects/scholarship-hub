@@ -1241,38 +1241,60 @@ scholarship-hub/
 - [✅] Created and successfully ran test script to verify database connection
 - [✅] Using existing `.env.local` file (not creating new .env) with DATABASE_URL, OPENAI_API_KEY, GOOGLE_CUSTOM_SEARCH_CX, and GOOGLE_API_KEY
 
-- [ ] #### 8.3: Implement Enhanced Deduplication
+- [✅] #### 8.3: Implement Enhanced Deduplication
 
-The deduplication engine (see Phase 3) includes:
-- Fingerprint/checksum generation
-- Exact URL matching
-- Fuzzy string matching for similar scholarships
-- Data merging for duplicates
+The deduplication engine is fully implemented in [src/deduplication/engine.py](scholarship-finder/src/deduplication/engine.py:1-147) with:
 
-Create fingerprint function:
+**✅ Features Implemented:**
+- **Checksum/Fingerprint Generation**: SHA-256 hash of (organization + name + amount + deadline)
+  - Handles both legacy `amount` field and new `min_award`/`max_award` fields
+  - Case-insensitive and whitespace-normalized for consistency
+- **Three-Layer Duplicate Detection**:
+  1. **Exact checksum match** (fastest) - detects identical scholarships
+  2. **URL matching** (fast) - detects same scholarship from different sources
+  3. **Fuzzy string matching** (slower, comprehensive) - detects similar scholarships with name variations
+    - Uses SequenceMatcher with 85% similarity threshold
+    - Weighted: name (70%) + organization (30%)
+    - Only checks scholarships from same organization discovered in last 6 months (performance optimization)
+- **Smart Data Merging**: `merge_scholarship_data()` method
+  - Keeps most complete information (longer descriptions, more details)
+  - Updates to newer deadlines
+  - Preserves all existing data, only adds missing fields
+  - Handles both legacy and new schema fields
+- **Integration with Database**:
+  - `check_duplicate()` returns (is_duplicate, existing_id)
+  - `insert_scholarship()` automatically generates checksums if not provided
+  - Upsert logic prevents duplicate entries
+
+**✅ Testing:**
+- Created comprehensive test suite: [test_deduplication.py](scholarship-finder/test_deduplication.py:1-259)
+- All 4 test categories passed:
+  1. ✅ Checksum generation (including legacy field compatibility)
+  2. ✅ Exact duplicate detection (checksum + URL)
+  3. ✅ Fuzzy matching (detects similar scholarships)
+  4. ✅ Data merging (preserves complete information)
+
+**Usage Example:**
 ```python
-import hashlib
+from database.connection import DatabaseConnection
+from deduplication.engine import DeduplicationEngine
 
-def create_fingerprint(scholarship: dict) -> str:
-    """
-    Create unique fingerprint for scholarship to detect duplicates.
-    Uses: title + organization + deadline + award amount
-    """
-    # Normalize strings (lowercase, strip whitespace)
-    title = scholarship.get('title', '').lower().strip()
-    org = scholarship.get('organization', '').lower().strip()
-    deadline = scholarship.get('deadline', '').strip()
-    award = str(scholarship.get('min_award', 0))
+db = DatabaseConnection()
+db.connect()
+dedup = DeduplicationEngine(db)
 
-    key = f"{title}|{org}|{deadline}|{award}"
-    return hashlib.sha256(key.encode()).hexdigest()
+# Check if scholarship is duplicate
+is_duplicate, existing_id = dedup.check_duplicate(scholarship)
+
+if is_duplicate:
+    # Merge and update existing
+    existing = db.get_scholarship_by_id(existing_id)
+    merged = dedup.merge_scholarship_data(existing, scholarship)
+    db.update_scholarship(existing_id, merged)
+else:
+    # Insert new scholarship
+    db.insert_scholarship(scholarship)
 ```
-
-Before inserting to `scholarships`:
-- Insert to `scholarship_raw_results` with fingerprint
-- Check if fingerprint exists → skip if duplicate
-- Otherwise, upsert to `scholarships` table
-- Handle updates: if fingerprint matches but data changed, update existing record
 
 - [ ] #### 8.4: Enhance Scraper Categories
 
