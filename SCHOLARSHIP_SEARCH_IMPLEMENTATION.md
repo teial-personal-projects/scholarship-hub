@@ -138,7 +138,7 @@ Saved preferences influence future suggestions
 
 ### Phase 1: Scholarship API Endpoints
 
-- [ ] #### Step 1.1: Create Scholarship Service
+- [✅] #### Step 1.1: Create Scholarship Service
 
 Create `api/src/services/scholarships.service.ts`:
 
@@ -380,7 +380,7 @@ export async function getSavedScholarships(userId: number): Promise<ScholarshipR
 }
 ```
 
-- [ ] #### Step 1.2: Create API Routes
+- [✅] #### Step 1.2: Create API Routes
 
 Create `api/src/routes/scholarships.routes.ts`:
 
@@ -507,7 +507,7 @@ router.get('/saved', requireAuth, async (req, res, next) => {
 export default router;
 ```
 
-- [ ] #### Step 1.3: Update TypeScript Types
+- [✅] #### Step 1.3: Update TypeScript Types
 
 Update `shared/src/types/scholarship.types.ts`:
 

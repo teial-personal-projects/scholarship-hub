@@ -1,6 +1,7 @@
 // Export all types
 export * from './types/user.types';
 export * from './types/scholarship.types';
+export * from './types/scholarship-finder.types';
 export * from './types/application.types';
 export * from './types/application.constants';
 export * from './types/essay.types';
