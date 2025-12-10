@@ -1241,7 +1241,7 @@ scholarship-hub/
 - [✅] Created and successfully ran test script to verify database connection
 - [✅] Using existing `.env.local` file (not creating new .env) with DATABASE_URL, OPENAI_API_KEY, GOOGLE_CUSTOM_SEARCH_CX, and GOOGLE_API_KEY
 
-- [✅] #### 8.3: Implement Enhanced Deduplication
+- [✅] #### 8.3: Implement Enhanced Deduplication (UPDATED with Expiration Filtering & Date Normalization)
 
 The deduplication engine is fully implemented in [src/deduplication/engine.py](scholarship-finder/src/deduplication/engine.py:1-147) with:
 
@@ -1274,6 +1274,31 @@ The deduplication engine is fully implemented in [src/deduplication/engine.py](s
   3. ✅ Fuzzy matching (detects similar scholarships)
   4. ✅ Data merging (preserves complete information)
 
+**✅ NEW: Date Normalization & Expiration Filtering:**
+- Created [src/utils_python/date_utils.py](scholarship-finder/src/utils_python/date_utils.py:1-134) for smart date handling:
+  - **Dates without years** (e.g., "March 15") → automatically adds current or next year
+  - **Month + year only** (e.g., "March 2025") → defaults to 1st of month
+  - **Full dates** → preserves original date
+  - **Expiration calculation** → automatically calculates `expires_at` (deadline + 30 days grace period)
+- **Expired scholarships excluded** from deduplication:
+  - `check_duplicate()` only checks scholarships with `status = 'active'`
+  - Allows re-adding expired scholarships with updated deadlines
+  - Expired scholarships won't block new entries
+- **Automatic date normalization** in `insert_scholarship()`:
+  - All deadlines normalized before storage
+  - `expires_at` calculated automatically
+  - Invalid dates handled gracefully with warnings
+
+**✅ Testing:**
+- [test_deduplication.py](scholarship-finder/test_deduplication.py:1-259) - 4/4 tests passed
+- [test_date_normalization.py](scholarship-finder/test_date_normalization.py:1-324) - 6/6 tests passed including:
+  1. ✅ Partial date handling (no year)
+  2. ✅ Month+year defaults to 1st
+  3. ✅ Full date parsing
+  4. ✅ Expiration logic
+  5. ✅ Database integration
+  6. ✅ Expired scholarship exclusion
+
 **Usage Example:**
 ```python
 from database.connection import DatabaseConnection
@@ -1281,14 +1306,27 @@ from deduplication.engine import DeduplicationEngine
 
 db = DatabaseConnection()
 db.connect()
-dedup = DeduplicationEngine(db)
 
-# Check if scholarship is duplicate
+# Example: Insert scholarship with partial date
+scholarship = {
+    'name': 'Summer Scholarship',
+    'organization': 'ABC Foundation',
+    'url': 'https://example.com/scholarship',
+    'deadline': 'June 15',  # No year! Will auto-add current/next year
+    'min_award': 5000,
+    'category': 'STEM'
+}
+
+# Date is automatically normalized, expires_at calculated
+scholarship_id = db.insert_scholarship(scholarship)
+
+# Check for duplicates (only active scholarships checked)
+dedup = DeduplicationEngine(db)
 is_duplicate, existing_id = dedup.check_duplicate(scholarship)
 
 if is_duplicate:
     # Merge and update existing
-    existing = db.get_scholarship_by_id(existing_id)
+    existing = db.get_scholarship_by_url(scholarship['url'])
     merged = dedup.merge_scholarship_data(existing, scholarship)
     db.update_scholarship(existing_id, merged)
 else:

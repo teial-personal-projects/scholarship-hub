@@ -7,6 +7,7 @@ import psycopg
 from psycopg.rows import dict_row
 from typing import Optional
 from dotenv import load_dotenv
+from datetime import datetime
 
 # Load environment from root .env.local
 env_path = os.path.join(os.path.dirname(__file__), '../../../.env.local')
@@ -69,6 +70,26 @@ class DatabaseConnection:
         Returns the scholarship ID if successful, None otherwise
         """
         try:
+            # Normalize deadline date (handle partial dates)
+            if scholarship.get('deadline'):
+                try:
+                    # Import date utilities
+                    import sys
+                    from pathlib import Path
+                    utils_path = Path(__file__).parent.parent / 'utils_python'
+                    if str(utils_path) not in sys.path:
+                        sys.path.insert(0, str(utils_path))
+
+                    import date_utils
+                    normalized_date = date_utils.normalize_deadline(scholarship['deadline'])
+                    if normalized_date:
+                        scholarship['deadline'] = normalized_date
+                        # Calculate expiration date (30 days after deadline)
+                        if not scholarship.get('expires_at'):
+                            scholarship['expires_at'] = date_utils.calculate_expiration_date(normalized_date, grace_days=30)
+                except (ImportError, ValueError, Exception) as e:
+                    print(f"⚠️  Could not normalize deadline: {e}")
+
             # Generate checksum if not provided
             if 'checksum' not in scholarship or not scholarship['checksum']:
                 try:

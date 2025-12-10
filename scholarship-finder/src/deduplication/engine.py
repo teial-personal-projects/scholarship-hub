@@ -35,13 +35,14 @@ class DeduplicationEngine:
     def check_duplicate(self, scholarship: dict) -> Tuple[bool, Optional[int]]:
         """
         Check if scholarship is a duplicate
+        Only checks against active scholarships (not expired or invalid)
         Returns: (is_duplicate, existing_id)
         """
         # 1. Check exact checksum match (fastest)
         checksum = self.generate_checksum(scholarship)
 
         self.db.cursor.execute(
-            "SELECT id FROM scholarships WHERE checksum = %s AND status != 'invalid'",
+            "SELECT id FROM scholarships WHERE checksum = %s AND status = 'active'",
             (checksum,)
         )
         result = self.db.cursor.fetchone()
@@ -51,7 +52,7 @@ class DeduplicationEngine:
         # 2. Check URL match (second fastest)
         if scholarship.get('url'):
             self.db.cursor.execute(
-                "SELECT id FROM scholarships WHERE url = %s AND status != 'invalid'",
+                "SELECT id FROM scholarships WHERE url = %s AND status = 'active'",
                 (scholarship['url'],)
             )
             result = self.db.cursor.fetchone()
@@ -68,7 +69,7 @@ class DeduplicationEngine:
     def _find_similar_scholarship(self, scholarship: dict) -> Optional[int]:
         """
         Find similar scholarships using fuzzy string matching
-        Only checks recent scholarships for performance
+        Only checks recent active scholarships for performance
         """
         org = (scholarship.get('organization') or '').lower().strip()
         name = (scholarship.get('name') or '').lower().strip()
@@ -76,12 +77,12 @@ class DeduplicationEngine:
         if not org or not name:
             return None
 
-        # Only check scholarships from same organization
+        # Only check active scholarships from same organization
         self.db.cursor.execute("""
             SELECT id, name, organization
             FROM scholarships
             WHERE LOWER(organization) LIKE %s
-            AND status != 'invalid'
+            AND status = 'active'
             AND discovered_at > NOW() - INTERVAL '6 months'
             LIMIT 50
         """, (f'%{org}%',))
