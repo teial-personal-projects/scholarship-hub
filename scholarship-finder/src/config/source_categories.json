@@ -1,0 +1,107 @@
+{
+  "categories": [
+    {
+      "id": "STEM",
+      "name": "STEM",
+      "keywords": [
+        "engineering",
+        "technology",
+        "tech",
+        "software",
+        "hardware",
+        "software engineering",
+        "computer science",
+        "information technology",
+        "cybersecurity",
+        "data science",
+        "artificial intelligence",
+        "machine learning",
+        "robotics",
+        "STEM",
+        "Science",
+        "Math",
+        "Physics",
+        "Chemistry",
+        "Biology",
+        "Astronomy",
+        "Geology"
+      ]
+    },
+    {
+      "id": "healthcare_medical",
+      "name": "Healthcare & Medical",
+      "keywords": [
+        "healthcare",
+        "medical",
+        "hospital"
+      ]
+    },
+    {
+      "id": "pharmaceuticals",
+      "name": "Pharmaceuticals",
+      "keywords": [
+        "pharmaceutical",
+        "pharma",
+        "drug",
+        "medicine",
+        "biotech"
+      ]
+    },
+    {
+      "id": "financial_services",
+      "name": "Financial Services",
+      "keywords": [
+        "financial",
+        "banking",
+        "insurance",
+        "investment",
+        "finance"
+      ]
+    },
+    {
+      "id": "energy_utilities",
+      "name": "Energy & Utilities",
+      "keywords": [
+        "energy",
+        "utilities",
+        "oil",
+        "gas",
+        "electric",
+        "renewable"
+      ]
+    },
+    {
+      "id": "consumer_goods",
+      "name": "Consumer Goods",
+      "keywords": [
+        "consumer",
+        "retail",
+        "products",
+        "brands",
+        "consumer goods"
+      ]
+    },
+    {
+      "id": "agriculture_food",
+      "name": "Agriculture & Food",
+      "keywords": [
+        "agriculture",
+        "food",
+        "farming",
+        "agricultural",
+        "food processing"
+      ]
+    },
+    {
+      "id": "construction_real_estate",
+      "name": "Construction & Real Estate",
+      "keywords": [
+        "construction",
+        "real estate",
+        "building",
+        "development",
+        "property"
+      ]
+    }
+  ]
+}

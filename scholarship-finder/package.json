@@ -1,0 +1,61 @@
+{
+  "name": "scholarship-scraper2",
+  "version": "1.0.0",
+  "description": "College scholarship scraper",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "test": "jest",
+    "lint": "python main.py --lint",
+    "lint:fix": "python main.py --lint-fix",
+    "lint:python": "ruff check .",
+    "lint:python:fix": "ruff check --fix .",
+    "cdk": "cdk",
+    "deploy:dev": "cdk deploy --profile default -c environment=dev",
+    "deploy:staging": "cdk deploy --profile default -c environment=staging",
+    "deploy:prod": "cdk deploy --profile default -c environment=prod",
+    "destroy:dev": "cdk destroy --profile default -c environment=dev",
+    "destroy:staging": "cdk destroy --profile default -c environment=staging",
+    "destroy:prod": "cdk destroy --profile default -c environment=prod",
+    "diff:dev": "cdk diff -c environment=dev",
+    "diff:staging": "cdk diff -c environment=staging",
+    "diff:prod": "cdk diff -c environment=prod",
+    "bootstrap": "cdk bootstrap -c environment=dev",
+    "setup": "npm install && npm run bootstrap",
+    "docker:build:dev": "./scripts/build-and-push-docker.sh dev",
+    "docker:build:staging": "./scripts/build-and-push-docker.sh staging",
+    "docker:build:prod": "./scripts/build-and-push-docker.sh prod",
+    "test:careerone": "ts-node test-careerone-local.ts",
+    "populate:websites:dev": "./scripts/run-populate-websites.sh",
+    "populate:websites:staging": "ENVIRONMENT=staging ./scripts/run-populate-websites.sh",
+    "populate:websites:prod": "ENVIRONMENT=prod ./scripts/run-populate-websites.sh",
+    "cleanup:expired:dev": "ts-node scripts/cleanup-expired-scholarships.ts",
+    "cleanup:expired:staging": "ENVIRONMENT=staging ts-node scripts/cleanup-expired-scholarships.ts",
+    "cleanup:expired:prod": "ENVIRONMENT=prod ts-node scripts/cleanup-expired-scholarships.ts",
+    "check:logs:dev": "ts-node scripts/check-lambda-logs.ts",
+    "check:logs:staging": "ENVIRONMENT=staging ts-node scripts/check-lambda-logs.ts",
+    "check:logs:prod": "ENVIRONMENT=prod ts-node scripts/check-lambda-logs.ts",
+    "check:sg:dev": "ts-node scripts/check-security-group-dependencies.ts"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.0.0",
+    "@types/node": "^20.0.0",
+    "@types/uuid": "^9.0.0",
+    "constructs": "^10.0.0",
+    "jest": "^29.0.0",
+    "ts-jest": "^29.0.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "axios": "^1.0.0",
+    "cheerio": "^1.0.0",
+    "dotenv": "^16.0.0",
+    "mysql2": "^3.0.0",
+    "puppeteer": "^21.0.0",
+    "uuid": "^9.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
