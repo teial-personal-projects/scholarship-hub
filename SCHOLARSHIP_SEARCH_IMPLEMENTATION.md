@@ -138,7 +138,7 @@ Saved preferences influence future suggestions
 
 ### Phase 1: Scholarship API Endpoints
 
-#### Step 1.1: Create Scholarship Service
+- [ ] #### Step 1.1: Create Scholarship Service
 
 Create `api/src/services/scholarships.service.ts`:
 
@@ -380,7 +380,7 @@ export async function getSavedScholarships(userId: number): Promise<ScholarshipR
 }
 ```
 
-#### Step 1.2: Create API Routes
+- [ ] #### Step 1.2: Create API Routes
 
 Create `api/src/routes/scholarships.routes.ts`:
 
@@ -507,7 +507,7 @@ router.get('/saved', requireAuth, async (req, res, next) => {
 export default router;
 ```
 
-#### Step 1.3: Update TypeScript Types
+- [ ] #### Step 1.3: Update TypeScript Types
 
 Update `shared/src/types/scholarship.types.ts`:
 
@@ -596,7 +596,7 @@ export interface UserScholarshipInteraction {
 
 ### Phase 2: Scholarship Search Pages
 
-#### Step 2.1: Create Scholarship Search Page
+- [ ] #### Step 2.1: Create Scholarship Search Page
 
 Create `web/src/pages/ScholarshipSearch.tsx`:
 
@@ -871,7 +871,7 @@ function ScholarshipSearch() {
 export default ScholarshipSearch;
 ```
 
-#### Step 2.2: Create Scholarship Detail Page
+- [ ] #### Step 2.2: Create Scholarship Detail Page
 
 Create `web/src/pages/ScholarshipDetail.tsx`:
 
@@ -1098,7 +1098,7 @@ function ScholarshipDetail() {
 export default ScholarshipDetail;
 ```
 
-#### Step 2.3: Add Dashboard Recommendations Widget
+- [ ] #### Step 2.3: Add Dashboard Recommendations Widget
 
 Update `web/src/pages/Dashboard.tsx` to add scholarship recommendations:
 
@@ -1209,7 +1209,7 @@ function Dashboard() {
 
 ### Phase 3: Smart Matching
 
-#### Step 3.1: Calculate Match Score
+- [ ] #### Step 3.1: Calculate Match Score
 
 Create `api/src/services/scholarship-matching.service.ts`:
 
@@ -1306,7 +1306,7 @@ export function calculateMatchScore(
 
 ### Phase 4: User Preferences
 
-#### Step 4.1: Add Search Preferences to Profile
+- [ ] #### Step 4.1: Add Search Preferences to Profile
 
 Update `api/src/services/users.service.ts`:
 
@@ -1326,7 +1326,7 @@ export async function updateSearchPreferences(
 }
 ```
 
-#### Step 4.2: Create Preferences UI
+- [ ] #### Step 4.2: Create Preferences UI
 
 Create `web/src/components/SearchPreferencesForm.tsx`:
 
@@ -1476,7 +1476,7 @@ export default SearchPreferencesForm;
 
 ### Phase 5: Testing
 
-#### Step 5.1: Backend Tests
+- [ ] #### Step 5.1: Backend Tests
 
 Create `api/src/services/scholarships.service.test.ts`:
 
@@ -1528,7 +1528,7 @@ describe('Scholarship Service', () => {
 });
 ```
 
-#### Step 5.2: Frontend Tests
+- [ ] #### Step 5.2: Frontend Tests
 
 Create `web/src/pages/ScholarshipSearch.test.tsx`:
 

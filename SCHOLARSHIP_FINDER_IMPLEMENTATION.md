@@ -271,7 +271,7 @@ CREATE INDEX idx_user_scholarships_match_score ON user_scholarships(match_score)
 
 **Goal**: Set up new tables in the existing database
 
-#### Step 1.1: Create Migration Files
+- [✅] #### Step 1.1: Create Migration Files
 
 ```bash
 cd scholarship-hub
@@ -350,7 +350,7 @@ export async function down(knex: Knex): Promise<void> {
 }
 ```
 
-#### Step 1.2: Run Migration
+- [✅] #### Step 1.2: Run Migration
 
 ```bash
 npm run migrate:latest --workspace=api
@@ -362,14 +362,14 @@ npm run migrate:latest --workspace=api
 
 **Goal**: Move the Python scholarship finder into the project and configure it
 
-#### Step 2.1: Create scholarship-finder Directory
+- [ ] #### Step 2.1: Create scholarship-finder Directory
 
 ```bash
 cd scholarship-hub
 mkdir -p scholarship-finder
 ```
 
-#### Step 2.2: Copy Existing Scraper Code
+- [ ] #### Step 2.2: Copy Existing Scraper Code
 
 ```bash
 # Copy from your existing scraper
@@ -380,7 +380,7 @@ mv scholarship-finder/src/scrapers scholarship-finder/src/scholarship_finder
 mv scholarship-finder/main.py scholarship-finder/finder_main.py
 ```
 
-#### Step 2.3: Update Database Connection
+- [ ] #### Step 2.3: Update Database Connection
 
 Create `scholarship-finder/src/database/connection.py`:
 
@@ -433,7 +433,7 @@ class DatabaseConnection:
         pass
 ```
 
-#### Step 2.4: Update Dependencies
+- [ ] #### Step 2.4: Update Dependencies
 
 Create `scholarship-finder/requirements.txt`:
 
@@ -463,7 +463,7 @@ python-dateutil==2.8.2
 
 **Goal**: Prevent duplicate scholarships using checksums and fuzzy matching
 
-#### Step 3.1: Create Deduplication Module
+- [ ] #### Step 3.1: Create Deduplication Module
 
 Create `scholarship-finder/src/deduplication/engine.py`:
 
@@ -603,7 +603,7 @@ class DeduplicationEngine:
 
 **Goal**: Use AI to discover scholarships from non-traditional sources
 
-#### Step 4.1: Create AI Discovery Module
+- [ ] #### Step 4.1: Create AI Discovery Module
 
 Create `scholarship-finder/src/ai_discovery/discovery_engine.py`:
 
@@ -863,7 +863,7 @@ Return ONLY valid JSON, no explanation.
 
 **Goal**: Automatically mark expired scholarships
 
-#### Step 5.1: Create Expiration Manager
+- [ ] #### Step 5.1: Create Expiration Manager
 
 Create `scholarship-finder/src/expiration/manager.py`:
 
@@ -1207,7 +1207,7 @@ scholarship-hub/
 
 ### Migration Steps
 
-#### 8.1: Review Existing Scraper
+- [ ] #### 8.1: Review Existing Scraper
 
 - [ ] Copy scraper from existing project to new location:
   ```bash
@@ -1221,7 +1221,7 @@ scholarship-hub/
 - [ ] Document current scraper capabilities in `scholarship-finder/README.md`
 - [ ] Review what needs to be updated for Supabase PostgreSQL
 
-#### 8.2: Update Scraper to Use PostgreSQL
+- [ ] #### 8.2: Update Scraper to Use PostgreSQL
 
 - [ ] Install PostgreSQL driver: `pip install psycopg2-binary` or `asyncpg`
 - [ ] Update database connection to use Supabase PostgreSQL connection string
@@ -1233,7 +1233,7 @@ scholarship-hub/
   DATABASE_URL=postgresql://user:pass@host:5432/db
   ```
 
-#### 8.3: Implement Enhanced Deduplication
+- [ ] #### 8.3: Implement Enhanced Deduplication
 
 The deduplication engine (see Phase 3) includes:
 - Fingerprint/checksum generation
@@ -1266,14 +1266,14 @@ Before inserting to `scholarships`:
 - Otherwise, upsert to `scholarships` table
 - Handle updates: if fingerprint matches but data changed, update existing record
 
-#### 8.4: Enhance Scraper Categories
+- [ ] #### 8.4: Enhance Scraper Categories
 
 - [ ] Review current categories (STEM, Healthcare, etc.)
 - [ ] Add more categories or customize based on user feedback
 - [ ] Make categories configurable via config file
 - [ ] Add subject area mapping to match `subject_areas` table
 
-#### 8.5: Schedule Scraper Runs
+- [ ] #### 8.5: Schedule Scraper Runs
 
 Set up cron job or GitHub Actions workflow to run scraper:
 - Daily or weekly
@@ -1317,7 +1317,7 @@ jobs:
           python finder_main.py
 ```
 
-#### 8.6: Backend - Scraper Stats API
+- [ ] #### 8.6: Backend - Scraper Stats API
 
 Create endpoint: `GET /api/admin/scraper/stats`
 
@@ -1438,7 +1438,7 @@ Users interact with scraped data through:
 
 This phase extends the basic AI discovery with more sophisticated techniques for finding scholarships from social media, news sources, and through intelligent website analysis.
 
-### 9.1: Enhanced Google Search API Integration
+- [ ] ### 9.1: Enhanced Google Search API Integration
 
 Create `scholarship-finder/src/discovery/google_search.py`:
 
@@ -1574,7 +1574,7 @@ class GoogleScholarshipSearch:
         return all_results[:max_results]
 ```
 
-### 9.2: Social Media & News Scraping
+- [ ] ### 9.2: Social Media & News Scraping
 
 Create `scholarship-finder/src/discovery/news_social.py`:
 
@@ -1723,7 +1723,7 @@ class NewsAndSocialDiscovery:
         return all_results
 ```
 
-### 9.3: Website Structure Analysis
+- [ ] ### 9.3: Website Structure Analysis
 
 Create `scholarship-finder/src/discovery/website_analyzer.py`:
 
@@ -1913,7 +1913,7 @@ If none seem scholarship-related, return an empty array.
         return results
 ```
 
-### 9.4: Integration & Orchestration
+- [ ] ### 9.4: Integration & Orchestration
 
 Create `scholarship-finder/src/discovery/advanced_discovery.py`:
 
@@ -2017,7 +2017,7 @@ class AdvancedDiscoveryOrchestrator:
         return verified_scholarships
 ```
 
-### 9.5: Usage & Configuration
+- [ ] ### 9.5: Usage & Configuration
 
 Add to `scholarship-finder/finder_main.py`:
 
