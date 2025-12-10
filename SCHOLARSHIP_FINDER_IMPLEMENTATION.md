@@ -382,6 +382,16 @@ mv scholarship-finder/main.py scholarship-finder/finder_main.py
 
 - [ ] #### Step 2.3: Update Database Connection
 
+First, install the Supabase Python library:
+```bash
+pip install supabase
+```
+
+Add to `requirements.txt`:
+```txt
+supabase>=2.0.0
+```
+
 Create `scholarship-finder/src/database/connection.py`:
 
 ```python
@@ -390,8 +400,7 @@ Database connection for Scholarship Finder
 Connects to the same database as the Node.js API
 """
 import os
-import psycopg2
-from psycopg2.extras import RealDictCursor
+from supabase import create_client
 from typing import Optional
 from dotenv import load_dotenv
 
@@ -400,21 +409,15 @@ load_dotenv(os.path.join(os.path.dirname(__file__), '../../../.env'))
 
 class DatabaseConnection:
     def __init__(self):
-        self.connection = None
-        self.cursor = None
+        self.supabase = None
 
     def connect(self):
-        """Connect to PostgreSQL database (same as Node.js API)"""
+        """Connect to Supabase database (same as Node.js API)"""
         try:
-            self.connection = psycopg2.connect(
-                host=os.getenv('SUPABASE_HOST', 'localhost'),
-                port=int(os.getenv('SUPABASE_PORT', '5432')),
-                user=os.getenv('SUPABASE_USER'),
-                password=os.getenv('SUPABASE_PASSWORD'),
-                database=os.getenv('SUPABASE_DATABASE'),
-                cursor_factory=RealDictCursor
+            self.supabase = create_client(
+                os.getenv("SUPABASE_URL"),
+                os.getenv("SUPABASE_SERVICE_ROLE_KEY")
             )
-            self.cursor = self.connection.cursor()
             return True
         except Exception as e:
             print(f"❌ Database connection error: {e}")
@@ -422,10 +425,8 @@ class DatabaseConnection:
 
     def close(self):
         """Close database connection"""
-        if self.cursor:
-            self.cursor.close()
-        if self.connection:
-            self.connection.close()
+        # Supabase client doesn't require explicit closing
+        self.supabase = None
 
     def insert_scholarship(self, scholarship: dict) -> Optional[int]:
         """Insert or update scholarship"""
