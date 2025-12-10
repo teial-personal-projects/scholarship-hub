@@ -434,7 +434,7 @@ class DatabaseConnection:
         pass
 ```
 
-- [ ] #### Step 2.4: Update Dependencies
+- [✅] #### Step 2.4: Update Dependencies
 
 Create `scholarship-finder/requirements.txt`:
 
