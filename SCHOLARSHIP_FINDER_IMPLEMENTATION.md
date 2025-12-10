@@ -1176,12 +1176,12 @@ export function scheduleScholarshipFinder() {
 
 **Status**: This section contains all scraper-related implementation details. The scraper integration will be revisited once the core scholarship application tracking features are stable.
 
-### Existing Scraper
+### Scraper Code Location
 
-- **Location**: `/Users/teial/Tutorials/scholarship-tracker/scraper/`
+- **Location**: `scholarship-finder/src/`
 - **Language**: Python
-- **Features**: AI discovery scraper logic, existing configurations
-- **Status**: Working in old project, needs migration to new stack
+- **Features**: AI discovery scraper logic, web scrapers, deduplication, expiration management
+- **Status**: Already integrated into the project (migrated in Phase 2)
 
 ### Project Structure (Scraper Components)
 
@@ -1189,50 +1189,57 @@ export function scheduleScholarshipFinder() {
 scholarship-hub/
 ├── scholarship-finder/          # Python scholarship scraper
 │   ├── requirements.txt
-│   ├── README.md
+│   ├── FINDER.md
 │   ├── finder_main.py
 │   ├── src/
-│   │   ├── scholarship_finder/
-│   │   │   ├── ai_discovery.py
-│   │   │   └── base_scraper.py
-│   │   ├── deduplication/
-│   │   │   └── engine.py
-│   │   ├── database/
+│   │   ├── ai_discovery/        # AI-powered discovery
+│   │   │   └── discovery_engine.py
+│   │   ├── ai_discovery_scraper.py
+│   │   ├── base_scraper.py
+│   │   ├── careeronestop_scraper.py
+│   │   ├── collegescholarship_scraper.py
+│   │   ├── general_scraper.py
+│   │   ├── config/              # Configuration files
+│   │   │   ├── config_loader.py
+│   │   │   └── source_categories.json
+│   │   ├── database/             # Database connection
 │   │   │   └── connection.py
-│   │   └── expiration/
-│   │       └── manager.py
-│   ├── scheduler/
-│   │   └── run_finder.sh
+│   │   ├── deduplication/       # Deduplication engine
+│   │   │   └── engine.py
+│   │   ├── expiration/          # Expiration manager
+│   │   │   └── manager.py
+│   │   └── utils_python/        # Utility functions
+│   ├── scripts/
+│   │   ├── run-finder.sh        # Manual run script
+│   │   └── setup-cron.sh       # Cron setup script
 │   └── tests/
 ```
 
 ### Migration Steps
 
-- [ ] #### 8.1: Review Existing Scraper
+- [✅] #### 8.1: Review Existing Scraper
 
-- [ ] Copy scraper from existing project to new location:
-  ```bash
-  mkdir -p scholarship-finder/src/{scholarship_finder,deduplication,database,expiration}
-  cp -r /Users/teial/Tutorials/scholarship-tracker/scraper/* scholarship-finder/
-  ```
-- [ ] Review files copied:
-  - AI discovery scraper logic
-  - Existing scraper configurations
-  - Requirements and dependencies
-- [ ] Document current scraper capabilities in `scholarship-finder/README.md`
-- [ ] Review what needs to be updated for Supabase PostgreSQL
+- [✅] Scraper code is already in `scholarship-finder/src/` (migrated in Phase 2)
+- [✅] Files are organized in the src directory:
+  - Scrapers: `ai_discovery_scraper.py`, `careeronestop_scraper.py`, `collegescholarship_scraper.py`, `general_scraper.py`
+  - AI Discovery: `src/ai_discovery/discovery_engine.py`
+  - Database: `src/database/connection.py` (updated for Supabase)
+  - Deduplication: `src/deduplication/engine.py`
+  - Expiration: `src/expiration/manager.py`
+  - Config: `src/config/` with category configuration
+- [✅] Database connection updated for Supabase PostgreSQL (Step 2.3)
+- [✅] Dependencies updated in `requirements.txt` (Step 2.4)
 
-- [ ] #### 8.2: Update Scraper to Use PostgreSQL
+- [✅] #### 8.2: Update Scraper to Use PostgreSQL
 
-- [ ] Install PostgreSQL driver: `pip install psycopg2-binary` or `asyncpg`
-- [ ] Update database connection to use Supabase PostgreSQL connection string
-- [ ] Update table names to match new schema
-- [ ] Create `scholarship-finder/.env` file with Supabase credentials:
-  ```
-  SUPABASE_URL=https://xxx.supabase.co
-  SUPABASE_SERVICE_KEY=xxx
-  DATABASE_URL=postgresql://user:pass@host:5432/db
-  ```
+- [✅] Verified PostgreSQL driver `psycopg>=3.1.0` is installed in requirements.txt
+- [✅] Updated database connection to use Supabase PostgreSQL connection string from `.env.local`
+- [✅] Implemented `insert_scholarship()` method with proper table schema matching migration 012
+- [✅] Added helper methods: `update_scholarship()`, `get_scholarship_by_url()`, `get_scholarship_by_checksum()`
+- [✅] Implemented upsert logic (INSERT ... ON CONFLICT) to handle duplicate URLs gracefully
+- [✅] Added automatic checksum generation with fallback for cases where deduplication engine isn't available
+- [✅] Created and successfully ran test script to verify database connection
+- [✅] Using existing `.env.local` file (not creating new .env) with DATABASE_URL, OPENAI_API_KEY, GOOGLE_CUSTOM_SEARCH_CX, and GOOGLE_API_KEY
 
 - [ ] #### 8.3: Implement Enhanced Deduplication
 
