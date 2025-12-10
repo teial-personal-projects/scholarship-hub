@@ -871,7 +871,7 @@ function ScholarshipSearch() {
 export default ScholarshipSearch;
 ```
 
-- [ ] #### Step 2.2: Create Scholarship Detail Page
+- [x] #### Step 2.2: Create Scholarship Detail Page
 
 Create `web/src/pages/ScholarshipDetail.tsx`:
 

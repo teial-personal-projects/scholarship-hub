@@ -10,6 +10,7 @@ import CollaboratorDashboard from './pages/CollaboratorDashboard';
 import CollaboratorInvite from './pages/CollaboratorInvite';
 import Search from './pages/Search';
 import ScholarshipSearch from './pages/ScholarshipSearch';
+import ScholarshipDetail from './pages/ScholarshipDetail';
 import Profile from './pages/Profile';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
@@ -94,6 +95,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <ScholarshipSearch />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/scholarships/:id"
+            element={
+              <ProtectedRoute>
+                <ScholarshipDetail />
               </ProtectedRoute>
             }
           />
