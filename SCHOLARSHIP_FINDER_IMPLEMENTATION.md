@@ -380,7 +380,7 @@ mv scholarship-finder/src/scrapers scholarship-finder/src/scholarship_finder
 mv scholarship-finder/main.py scholarship-finder/finder_main.py
 ```
 
-- [ ] #### Step 2.3: Update Database Connection
+- [✅] #### Step 2.3: Update Database Connection
 
 First, install the Supabase Python library:
 ```bash
