@@ -6,9 +6,51 @@ This document outlines features and improvements that are planned but not yet im
 
 ## Admin Interface
 
+### Scraper Stats API
+
+**Status**: Not implemented
+
+**Description**: REST API endpoints to view scraper execution statistics and performance metrics.
+
+**Proposed Endpoints**:
+- `GET /api/admin/scraper/stats` - Get overall scraper statistics
+- `POST /api/admin/scraper/trigger` - Manually trigger scraper run (admin only)
+
+**Response Format**:
+```typescript
+{
+  totalScholarships: number;
+  lastScraperRun: Date;
+  scholarshipsBySource: {
+    source: string;
+    count: number;
+  }[];
+  scholarshipsByCategory: {
+    category: string;
+    count: number;
+  }[];
+  recentlyAdded: Scholarship[];
+  recentJobs: FinderJob[];
+}
+```
+
+**Implementation Notes**:
+- Query `finder_jobs` table for execution history
+- Query `scholarships` table for counts
+- Join with `scholarship_sources` and `scraper_categories` for names
+- Add caching to avoid expensive queries on every request
+
+**Related Tables**:
+- `finder_jobs` - execution history and stats
+- `scholarships` - scholarship counts
+- `scholarship_sources` - source names
+- `scraper_categories` - category names
+
+---
+
 ### Category Management API
 
-**Status**: Not implemented (reference code exists in SCHOLARSHIP_FINDER_IMPLEMENTATION.md section 8.4.5)
+**Status**: Not implemented
 
 **Description**: REST API endpoints for managing scholarship scraper categories through an admin interface.
 

@@ -1680,26 +1680,7 @@ jobs:
           python finder_main.py --mode scheduled
 ```
 
-- [ ] #### 8.7: Backend - Scraper Stats API
-
-Create endpoint: `GET /api/admin/scraper/stats`
-
-Return statistics:
-```typescript
-{
-  totalScholarships: number;
-  lastScraperRun: Date;
-  scholarshipsBySource: {
-    source: string;
-    count: number;
-  }[];
-  recentlyAdded: Scholarship[];
-}
-```
-
-Optional admin features:
-- Create admin dashboard to trigger scraper manually
-- Create endpoint: `POST /api/admin/scraper/trigger` (admin only)
+> **Note**: Backend scraper stats API documentation has been moved to [FUTURE.md](FUTURE.md) as a future enhancement.
 
 ---
 
