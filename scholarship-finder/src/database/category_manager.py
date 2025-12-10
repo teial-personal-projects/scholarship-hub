@@ -44,9 +44,7 @@ class CategoryManager:
                     description,
                     enabled,
                     priority,
-                    keywords,
-                    total_scholarships_found,
-                    last_scraped_at
+                    keywords
                 FROM scraper_categories
                 WHERE enabled = true
                 ORDER BY priority DESC, name ASC
@@ -64,9 +62,7 @@ class CategoryManager:
                     'description': cat['description'],
                     'enabled': cat['enabled'],
                     'priority': cat['priority'],
-                    'keywords': cat['keywords'] if isinstance(cat['keywords'], list) else [],
-                    'total_scholarships_found': cat['total_scholarships_found'],
-                    'last_scraped_at': cat['last_scraped_at']
+                    'keywords': cat['keywords'] if isinstance(cat['keywords'], list) else []
                 })
 
             # Update cache
@@ -94,8 +90,7 @@ class CategoryManager:
         try:
             self.db.cursor.execute("""
                 SELECT
-                    id, name, slug, description, enabled, priority,
-                    keywords, total_scholarships_found, last_scraped_at
+                    id, name, slug, description, enabled, priority, keywords
                 FROM scraper_categories
                 WHERE id = %s
             """, (category_id,))
@@ -109,9 +104,7 @@ class CategoryManager:
                     'description': cat['description'],
                     'enabled': cat['enabled'],
                     'priority': cat['priority'],
-                    'keywords': cat['keywords'] if isinstance(cat['keywords'], list) else [],
-                    'total_scholarships_found': cat['total_scholarships_found'],
-                    'last_scraped_at': cat['last_scraped_at']
+                    'keywords': cat['keywords'] if isinstance(cat['keywords'], list) else []
                 }
             return None
 
@@ -126,37 +119,9 @@ class CategoryManager:
             return category.get('keywords', [])
         return []
 
-    def update_category_stats(self, category_id: int, scholarships_found: int):
-        """
-        Update category statistics after scraping
 
-        Args:
-            category_id: The category ID
-            scholarships_found: Number of scholarships found in this run
-        """
-        try:
-            self.db.cursor.execute("""
-                UPDATE scraper_categories
-                SET
-                    total_scholarships_found = total_scholarships_found + %s,
-                    last_scraped_at = CURRENT_TIMESTAMP,
-                    updated_at = CURRENT_TIMESTAMP
-                WHERE id = %s
-            """, (scholarships_found, category_id))
-
-            self.db.connection.commit()
-
-            # Invalidate cache
-            self._cache = None
-
-            print(f"✅ Updated stats for category ID {category_id}: +{scholarships_found} scholarships")
-
-        except Exception as e:
-            print(f"❌ Error updating category stats: {e}")
-            self.db.connection.rollback()
-
-    def get_all_categories_with_stats(self) -> List[Dict]:
-        """Get all categories (including disabled) with full statistics"""
+    def get_all_categories(self) -> List[Dict]:
+        """Get all categories (including disabled ones)"""
         try:
             self.db.cursor.execute("""
                 SELECT
@@ -167,9 +132,6 @@ class CategoryManager:
                     enabled,
                     priority,
                     keywords,
-                    total_scholarships_found,
-                    last_scraped_at,
-                    average_success_rate,
                     created_at,
                     updated_at
                 FROM scraper_categories
@@ -188,9 +150,6 @@ class CategoryManager:
                     'enabled': cat['enabled'],
                     'priority': cat['priority'],
                     'keywords': cat['keywords'] if isinstance(cat['keywords'], list) else [],
-                    'total_scholarships_found': cat['total_scholarships_found'],
-                    'last_scraped_at': cat['last_scraped_at'],
-                    'average_success_rate': float(cat['average_success_rate']) if cat['average_success_rate'] else 0.0,
                     'created_at': cat['created_at'],
                     'updated_at': cat['updated_at']
                 })
@@ -232,9 +191,7 @@ class CategoryManager:
                         'description': f"{cat.get('name', '')} scholarships",
                         'enabled': True,
                         'priority': 5,  # Default priority
-                        'keywords': cat.get('keywords', []),
-                        'total_scholarships_found': 0,
-                        'last_scraped_at': None
+                        'keywords': cat.get('keywords', [])
                     })
 
             print(f"⚠️  Loaded {len(result)} categories from JSON fallback")

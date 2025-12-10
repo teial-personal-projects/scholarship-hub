@@ -1467,11 +1467,8 @@ class AIDiscoveryScraper:
                 keywords
             )
 
-            # Update stats
-            self.category_manager.update_category_stats(
-                category['id'],
-                scholarships_found
-            )
+            # Stats are now tracked in finder_jobs table, not in categories
+            # See migration 014 for details on the new stats architecture
 
     def discover_for_category(self, category_name: str, keywords: List[str]) -> int:
         """Discover scholarships for a specific category"""
@@ -1506,22 +1503,73 @@ class AIDiscoveryScraper:
 - 3 disabled categories: Healthcare & Medical, Law, Financial Services
 
 **Test Results:**
-All 6/6 tests passed:
-1. ✅ Get Enabled Categories
+All 5/5 tests passed:
+1. ✅ Get Enabled Categories (3 found: STEM, Arts, Music)
 2. ✅ Get Category by Slug
-3. ✅ Get Category Keywords
-4. ✅ Update Category Stats
-5. ✅ Caching (3578x speedup)
-6. ✅ Get All Categories
+3. ✅ Get Category Keywords (11 STEM keywords)
+4. ✅ Caching (5177x speedup)
+5. ✅ Get All Categories (6 total: 3 enabled, 3 disabled)
 
 **CategoryManager Features:**
 - `get_enabled_categories()` - Fetch enabled categories with 5-min cache
 - `get_category_by_slug()` - Get specific category
 - `get_category_by_id()` - Get category by database ID
 - `get_category_keywords()` - Get search keywords for category
-- `update_category_stats()` - Track scholarships found per category
-- `get_all_categories_with_stats()` - Admin view of all categories
+- `get_all_categories()` - Get all categories (including disabled)
 - `_get_from_json_fallback()` - Automatic fallback to JSON if DB unavailable
+
+**Important:** Stats tracking has been moved to `finder_jobs` table (see migration 014)
+
+---
+
+#### Step 8.4.6: Clean Up Stats Architecture (Migration 014)
+
+**Problem:** Stats fields were incorrectly placed in lookup tables (`scraper_categories` and `scholarship_sources`). These tables should ONLY hold configuration, not execution stats.
+
+**Solution:** Created [migration 014](api/src/migrations/014_cleanup_stats_from_lookup_tables.sql:1) to remove stats fields and clarify table responsibilities.
+
+**Table Responsibilities:**
+
+1. **`scraper_categories`** - Category configuration ONLY
+   - Fields: name, slug, description, enabled, priority, keywords
+   - Purpose: Define what categories to search for
+   - No stats fields (removed: total_scholarships_found, last_scraped_at, average_success_rate)
+
+2. **`scholarship_sources`** - Source configuration ONLY
+   - Fields: name, url, source_type, scraper_class, enabled, priority, rate_limit_per_hour
+   - Purpose: Define which websites to scrape
+   - No stats fields (removed: last_scraped_at, total_scholarships_found, success_rate, status, error_count, last_error)
+
+3. **`finder_jobs`** - ALL execution stats
+   - Tracks every scraper run (both scrapers and AI discovery)
+   - Fields: job_type, source_id, status, started_at, completed_at, scholarships_found, scholarships_new, error_message, etc.
+   - Purpose: Historical record of all finder executions
+
+**To get stats now:**
+```sql
+-- Per category stats
+SELECT category, SUM(scholarships_found) as total, COUNT(*) as runs
+FROM finder_jobs
+GROUP BY category;
+
+-- Per source stats
+SELECT source_id, SUM(scholarships_found) as total, AVG(duration_seconds) as avg_duration
+FROM finder_jobs
+WHERE source_id IS NOT NULL
+GROUP BY source_id;
+
+-- Recent runs
+SELECT * FROM finder_jobs
+ORDER BY created_at DESC
+LIMIT 10;
+```
+
+**Files Updated:**
+- Migration 014 applied successfully
+- [CategoryManager](scholarship-finder/src/database/category_manager.py:1) updated - removed `update_category_stats()` method
+- [test_category_manager.py](scholarship-finder/test_category_manager.py:1) updated - all tests pass (5/5)
+
+---
 
 **Next Steps:**
 - Update AI discovery scraper to use `CategoryManager`
@@ -1555,21 +1603,52 @@ def get_enabled_categories(self, refresh_cache: bool = False) -> List[Dict]:
 - [ ] Create category groups (e.g., "Technology" group contains STEM, CS, IT)
 - [ ] Add user preferences for favorite categories
 
-- [ ] #### 8.5: Schedule Scraper Runs
+- [✅] #### 8.6: Schedule Scraper Runs
 
-Set up cron job or GitHub Actions workflow to run scraper:
-- Daily or weekly
-- Run all categories
-- Log results to file or monitoring service
-- Monitor for errors and send alerts
+**Status**: Setup scripts created. Run `./scripts/setup-cron.sh` when ready to enable scheduled runs.
 
-Example cron job:
+Created two scripts for scheduling:
+
+1. **`scripts/run-finder.sh`** - Main runner script
+   - Loads environment variables from `.env.local`
+   - Activates virtual environment
+   - Runs finder with logging
+   - Captures exit codes
+   - Located at: [scholarship-finder/scripts/run-finder.sh](scholarship-finder/scripts/run-finder.sh:1)
+
+2. **`scripts/setup-cron.sh`** - Cron job setup script
+   - Installs cron job (runs every 6 hours)
+   - Checks for existing entries
+   - Creates logs directory
+   - Provides instructions for management
+   - Located at: [scholarship-finder/scripts/setup-cron.sh](scholarship-finder/scripts/setup-cron.sh:1)
+
+**Usage:**
+
 ```bash
-# Run daily at 2 AM
-0 2 * * * cd /path/to/scholarship-finder && ./scheduler/run_finder.sh >> logs/scraper.log 2>&1
+# Manual run (test first)
+cd scholarship-finder
+./scripts/run-finder.sh
+
+# Set up automated cron job (when ready)
+./scripts/setup-cron.sh
 ```
 
-Example GitHub Action:
+**Schedule**: The cron job runs every 6 hours: `0 */6 * * *`
+
+**Logs**: Stored in `scholarship-finder/logs/finder_YYYYMMDD.log`
+
+**To view/manage cron job:**
+```bash
+# View current crontab
+crontab -l
+
+# Remove cron job
+crontab -l | grep -v 'run-finder.sh' | crontab -
+```
+
+**Alternative: GitHub Actions** (for cloud-based scheduling)
+
 ```yaml
 name: Run Scholarship Finder
 on:
@@ -1592,14 +1671,16 @@ jobs:
           pip install -r requirements.txt
       - name: Run finder
         env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          GOOGLE_CUSTOM_SEARCH_CX: ${{ secrets.GOOGLE_CUSTOM_SEARCH_CX }}
         run: |
           cd scholarship-finder
-          python finder_main.py
+          python finder_main.py --mode scheduled
 ```
 
-- [ ] #### 8.6: Backend - Scraper Stats API
+- [ ] #### 8.7: Backend - Scraper Stats API
 
 Create endpoint: `GET /api/admin/scraper/stats`
 

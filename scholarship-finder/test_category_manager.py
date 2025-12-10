@@ -36,7 +36,6 @@ def test_get_enabled_categories():
         print(f"\n  📂 {cat['name']} (slug: {cat['slug']})")
         print(f"     Priority: {cat['priority']}")
         print(f"     Keywords: {len(cat['keywords'])} keywords")
-        print(f"     Total found: {cat['total_scholarships_found']}")
         if cat['keywords']:
             print(f"     Sample keywords: {', '.join(cat['keywords'][:5])}")
 
@@ -109,43 +108,6 @@ def test_get_category_keywords():
     return True
 
 
-def test_update_category_stats():
-    """Test updating category statistics"""
-    print("\n" + "=" * 60)
-    print("Test 4: Update Category Stats")
-    print("=" * 60)
-
-    db = DatabaseConnection()
-    db.connect()
-    category_manager = CategoryManager(db)
-
-    # Get STEM category
-    stem = category_manager.get_category_by_slug('stem')
-    if not stem:
-        print("❌ STEM category not found")
-        db.close()
-        return False
-
-    initial_count = stem['total_scholarships_found']
-    print(f"Initial scholarships found: {initial_count}")
-
-    # Update stats (add 5 scholarships)
-    category_manager.update_category_stats(stem['id'], 5)
-
-    # Re-fetch to verify
-    stem_updated = category_manager.get_category_by_id(stem['id'])
-    new_count = stem_updated['total_scholarships_found']
-
-    print(f"After update: {new_count}")
-    assert new_count == initial_count + 5, "Count should increase by 5"
-
-    print("✅ Successfully updated category stats")
-
-    # Reset to original count
-    category_manager.update_category_stats(stem['id'], -5)
-
-    db.close()
-    return True
 
 
 def test_caching():
@@ -188,17 +150,17 @@ def test_caching():
     return True
 
 
-def test_all_categories_with_stats():
+def test_all_categories():
     """Test getting all categories including disabled ones"""
     print("\n" + "=" * 60)
-    print("Test 6: Get All Categories (including disabled)")
+    print("Test 5: Get All Categories (including disabled)")
     print("=" * 60)
 
     db = DatabaseConnection()
     db.connect()
     category_manager = CategoryManager(db)
 
-    all_categories = category_manager.get_all_categories_with_stats()
+    all_categories = category_manager.get_all_categories()
 
     print(f"\nFound {len(all_categories)} total categories:")
     enabled_count = sum(1 for c in all_categories if c['enabled'])
@@ -211,7 +173,7 @@ def test_all_categories_with_stats():
         status = "✅" if cat['enabled'] else "❌"
         print(f"\n  {status} {cat['name']}")
         print(f"     Priority: {cat['priority']}")
-        print(f"     Scholarships found: {cat['total_scholarships_found']}")
+        print(f"     Keywords: {len(cat['keywords'])}")
 
     assert len(all_categories) >= 6, "Should have at least 6 categories"
     print("\n✅ Successfully retrieved all categories")
@@ -230,9 +192,8 @@ def main():
         ("Get Enabled Categories", test_get_enabled_categories),
         ("Get Category by Slug", test_get_category_by_slug),
         ("Get Category Keywords", test_get_category_keywords),
-        ("Update Category Stats", test_update_category_stats),
         ("Caching", test_caching),
-        ("Get All Categories", test_all_categories_with_stats),
+        ("Get All Categories", test_all_categories),
     ]
 
     passed = 0
