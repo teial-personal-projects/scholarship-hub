@@ -1334,12 +1334,433 @@ else:
     db.insert_scholarship(scholarship)
 ```
 
-- [ ] #### 8.4: Enhance Scraper Categories
+- [ ] #### 8.4: Migrate Source Categories to Database
 
-- [ ] Review current categories (STEM, Healthcare, etc.)
-- [ ] Add more categories or customize based on user feedback
-- [ ] Make categories configurable via config file
-- [ ] Add subject area mapping to match `subject_areas` table
+**Goal**: Move `source_categories.json` configuration to database for better management and dynamic updates
+
+**Current State**: Categories are stored in [src/config/source_categories.json](scholarship-finder/src/config/source_categories.json:1-107)
+
+**Why Migrate to Database:**
+- Enable/disable categories without code changes
+- Add new categories through admin interface
+- Track category usage and performance
+- Allow user-specific category preferences
+- Synchronize categories across multiple scraper instances
+
+#### Step 8.4.1: Create Database Migration for Category Tables
+
+Create new migration: `api/src/migrations/013_add_category_tables.sql`
+
+```sql
+-- ============================================================================
+-- Scraper Categories Table
+-- Stores categories for scholarship discovery (STEM, Arts, Healthcare, etc.)
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS scraper_categories (
+  id SERIAL PRIMARY KEY,
+
+  -- Category Info
+  name VARCHAR(100) NOT NULL UNIQUE,
+  slug VARCHAR(100) NOT NULL UNIQUE,  -- URL-friendly identifier
+  description TEXT,
+
+  -- Configuration
+  enabled BOOLEAN DEFAULT TRUE,  -- Whether to scrape this category
+  priority INTEGER DEFAULT 5,    -- 1-10, higher = more important
+
+  -- Search Keywords (for AI discovery)
+  keywords JSONB DEFAULT '[]'::jsonb,  -- Array of search keywords
+
+  -- Performance Metrics
+  total_scholarships_found INTEGER DEFAULT 0,
+  last_scraped_at TIMESTAMP,
+  average_success_rate DECIMAL(5, 2) DEFAULT 0.00,
+
+  -- Timestamps
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Indexes
+CREATE INDEX IF NOT EXISTS idx_scraper_categories_enabled ON scraper_categories(enabled);
+CREATE INDEX IF NOT EXISTS idx_scraper_categories_slug ON scraper_categories(slug);
+CREATE INDEX IF NOT EXISTS idx_scraper_categories_priority ON scraper_categories(priority DESC);
+
+-- Enable Row Level Security
+ALTER TABLE scraper_categories ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policy: Anyone can view categories (for frontend)
+CREATE POLICY "Anyone can view categories"
+  ON scraper_categories
+  FOR SELECT
+  USING (true);
+
+-- Admin can manage categories (using service role key)
+
+COMMENT ON TABLE scraper_categories IS 'Manages scholarship discovery categories and their search keywords';
+
+-- ============================================================================
+-- Trigger for updated_at
+-- ============================================================================
+CREATE TRIGGER update_scraper_categories_updated_at
+  BEFORE UPDATE ON scraper_categories
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+-- ============================================================================
+-- Seed Data: Migrate from source_categories.json
+-- ============================================================================
+INSERT INTO scraper_categories (name, slug, enabled, priority, keywords)
+VALUES
+  (
+    'STEM',
+    'stem',
+    true,
+    10,
+    '["engineering", "computer science", "information technology", "cybersecurity", "data science", "artificial intelligence", "machine learning", "robotics", "STEM", "Science", "Math"]'::jsonb
+  ),
+  (
+    'Arts',
+    'arts',
+    true,
+    8,
+    '["art", "arts", "fine arts", "visual arts", "graphic design", "painting", "sculpture", "photography", "digital art", "art history", "studio art", "creative arts"]'::jsonb
+  ),
+  (
+    'Music',
+    'music',
+    true,
+    8,
+    '["music", "music education", "music performance", "music theory", "music composition", "orchestra", "band", "choir", "jazz", "music production", "audio engineering", "sound design"]'::jsonb
+  ),
+  (
+    'Healthcare & Medical',
+    'healthcare-medical',
+    false,
+    7,
+    '["healthcare", "medical", "hospital", "biomedical", "registered nurse", "nursing", "nursing school"]'::jsonb
+  ),
+  (
+    'Financial Services',
+    'financial-services',
+    false,
+    6,
+    '["economics", "financial", "banking", "insurance", "investment", "finance"]'::jsonb
+  ),
+  (
+    'Law',
+    'law',
+    false,
+    7,
+    '["law", "legal", "law school", "jurisprudence", "attorney", "lawyer", "paralegal", "legal studies", "pre-law", "criminal justice", "criminal law", "corporate law", "forensics"]'::jsonb
+  )
+ON CONFLICT (slug) DO NOTHING;
+```
+
+#### Step 8.4.2: Run the Migration
+
+```bash
+cd api
+npm run migrate:latest
+# Or if using a specific migration command:
+# npm run migrate:up -- 013_add_category_tables.sql
+```
+
+#### Step 8.4.3: Create Python Database Helper for Categories
+
+Create `scholarship-finder/src/database/category_manager.py`:
+
+```python
+"""
+Category Manager for Scholarship Finder
+Retrieves category configuration from database instead of JSON file
+"""
+from typing import List, Dict, Optional
+
+
+class CategoryManager:
+    def __init__(self, db_connection):
+        self.db = db_connection
+        self._cache = None  # Simple in-memory cache
+        self._cache_timestamp = None
+
+    def get_enabled_categories(self, refresh_cache: bool = False) -> List[Dict]:
+        """
+        Get all enabled categories from database
+
+        Returns:
+            List of category dictionaries with id, name, slug, keywords, priority
+        """
+        # Simple cache to avoid repeated DB queries
+        import time
+        current_time = time.time()
+        cache_duration = 300  # 5 minutes
+
+        if not refresh_cache and self._cache and self._cache_timestamp:
+            if current_time - self._cache_timestamp < cache_duration:
+                return self._cache
+
+        try:
+            self.db.cursor.execute("""
+                SELECT
+                    id,
+                    name,
+                    slug,
+                    description,
+                    enabled,
+                    priority,
+                    keywords,
+                    total_scholarships_found,
+                    last_scraped_at
+                FROM scraper_categories
+                WHERE enabled = true
+                ORDER BY priority DESC, name ASC
+            """)
+
+            categories = self.db.cursor.fetchall()
+
+            # Convert JSONB keywords to Python list
+            result = []
+            for cat in categories:
+                result.append({
+                    'id': cat['id'],
+                    'name': cat['name'],
+                    'slug': cat['slug'],
+                    'description': cat['description'],
+                    'enabled': cat['enabled'],
+                    'priority': cat['priority'],
+                    'keywords': cat['keywords'] if isinstance(cat['keywords'], list) else [],
+                    'total_scholarships_found': cat['total_scholarships_found'],
+                    'last_scraped_at': cat['last_scraped_at']
+                })
+
+            # Update cache
+            self._cache = result
+            self._cache_timestamp = current_time
+
+            return result
+
+        except Exception as e:
+            print(f"❌ Error fetching categories from database: {e}")
+            # Fallback: return empty list or load from JSON
+            return []
+
+    def get_category_by_slug(self, slug: str) -> Optional[Dict]:
+        """Get a specific category by slug"""
+        categories = self.get_enabled_categories()
+        for cat in categories:
+            if cat['slug'] == slug:
+                return cat
+        return None
+
+    def get_category_keywords(self, category_slug: str) -> List[str]:
+        """Get keywords for a specific category"""
+        category = self.get_category_by_slug(category_slug)
+        if category:
+            return category.get('keywords', [])
+        return []
+
+    def update_category_stats(self, category_id: int, scholarships_found: int):
+        """Update category statistics after scraping"""
+        try:
+            self.db.cursor.execute("""
+                UPDATE scraper_categories
+                SET
+                    total_scholarships_found = total_scholarships_found + %s,
+                    last_scraped_at = CURRENT_TIMESTAMP,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE id = %s
+            """, (scholarships_found, category_id))
+
+            self.db.connection.commit()
+
+            # Invalidate cache
+            self._cache = None
+
+        except Exception as e:
+            print(f"❌ Error updating category stats: {e}")
+            self.db.connection.rollback()
+
+    def get_all_categories_with_stats(self) -> List[Dict]:
+        """Get all categories (including disabled) with full statistics"""
+        try:
+            self.db.cursor.execute("""
+                SELECT
+                    id,
+                    name,
+                    slug,
+                    description,
+                    enabled,
+                    priority,
+                    keywords,
+                    total_scholarships_found,
+                    last_scraped_at,
+                    average_success_rate,
+                    created_at,
+                    updated_at
+                FROM scraper_categories
+                ORDER BY priority DESC, name ASC
+            """)
+
+            return self.db.cursor.fetchall()
+
+        except Exception as e:
+            print(f"❌ Error fetching all categories: {e}")
+            return []
+```
+
+#### Step 8.4.4: Update AI Discovery Scraper to Use Database
+
+Update `scholarship-finder/src/ai_discovery_scraper.py` (or wherever categories are used):
+
+```python
+from database.category_manager import CategoryManager
+
+class AIDiscoveryScraper:
+    def __init__(self, db_connection):
+        self.db = db_connection
+        self.category_manager = CategoryManager(db_connection)
+
+    def run_discovery(self):
+        """Run AI discovery for all enabled categories"""
+        # OLD: Load from JSON file
+        # with open('src/config/source_categories.json') as f:
+        #     config = json.load(f)
+        #     categories = [c for c in config['categories'] if c.get('include')]
+
+        # NEW: Load from database
+        categories = self.category_manager.get_enabled_categories()
+
+        print(f"🔍 Discovering scholarships for {len(categories)} enabled categories")
+
+        for category in categories:
+            print(f"\n📂 Category: {category['name']} (Priority: {category['priority']})")
+
+            # Use category keywords for search
+            keywords = category['keywords']
+            scholarships_found = self.discover_for_category(
+                category['name'],
+                keywords
+            )
+
+            # Update stats
+            self.category_manager.update_category_stats(
+                category['id'],
+                scholarships_found
+            )
+
+    def discover_for_category(self, category_name: str, keywords: List[str]) -> int:
+        """Discover scholarships for a specific category"""
+        # Your existing discovery logic here
+        pass
+```
+
+#### Step 8.4.5: Create Admin API Endpoints (Optional)
+
+Add to Node.js API for managing categories through admin interface:
+
+**GET `/api/admin/categories`** - List all categories
+**GET `/api/admin/categories/:id`** - Get specific category
+**POST `/api/admin/categories`** - Create new category
+**PUT `/api/admin/categories/:id`** - Update category
+**PATCH `/api/admin/categories/:id/toggle`** - Enable/disable category
+**DELETE `/api/admin/categories/:id`** - Delete category
+
+Example controller (`api/src/controllers/admin/categories.controller.ts`):
+
+```typescript
+import { Request, Response } from 'express';
+import { db } from '../../database';
+
+export const getCategories = async (req: Request, res: Response) => {
+  const categories = await db('scraper_categories')
+    .select('*')
+    .orderBy('priority', 'desc');
+
+  res.json(categories);
+};
+
+export const toggleCategory = async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  const category = await db('scraper_categories')
+    .where({ id })
+    .first();
+
+  if (!category) {
+    return res.status(404).json({ error: 'Category not found' });
+  }
+
+  await db('scraper_categories')
+    .where({ id })
+    .update({
+      enabled: !category.enabled,
+      updated_at: db.fn.now()
+    });
+
+  res.json({
+    message: 'Category toggled',
+    enabled: !category.enabled
+  });
+};
+
+export const updateCategory = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { name, description, priority, keywords } = req.body;
+
+  await db('scraper_categories')
+    .where({ id })
+    .update({
+      name,
+      description,
+      priority,
+      keywords: JSON.stringify(keywords),
+      updated_at: db.fn.now()
+    });
+
+  res.json({ message: 'Category updated' });
+};
+```
+
+#### Step 8.4.6: Migration Checklist
+
+- [ ] Create migration file `013_add_category_tables.sql`
+- [ ] Run migration to create `scraper_categories` table
+- [ ] Verify seed data matches `source_categories.json`
+- [ ] Create `CategoryManager` Python class
+- [ ] Update scraper code to use `CategoryManager` instead of JSON file
+- [ ] Test that scraper loads categories from database
+- [ ] (Optional) Create admin API endpoints
+- [ ] (Optional) Keep `source_categories.json` as backup/fallback
+- [ ] Update documentation
+
+**Benefits of Database Approach:**
+- ✅ Enable/disable categories without redeploying
+- ✅ Add new categories through admin UI
+- ✅ Track performance per category
+- ✅ Dynamic configuration for multiple scraper instances
+- ✅ Category-specific analytics and reporting
+
+**Backward Compatibility:**
+Keep `source_categories.json` as fallback in case database is unavailable:
+
+```python
+def get_enabled_categories(self, refresh_cache: bool = False) -> List[Dict]:
+    try:
+        # Try database first
+        return self._get_from_database()
+    except Exception as e:
+        print(f"⚠️  Database unavailable, falling back to JSON: {e}")
+        # Fallback to JSON file
+        return self._get_from_json_file()
+```
+
+- [ ] #### 8.5: Enhance Scraper Categories (Additional Improvements)
+
+- [ ] Add category descriptions for better documentation
+- [ ] Map categories to existing `field_of_study` values
+- [ ] Create category groups (e.g., "Technology" group contains STEM, CS, IT)
+- [ ] Add user preferences for favorite categories
 
 - [ ] #### 8.5: Schedule Scraper Runs
 
