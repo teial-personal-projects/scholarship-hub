@@ -9,6 +9,13 @@ This directory contains SQL migration scripts for the ScholarshipHub database. M
 3. **003_essays.sql** - Essays associated with applications
 4. **004_collaborators.sql** - Collaborators and collaborations system
 5. **005_recommendations.sql** - Recommendation letters
+6. **006_add_user_id_to_collaborations.sql** - Add user_id to collaborations
+7. **007_collaborations_invitation.sql** - Collaborations invitation system
+8. **008_notification_preferences.sql** - User notification preferences
+9. **009_reminder_tracking.sql** - Reminder tracking system
+10. **010_rename_collaborators_email_to_email_address.sql** - Rename email field
+11. **011_remove_portal_deadline.sql** - Remove portal deadline field
+12. **012_add_scholarships_tables.sql** - Automated scholarship discovery system tables
 
 ## Running Migrations
 

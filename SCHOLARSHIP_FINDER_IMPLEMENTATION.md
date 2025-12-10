@@ -1463,14 +1463,14 @@ class GoogleScholarshipSearch:
         Generate advanced search queries to find scholarships
 
         These queries are designed to:
-        - Exclude aggregator sites (Fastweb, Scholarships.com)
+        - Exclude aggregator sites (CareerOneStop, CollegeScholarships.org)
         - Target original sources (organizations, foundations)
         - Find local/regional opportunities
         """
         base_queries = [
             # Direct scholarship pages, excluding aggregators
-            '"scholarship application" site:*.com -site:fastweb.com -site:scholarships.com -site:cappex.com',
-            '"scholarship application" site:*.org -site:fastweb.com -site:scholarships.com',
+            '"scholarship application" site:*.com -site:collegescholarships.org -site:collegescholarships.org -site:cappex.com',
+            '"scholarship application" site:*.org -site:collegescholarships.org-site:collegescholarships.org',
 
             # Annual scholarships from professional organizations
             '"annual scholarship" "law firm" OR "medical practice" OR "accounting firm"',
@@ -1499,7 +1499,7 @@ class GoogleScholarshipSearch:
         if location:
             location_queries = [
                 f'"scholarship" "{location}" "high school" OR "college"',
-                f'"student scholarship" "{location}" -site:fastweb.com',
+                f'"student scholarship" "{location}" -site:collegescholarships.org',
                 f'site:*.{location.lower()}.us scholarship',
             ]
             base_queries.extend(location_queries)
@@ -1508,7 +1508,7 @@ class GoogleScholarshipSearch:
         if field:
             field_queries = [
                 f'"{field}" scholarship site:*.org',
-                f'"{field}" "student award" -site:fastweb.com',
+                f'"{field}" "student award" -site:collegescholarships.org',
             ]
             base_queries.extend(field_queries)
 
