@@ -864,7 +864,7 @@ Return ONLY valid JSON, no explanation.
 
 **Goal**: Automatically mark expired scholarships
 
-- [x] ✅ #### Step 5.1: Create Expiration Manager
+- [✅]  #### Step 5.1: Create Expiration Manager
 
 Create `scholarship-finder/src/expiration/manager.py`:
 
@@ -992,7 +992,7 @@ class ExpirationManager:
 
 **Goal**: Run the scholarship finder on a schedule without AWS
 
-#### Option 1: Simple Cron Job (Free, Recommended for Start)
+#### [✅] Option 1: Simple Cron Job (Free, Recommended for Start) - CHOSEN OPTION
 
 Create `scholarship-finder/scheduler/run_finder.sh`:
 
@@ -1144,7 +1144,7 @@ export function scheduleScholarshipFinder() {
 
 1. **Hosting**: Run on your development machine or a cheap VPS ($5/month)
 2. **Database**: Use Supabase free tier (500MB, sufficient for start)
-3. **Scheduler**: Cron jobs (free) or node-cron (free)
+3. **Scheduler**: Cron jobs (free)
 4. **APIs**:
    - OpenAI: ~$10-20/month (GPT-3.5-turbo is cheap)
    - Google Custom Search: 100 queries/day free
