@@ -106,13 +106,129 @@ This document outlines features and improvements that are planned but not yet im
 
 ## Scraper Enhancements
 
-### Source Discovery Auto-Detection
+### Advanced ML-Based Data Quality Validation
+
+**Status**: Partially implemented (framework exists)
+
+**Description**: Deploy advanced machine learning models for data quality validation and cleaning.
+
+**Current State**: Text normalization and basic cleaning implemented; AI content extraction pipeline exists but advanced ML models not deployed.
+
+**Proposed Features**:
+- Deploy ML models for data validation
+- Automated anomaly detection in scholarship data
+- Intelligent data correction and enrichment
+- Confidence scoring for extracted data
+
+---
+
+### Deep Scholarship Content Verification
+
+**Status**: Partially implemented (basic validation only)
+
+**Description**: System to verify scholarship legitimacy and content accuracy beyond basic URL checks.
+
+**Current State**: Basic URL validation and robots.txt compliance checking exists via ethical_crawler.py
+
+**Proposed Features**:
+- Deep content verification and fact-checking
+- Cross-reference scholarship details across multiple sources
+- Automated legitimacy scoring
+- Historical data comparison
+- Red flag detection (scam indicators)
+
+---
+
+### Real-Time Scraping Triggers
 
 **Status**: Not implemented
 
+**Description**: Event-driven scraping system that responds to triggers beyond scheduled cron jobs.
+
+**Current State**: Only 6-hour scheduled cron runs implemented
+
+**Proposed Features**:
+- Webhook-based triggering system
+- Event bus integration
+- User-initiated scraping requests
+- API endpoints for on-demand scraping
+- Priority queue for scraping tasks
+
+---
+
+### Content Change Detection System
+
+**Status**: Partially implemented (expiration tracking only)
+
+**Description**: Monitor and detect changes to scholarship content over time.
+
+**Current State**: Expiration tracking implemented via expiration/manager.py (tracks active → expired → archived)
+
+**Proposed Features**:
+- Diff-based content monitoring
+- Track changes to amounts, deadlines, and requirements
+- Alert system for significant changes
+- Historical change log
+- Version control for scholarship data
+
+---
+
+### Quality Scoring Algorithm
+
+**Status**: Not implemented
+
+**Description**: Scoring system to rank scholarships and sources by reliability and data quality.
+
+**Proposed Features**:
+- Source reliability scoring
+- Data completeness metrics
+- Confidence weighting for extracted data
+- User feedback integration
+- Scholarship ranking based on quality indicators
+
+---
+
+### User-Requested Sources
+
+**Status**: Not implemented
+
+**Description**: Allow users to submit scholarship sources for scraping.
+
+**Current State**: Documented but no implementation
+
+**Proposed Features**:
+- User submission API endpoints
+- Source validation pipeline
+- Moderation queue for submitted sources
+- Attribution system
+- User feedback on source quality
+
+---
+
+### Community-Contributed Sources
+
+**Status**: Not implemented
+
+**Description**: Framework for community contributions to scholarship discovery.
+
+**Proposed Features**:
+- Community contribution dashboard
+- Source submission and validation
+- User reputation system
+- Contribution tracking and attribution
+- Community voting on source quality
+
+---
+
+### Source Discovery Auto-Detection
+
+**Status**: Partially implemented (AI discovery exists)
+
 **Description**: Automatically discover new scholarship websites by analyzing top scholarship aggregator sites.
 
-**Proposed Approach**:
+**Current State**: AI-powered source discovery implemented via source_discovery_engine.py with Google Custom Search integration
+
+**Proposed Enhancements**:
 1. Scrape major scholarship portals
 2. Extract outbound links
 3. Analyze linked sites for scholarship content
