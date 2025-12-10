@@ -3,13 +3,9 @@
     {
       "id": "STEM",
       "name": "STEM",
+      "include": true,
       "keywords": [
         "engineering",
-        "technology",
-        "tech",
-        "software",
-        "hardware",
-        "software engineering",
         "computer science",
         "information technology",
         "cybersecurity",
@@ -19,38 +15,67 @@
         "robotics",
         "STEM",
         "Science",
-        "Math",
-        "Physics",
-        "Chemistry",
-        "Biology",
-        "Astronomy",
-        "Geology"
+        "Math"
+      ]
+    },
+    {
+      "id": "arts",
+      "name": "Arts",
+      "include": true,
+      "keywords": [
+        "art",
+        "arts",
+        "fine arts",
+        "visual arts",
+        "graphic design",
+        "painting",
+        "sculpture",
+        "photography",
+        "digital art",
+        "art history",
+        "studio art",
+        "creative arts"
+      ]
+    },
+    {
+      "id": "music",
+      "name": "Music",
+      "include": true,
+      "keywords": [
+        "music",
+        "music education",
+        "music performance",
+        "music theory",
+        "music composition",
+        "orchestra",
+        "band",
+        "choir",
+        "jazz",
+        "music production",
+        "audio engineering",
+        "sound design"
       ]
     },
     {
       "id": "healthcare_medical",
       "name": "Healthcare & Medical",
+      "include": false,
       "keywords": [
         "healthcare",
         "medical",
-        "hospital"
-      ]
-    },
-    {
-      "id": "pharmaceuticals",
-      "name": "Pharmaceuticals",
-      "keywords": [
-        "pharmaceutical",
-        "pharma",
-        "drug",
-        "medicine",
-        "biotech"
+        "hospital",
+        "biomedical",
+        "registered nurse",
+        "nursing",
+        "nursing school"
       ]
     },
     {
       "id": "financial_services",
       "name": "Financial Services",
+      "include": false,
       "keywords": [
+        "economics",
         "financial",
         "banking",
         "insurance",
@@ -59,48 +84,23 @@
       ]
     },
     {
-      "id": "energy_utilities",
-      "name": "Energy & Utilities",
+      "id": "law",
+      "name": "Law",
+      "include": false,
       "keywords": [
-        "energy",
-        "utilities",
-        "oil",
-        "gas",
-        "electric",
-        "renewable"
-      ]
-    },
-    {
-      "id": "consumer_goods",
-      "name": "Consumer Goods",
-      "keywords": [
-        "consumer",
-        "retail",
-        "products",
-        "brands",
-        "consumer goods"
-      ]
-    },
-    {
-      "id": "agriculture_food",
-      "name": "Agriculture & Food",
-      "keywords": [
-        "agriculture",
-        "food",
-        "farming",
-        "agricultural",
-        "food processing"
-      ]
-    },
-    {
-      "id": "construction_real_estate",
-      "name": "Construction & Real Estate",
-      "keywords": [
-        "construction",
-        "real estate",
-        "building",
-        "development",
-        "property"
+        "law",
+        "legal",
+        "law school",
+        "jurisprudence",
+        "attorney",
+        "lawyer",
+        "paralegal",
+        "legal studies",
+        "pre-law",
+        "criminal justice",
+        "criminal law",
+        "corporate law",
+        "forensics"
       ]
     }
   ]
