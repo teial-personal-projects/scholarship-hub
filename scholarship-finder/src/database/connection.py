@@ -1,35 +1,67 @@
 """
 Database connection for Scholarship Finder
-Connects to the same database as the Node.js API
+Connects to the same database as the Node.js API using PostgreSQL
 """
 import os
-from supabase import create_client
+import psycopg2
+import psycopg2.extras
 from typing import Optional
 from dotenv import load_dotenv
 
-# Load environment from root .env
-load_dotenv(os.path.join(os.path.dirname(__file__), '../../../.env'))
+# Load environment from root .env.local
+env_path = os.path.join(os.path.dirname(__file__), '../../../.env.local')
+load_dotenv(env_path)
 
 class DatabaseConnection:
     def __init__(self):
-        self.supabase = None
+        self.connection = None
+        self.cursor = None
 
     def connect(self):
-        """Connect to Supabase database (same as Node.js API)"""
+        """Connect to Supabase PostgreSQL database (same as Node.js API)"""
         try:
-            self.supabase = create_client(
-                os.getenv("SUPABASE_URL"),
-                os.getenv("SUPABASE_SERVICE_ROLE_KEY")
-            )
+            # Extract connection details from Supabase URL
+            supabase_url = os.getenv("SUPABASE_URL")
+
+            # Supabase PostgreSQL connection pattern:
+            # postgres://postgres.[project-ref]:[password]@aws-0-[region].pooler.supabase.com:6543/postgres
+            # We'll construct this from the Supabase URL
+
+            project_ref = supabase_url.split("//")[1].split(".")[0] if supabase_url else None
+
+            # For now, let's use direct connection string if available in env
+            # Otherwise construct from Supabase URL
+            db_url = os.getenv("DATABASE_URL")
+
+            if not db_url:
+                # If no DATABASE_URL, we need to construct connection params
+                # For Supabase, we'll use the pooler connection
+                print("⚠️  DATABASE_URL not found in .env.local")
+                print("    Please add your Supabase PostgreSQL connection string")
+                print("    You can find it in: Supabase Dashboard > Project Settings > Database")
+                print("    Format: postgres://postgres.[ref]:[password]@[host]:6543/postgres")
+                return False
+
+            # Connect using psycopg2
+            self.connection = psycopg2.connect(db_url)
+            self.cursor = self.connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+            # Test connection
+            self.cursor.execute("SELECT 1")
+            print("✅ Database connection successful")
             return True
+
         except Exception as e:
             print(f"❌ Database connection error: {e}")
             return False
 
     def close(self):
         """Close database connection"""
-        # Supabase client doesn't require explicit closing
-        self.supabase = None
+        if self.cursor:
+            self.cursor.close()
+        if self.connection:
+            self.connection.close()
+        print("Database connection closed")
 
     def insert_scholarship(self, scholarship: dict) -> Optional[int]:
         """Insert or update scholarship"""

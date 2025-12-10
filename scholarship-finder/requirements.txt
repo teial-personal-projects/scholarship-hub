@@ -8,6 +8,7 @@ numpy==1.26.4
 
 # Database (Supabase instead of MySQL)
 supabase>=2.0.0
+psycopg2-binary==2.9.9
 
 # Scraping
 selenium==4.15.0
