@@ -604,7 +604,7 @@ class DeduplicationEngine:
 
 **Goal**: Use AI to discover scholarships from non-traditional sources
 
-- [ ] #### Step 4.1: Create AI Discovery Module
+- [x] ✅ #### Step 4.1: Create AI Discovery Module
 
 Create `scholarship-finder/src/ai_discovery/discovery_engine.py`:
 
@@ -864,7 +864,7 @@ Return ONLY valid JSON, no explanation.
 
 **Goal**: Automatically mark expired scholarships
 
-- [ ] #### Step 5.1: Create Expiration Manager
+- [x] ✅ #### Step 5.1: Create Expiration Manager
 
 Create `scholarship-finder/src/expiration/manager.py`:
 
