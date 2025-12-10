@@ -18,10 +18,6 @@ This plan transforms your existing `scholarship-tracker` (Vue + Express + MySQL 
 - ✅ No git submodule complexity
 - ❌ Types not separately versionable (but you don't need this for a single app)
 
-**Alternative**: Keep git submodules if you plan to:
-- Share types with other projects
-- Version types independently
-- Have multiple teams with different release cycles
 
 **Recommendation**: Use NPM workspace for this project.
 
@@ -48,12 +44,6 @@ This plan transforms your existing `scholarship-tracker` (Vue + Express + MySQL 
 - ✅ **Business Logic**: Reference patterns from `scholarship-tracker/server/src/`
 - ✅ **Domain Knowledge**: User flows, data models, API design patterns
 - ✅ **Lessons Learned**: What worked, what didn't in the old project
-
-**What NOT to Migrate**:
-- ❌ Vue/Quasar frontend → Build fresh in React
-- ❌ MySQL schema → Design fresh for PostgreSQL
-- ❌ Auth0 integration → Use Supabase Auth
-- ❌ Knex.js queries → Use Supabase client
 
 ---
 
