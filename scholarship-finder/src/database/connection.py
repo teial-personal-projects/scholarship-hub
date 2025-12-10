@@ -3,8 +3,8 @@ Database connection for Scholarship Finder
 Connects to the same database as the Node.js API using PostgreSQL
 """
 import os
-import psycopg2
-import psycopg2.extras
+import psycopg
+from psycopg.rows import dict_row
 from typing import Optional
 from dotenv import load_dotenv
 
@@ -42,9 +42,9 @@ class DatabaseConnection:
                 print("    Format: postgres://postgres.[ref]:[password]@[host]:6543/postgres")
                 return False
 
-            # Connect using psycopg2
-            self.connection = psycopg2.connect(db_url)
-            self.cursor = self.connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            # Connect using psycopg (v3)
+            self.connection = psycopg.connect(db_url)
+            self.cursor = self.connection.cursor(row_factory=dict_row)
 
             # Test connection
             self.cursor.execute("SELECT 1")
