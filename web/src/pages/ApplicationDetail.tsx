@@ -523,12 +523,12 @@ function ApplicationDetail() {
           <CardBody>
             <SimpleGrid columns={{ base: 1, md: 2 }} spacing="6">
               <Box>
-                <Text fontWeight="bold" mb="1">Organization</Text>
+                <Text fontWeight="bold" color="brand.700" mb="1">Organization</Text>
                 <Text>{application.organization || 'Not specified'}</Text>
               </Box>
 
               <Box>
-                <Text fontWeight="bold" mb="1">Due Date</Text>
+                <Text fontWeight="bold" color="brand.700" mb="1">Due Date</Text>
                 <Text>
                   {application.dueDate
                     ? new Date(application.dueDate).toLocaleDateString('en-US', {
@@ -542,7 +542,7 @@ function ApplicationDetail() {
 
               {application.openDate && (
                 <Box>
-                  <Text fontWeight="bold" mb="1">Open Date</Text>
+                  <Text fontWeight="bold" color="brand.700" mb="1">Open Date</Text>
                   <Text>
                     {new Date(application.openDate).toLocaleDateString('en-US', {
                       year: 'numeric',
@@ -555,7 +555,7 @@ function ApplicationDetail() {
 
               {application.submissionDate && (
                 <Box>
-                  <Text fontWeight="bold" mb="1">Submission Date</Text>
+                  <Text fontWeight="bold" color="brand.700" mb="1">Submission Date</Text>
                   <Text>
                     {new Date(application.submissionDate).toLocaleDateString('en-US', {
                       year: 'numeric',
@@ -568,7 +568,7 @@ function ApplicationDetail() {
 
               {(application.minAward || application.maxAward) && (
                 <Box>
-                  <Text fontWeight="bold" mb="1">Award Amount</Text>
+                  <Text fontWeight="bold" color="brand.700" mb="1">Award Amount</Text>
                   <Text>
                     {application.minAward && application.maxAward
                       ? `$${application.minAward.toLocaleString()} - $${application.maxAward.toLocaleString()}`
@@ -583,21 +583,21 @@ function ApplicationDetail() {
 
               {application.platform && (
                 <Box>
-                  <Text fontWeight="bold" mb="1">Platform</Text>
+                  <Text fontWeight="bold" color="brand.700" mb="1">Platform</Text>
                   <Text>{application.platform}</Text>
                 </Box>
               )}
 
               {application.theme && (
                 <Box>
-                  <Text fontWeight="bold" mb="1">Theme/Focus</Text>
+                  <Text fontWeight="bold" color="brand.700" mb="1">Theme/Focus</Text>
                   <Text>{application.theme}</Text>
                 </Box>
               )}
 
               {application.currentAction && (
                 <Box>
-                  <Text fontWeight="bold" mb="1">Current Action</Text>
+                  <Text fontWeight="bold" color="brand.700" mb="1">Current Action</Text>
                   <Text>{application.currentAction}</Text>
                 </Box>
               )}
@@ -607,7 +607,7 @@ function ApplicationDetail() {
               <>
                 <Divider my="6" />
                 <Box>
-                  <Text fontWeight="bold" mb="2">Requirements</Text>
+                  <Text fontWeight="bold" color="brand.700" mb="2">Requirements</Text>
                   <Text whiteSpace="pre-wrap">{application.requirements}</Text>
                 </Box>
               </>
@@ -617,15 +617,15 @@ function ApplicationDetail() {
               <>
                 <Divider my="6" />
                 <Box>
-                  <Text fontWeight="bold" mb="3">Renewable Information</Text>
+                  <Text fontWeight="bold" color="brand.700" mb="3">Renewable Information</Text>
                   <SimpleGrid columns={{ base: 1, md: 2 }} spacing="4">
                     <Box>
-                      <Text fontWeight="semibold" fontSize="sm" color="gray.600" mb="1">Renewable</Text>
+                      <Text fontWeight="semibold" fontSize="sm" color="brand.700" mb="1">Renewable</Text>
                       <Text>{application.renewable ? 'Yes' : 'No'}</Text>
                     </Box>
                     {application.renewableTerms && (
                       <Box>
-                        <Text fontWeight="semibold" fontSize="sm" color="gray.600" mb="1">Renewal Terms</Text>
+                        <Text fontWeight="semibold" fontSize="sm" color="brand.700" mb="1">Renewal Terms</Text>
                         <Text whiteSpace="pre-wrap">{application.renewableTerms}</Text>
                       </Box>
                     )}
@@ -639,7 +639,7 @@ function ApplicationDetail() {
               <>
                 <Divider my="6" />
                 <Box>
-                  <Text fontWeight="bold" mb="3">Links</Text>
+                  <Text fontWeight="bold" color="brand.700" mb="3">Links</Text>
                   <Stack spacing="3">
                     {application.orgWebsite && (
                       <Button

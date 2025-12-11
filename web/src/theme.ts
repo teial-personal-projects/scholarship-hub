@@ -215,6 +215,22 @@ const components = {
       fontWeight: 'semibold',
     },
   },
+  Table: {
+    variants: {
+      simple: {
+        th: {
+          color: 'brand.700', // Dark green (#4B612C)
+          fontWeight: 'semibold',
+          textTransform: 'none',
+          letterSpacing: 'normal',
+          paddingY: '2',
+        },
+        td: {
+          paddingY: '2',
+        },
+      },
+    },
+  },
   Heading: {
     baseStyle: {
       fontWeight: 'bold',
