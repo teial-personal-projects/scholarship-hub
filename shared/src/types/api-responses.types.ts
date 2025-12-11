@@ -66,7 +66,6 @@ export interface ApplicationResponse {
   requirements?: string | null;
   renewable?: boolean | null;
   renewableTerms?: string | null;
-  documentInfoLink?: string | null;
   currentAction?: string | null;
   status: TApplicationStatus;
   submissionDate?: string | null;

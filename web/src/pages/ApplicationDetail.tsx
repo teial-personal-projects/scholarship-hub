@@ -635,7 +635,7 @@ function ApplicationDetail() {
             )}
 
             {/* Links */}
-            {(application.orgWebsite || application.applicationLink || application.documentInfoLink) && (
+            {(application.orgWebsite || application.applicationLink) && (
               <>
                 <Divider my="6" />
                 <Box>
@@ -675,24 +675,6 @@ function ApplicationDetail() {
                         transition="all 0.2s"
                       >
                         Open Application Portal
-                      </Button>
-                    )}
-                    {application.documentInfoLink && (
-                      <Button
-                        as={ChakraLink}
-                        href={application.documentInfoLink}
-                        isExternal
-                        variant="outline"
-                        colorScheme="purple"
-                        size="sm"
-                        leftIcon={<Text>📄</Text>}
-                        rightIcon={<Text>→</Text>}
-                        justifyContent="space-between"
-                        width="fit-content"
-                        _hover={{ textDecoration: 'none', transform: 'translateX(2px)' }}
-                        transition="all 0.2s"
-                      >
-                        View Document Information
                       </Button>
                     )}
                   </Stack>

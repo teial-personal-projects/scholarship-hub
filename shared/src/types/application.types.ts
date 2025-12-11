@@ -17,7 +17,6 @@ export interface Application {
   requirements: string;
   renewable: boolean;
   renewableTerms?: string;
-  documentInfoLink: string;
   currentAction: string;
   status: TApplicationStatus;
   submissionDate?: Date;
