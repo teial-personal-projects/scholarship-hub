@@ -5,6 +5,7 @@
 import { supabase } from '../config/supabase.js';
 import { AppError } from '../middleware/error-handler.js';
 import { DB_ERROR_CODES, isDbErrorCode } from '../constants/db-errors.js';
+import { calculateMatchScore } from './scholarship-matching.service.js';
 
 export interface ScholarshipSearchParams {
   query?: string;
@@ -159,7 +160,7 @@ export async function getScholarshipById(id: number): Promise<ScholarshipRespons
     if (isDbErrorCode(error, DB_ERROR_CODES.NO_ROWS_FOUND)) {
       throw new AppError('Scholarship not found', 404);
     }
-    throw new AppError(`Failed to fetch scholarship: ${error.message}`, 500);
+    throw error;
   }
 
   return data as ScholarshipResponse;
@@ -223,7 +224,7 @@ export async function getRecommendedScholarships(
 
   query = query
     .order('amount', { ascending: false })
-    .limit(limit);
+    .limit(limit * 2); // Fetch more to score and sort
 
   const { data, error } = await query;
 
@@ -231,7 +232,20 @@ export async function getRecommendedScholarships(
     throw new AppError(`Failed to get recommendations: ${error.message}`, 500);
   }
 
-  return data as ScholarshipResponse[];
+  // Calculate match scores for all scholarships
+  const scholarshipsWithScores = (data as ScholarshipResponse[]).map(scholarship => {
+    const matchResult = calculateMatchScore(scholarship, prefs || undefined);
+    return {
+      ...scholarship,
+      matchScore: matchResult.score,
+      matchReasons: matchResult.reasons
+    };
+  });
+
+  // Sort by match score and return top results
+  return scholarshipsWithScores
+    .sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0))
+    .slice(0, limit) as ScholarshipResponse[];
 }
 
 /**
