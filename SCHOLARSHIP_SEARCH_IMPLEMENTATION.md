@@ -1098,7 +1098,7 @@ function ScholarshipDetail() {
 export default ScholarshipDetail;
 ```
 
-- [ ] #### Step 2.3: Add Dashboard Recommendations Widget
+- [✅] #### Step 2.3: Add Dashboard Recommendations Widget
 
 Update `web/src/pages/Dashboard.tsx` to add scholarship recommendations:
 

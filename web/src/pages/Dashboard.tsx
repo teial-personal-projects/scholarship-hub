@@ -34,7 +34,7 @@ import { useAuth } from '../contexts/AuthContext';
 import DashboardReminders from '../components/DashboardReminders';
 import DashboardCollaborations from '../components/DashboardCollaborations';
 import DashboardPendingResponses from '../components/DashboardPendingResponses';
-import type { UserProfile, ApplicationResponse } from '@scholarship-hub/shared';
+import type { UserProfile, ApplicationResponse, ScholarshipResponse } from '@scholarship-hub/shared';
 import { useToastHelpers } from '../utils/toast';
 
 function Dashboard() {
@@ -44,6 +44,7 @@ function Dashboard() {
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [applications, setApplications] = useState<ApplicationResponse[]>([]);
+  const [recommendedScholarships, setRecommendedScholarships] = useState<ScholarshipResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -68,6 +69,15 @@ function Dashboard() {
         // Fetch applications
         const applicationsData = await apiGet<ApplicationResponse[]>('/applications');
         setApplications(applicationsData || []);
+
+        // Fetch recommended scholarships
+        try {
+          const scholarshipsData = await apiGet<ScholarshipResponse[]>('/scholarships/recommended?limit=5');
+          setRecommendedScholarships(scholarshipsData || []);
+        } catch (scholarshipError) {
+          // Don't fail the whole dashboard if scholarships fail
+          console.error('Failed to fetch recommended scholarships:', scholarshipError);
+        }
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to load dashboard data';
         setError(errorMessage);
@@ -188,6 +198,65 @@ function Dashboard() {
               Browse Scholarships
             </Button>
           </HStack>
+
+          {/* Recommended Scholarships Widget */}
+          {recommendedScholarships.length > 0 && (
+            <Card variant="academic" bg="white">
+              <CardHeader
+                bg="highlight.50"
+                borderTopRadius="xl"
+                borderBottom="1px solid"
+                borderColor="brand.200"
+              >
+                <Flex justify="space-between" align="center">
+                  <Heading size="md" color="brand.700">
+                    📚 New Scholarships for You
+                  </Heading>
+                  <Button
+                    variant="link"
+                    colorScheme="brand"
+                    onClick={() => navigate('/scholarships/search')}
+                  >
+                    Browse All →
+                  </Button>
+                </Flex>
+              </CardHeader>
+              <CardBody>
+                <Stack spacing={4}>
+                  {recommendedScholarships.map((scholarship) => (
+                    <Card
+                      key={scholarship.id}
+                      variant="outline"
+                      _hover={{ shadow: 'sm' }}
+                      cursor="pointer"
+                      onClick={() => navigate(`/scholarships/${scholarship.id}`)}
+                    >
+                      <CardBody>
+                        <Flex justify="space-between" align="start">
+                          <Box flex="1">
+                            <Heading size="sm" mb={1}>{scholarship.name}</Heading>
+                            {scholarship.organization && (
+                              <Text fontSize="sm" color="gray.600">{scholarship.organization}</Text>
+                            )}
+                          </Box>
+                          {scholarship.amount && (
+                            <Badge colorScheme="green" ml={2}>
+                              ${scholarship.amount.toLocaleString()}
+                            </Badge>
+                          )}
+                        </Flex>
+                        {scholarship.deadline && (
+                          <Text fontSize="sm" color="gray.500" mt={2}>
+                            📅 Due: {new Date(scholarship.deadline).toLocaleDateString()}
+                          </Text>
+                        )}
+                      </CardBody>
+                    </Card>
+                  ))}
+                </Stack>
+              </CardBody>
+            </Card>
+          )}
 
           {/* Applications Section */}
         <Card variant="academic" bg="white">
