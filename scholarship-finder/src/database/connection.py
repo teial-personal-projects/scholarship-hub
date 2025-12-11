@@ -73,20 +73,14 @@ class DatabaseConnection:
             # Normalize deadline date (handle partial dates)
             if scholarship.get('deadline'):
                 try:
-                    # Import date utilities
-                    import sys
-                    from pathlib import Path
-                    utils_path = Path(__file__).parent.parent / 'utils_python'
-                    if str(utils_path) not in sys.path:
-                        sys.path.insert(0, str(utils_path))
-
-                    import date_utils
-                    normalized_date = date_utils.normalize_deadline(scholarship['deadline'])
+                    # Import date utilities from utils_python
+                    from ..utils_python.date_utils import normalize_deadline, calculate_expiration_date
+                    normalized_date = normalize_deadline(scholarship['deadline'])
                     if normalized_date:
                         scholarship['deadline'] = normalized_date
                         # Calculate expiration date (30 days after deadline)
                         if not scholarship.get('expires_at'):
-                            scholarship['expires_at'] = date_utils.calculate_expiration_date(normalized_date, grace_days=30)
+                            scholarship['expires_at'] = calculate_expiration_date(normalized_date, grace_days=30)
                 except (ImportError, ValueError, Exception) as e:
                     print(f"⚠️  Could not normalize deadline: {e}")
 
