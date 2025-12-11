@@ -280,13 +280,19 @@ export const urlSchema = z.string().url().max(2048).transform(val => val.trim())
  * const schema = phoneSchema('US', 'NATIONAL');
  */
 export function phoneSchema(defaultCountry?: CountryCode, format: 'E164' | 'NATIONAL' | 'INTERNATIONAL' = 'E164') {
-  return z.string()
-    .trim()
+  return z
+    .union([
+      z.string().trim(),
+      z.null(),
+    ])
     .refine(
       (val) => {
-        if (!val) return true; // Allow empty/optional
+        // Allow null/empty values
+        if (val === null) return true;
+        if (typeof val !== 'string' || !val.trim()) return true;
+        // Validate non-empty strings
         try {
-          return isValidPhoneNumber(val, defaultCountry);
+          return isValidPhoneNumber(val.trim(), defaultCountry);
         } catch {
           return false;
         }
@@ -296,10 +302,16 @@ export function phoneSchema(defaultCountry?: CountryCode, format: 'E164' | 'NATI
       }
     )
     .transform((val) => {
-      if (!val || !val.trim()) return undefined;
+      // Convert null/undefined/empty to undefined
+      if (val === null || val === undefined || !val || !val.trim()) {
+        return undefined;
+      }
+      
+      const trimmed = val.trim();
+      if (!trimmed) return undefined;
       
       try {
-        const phoneNumber = parsePhoneNumber(val.trim(), defaultCountry);
+        const phoneNumber = parsePhoneNumber(trimmed, defaultCountry);
         
         switch (format) {
           case 'E164':
@@ -309,14 +321,14 @@ export function phoneSchema(defaultCountry?: CountryCode, format: 'E164' | 'NATI
           case 'INTERNATIONAL':
             return phoneNumber.formatInternational();
           default:
-            return val.trim();
+            return trimmed;
         }
-      } catch {
+      } catch (error) {
         throw new z.ZodError([
           {
             code: 'custom',
             path: [],
-            message: `Invalid phone number format${defaultCountry ? ` for ${defaultCountry}` : ''}`,
+            message: error instanceof Error ? error.message : `Invalid phone number format${defaultCountry ? ` for ${defaultCountry}` : ''}`,
           },
         ]);
       }
