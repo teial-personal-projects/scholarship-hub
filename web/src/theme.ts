@@ -209,6 +209,12 @@ const components = {
       },
     },
   },
+  FormLabel: {
+    baseStyle: {
+      color: 'brand.700', // Dark green (#4B612C)
+      fontWeight: 'semibold',
+    },
+  },
   Heading: {
     baseStyle: {
       fontWeight: 'bold',
