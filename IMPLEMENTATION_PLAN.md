@@ -2307,24 +2307,22 @@ scholarship-hub/
 - [ ] Environment variables properly secured
 
 ### TODO 8.6: Deployment
-- [ ] Frontend:
-  - Deploy to Vercel/Netlify/Cloudflare Pages
-  - Configure environment variables
-  - Set up custom domain
-- [ ] Backend:
-  - Deploy to Railway/Render/Fly.io
-  - Configure environment variables
-  - Set up health checks
-- [ ] Database:
-  - Already on Supabase (production tier if needed)
-  - Set up backups
-  - Monitor usage
+
+See `STAGING_DEPLOYMENT.md` for detailed deployment plan including:
+- Frontend deployment (Vercel/Netlify/Cloudflare)
+- Backend deployment (Railway/Render/Fly.io)
+- Database configuration and backups
+- Environment variables setup
+- Pre and post-deployment checklists
 
 ### TODO 8.7: Monitoring & Analytics
-- [ ] Set up error tracking (Sentry)
-- [ ] Set up analytics (PostHog, Plausible, or GA4)
-- [ ] Set up uptime monitoring (UptimeRobot)
-- [ ] Database performance monitoring (Supabase dashboard)
+
+See `FUTURE.md` → "Monitoring & Analytics Infrastructure" for future monitoring setup including:
+- Error tracking (Sentry)
+- Analytics (PostHog, Plausible, or GA4)
+- Uptime monitoring (UptimeRobot)
+- Database performance monitoring
+- Application Performance Monitoring (APM)
 
 **Milestone**: App deployed and running in production!
 
