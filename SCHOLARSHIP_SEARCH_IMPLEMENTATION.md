@@ -1306,9 +1306,26 @@ export function calculateMatchScore(
 
 ### Phase 4: User Preferences
 
-- [ ] #### Step 4.1: Add Search Preferences to Profile
+- [✅] #### Step 4.1: Add Search Preferences to Profile (Already Implemented)
 
-Update `api/src/services/users.service.ts`:
+**Note**: This functionality is already fully implemented in the existing codebase.
+
+Location: `web/src/pages/Profile.tsx` (lines 298-472)
+
+The Profile page includes a complete "Search Preferences" section with:
+- Target Type (Merit, Need, Both)
+- Academic Level (High School, Undergraduate, Graduate, etc.)
+- Gender selection
+- Ethnicity selection
+- Minimum Award Amount
+- Subject Areas (multi-select with tags)
+- Geographic Restrictions
+- Essay Required checkbox
+- Recommendation Required checkbox
+
+Backend endpoint already exists: `PATCH /users/me/search-preferences`
+
+Original implementation example:
 
 ```typescript
 export async function updateSearchPreferences(
@@ -1326,9 +1343,27 @@ export async function updateSearchPreferences(
 }
 ```
 
-- [ ] #### Step 4.2: Create Preferences UI
+- [✅] #### Step 4.2: Create Preferences UI (Already Implemented)
 
-Create `web/src/components/SearchPreferencesForm.tsx`:
+**Note**: This UI is already fully implemented and integrated into the Profile page.
+
+Location: `web/src/pages/Profile.tsx`
+
+The existing implementation includes:
+- ✅ All preference fields with proper form controls
+- ✅ Real-time updates with state management
+- ✅ Save functionality via `apiPatch('/users/me/search-preferences')`
+- ✅ Success/error toast notifications
+- ✅ Loading states
+- ✅ Mobile-responsive design
+- ✅ Accessible form controls
+
+Users can update their preferences at `/profile`, and these preferences are automatically used by:
+- The recommendation algorithm (Step 3.1)
+- The match scoring system
+- Personalized scholarship search results
+
+Original example component (not needed):
 
 ```typescript
 /**
@@ -1593,57 +1628,6 @@ Scholarship discovery helps users find new scholarship opportunities within the 
 
 ### Options for Future Implementation
 
----
-
-### Option 1: Curated Database
-
-**Description**: Manually curate a database of popular, high-value scholarships that users can browse and apply to.
-
-#### Implementation Details
-
-**Database Setup:**
-- Populate `scholarships` table with 50-100 curated scholarships
-- Focus on:
-  - National scholarships (Gates, Coca-Cola, QuestBridge, etc.)
-  - High-value awards ($5,000+)
-  - Diverse eligibility criteria
-  - Well-established organizations
-
-**Backend:**
-```typescript
-// Endpoints needed:
-GET /api/scholarships/browse - Browse curated scholarships
-GET /api/scholarships/browse/:id - Get scholarship details
-POST /api/scholarships/:id/apply - Create application from curated scholarship
-```
-
-**Data Maintenance:**
-- Update deadlines annually (or mark as "rolling")
-- Review and update eligibility criteria
-- Add new scholarships based on user requests
-- Remove defunct scholarships
-
-#### Pros & Cons
-
-**Pros:**
-- ✅ No API costs
-- ✅ Structured, clean data
-- ✅ Immediate value for users
-- ✅ Good for demos and marketing
-- ✅ Complete control over quality
-
-**Cons:**
-- ❌ Manual curation effort
-- ❌ Data goes stale
-- ❌ Limited coverage (can't include every scholarship)
-- ❌ Ongoing maintenance required
-
-#### Estimated Effort
-- Initial curation: 8-12 hours (research and data entry)
-- Quarterly updates: 2-3 hours
-- Annual refresh: 4-6 hours
-
----
 
 ### Option 2: Web Search Integration
 
