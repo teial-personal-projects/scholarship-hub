@@ -33,22 +33,61 @@ import {
   useDisclosure,
   Card,
   CardBody,
-  Flex
+  Flex,
+  HStack,
+  useToast
 } from '@chakra-ui/react';
 import { useCollaborations } from '../hooks/useCollaborations';
 import type { CollaborationResponse } from '@scholarship-hub/shared';
 import CollaborationHistory from '../components/CollaborationHistory';
+import { apiPatch } from '../services/api';
 
 function CollaboratorDashboard() {
   const { collaborations, loading, fetchCollaborations } = useCollaborations();
+  const toast = useToast();
 
   // History modal state
   const { isOpen: isHistoryOpen, onOpen: onHistoryOpen, onClose: onHistoryClose } = useDisclosure();
   const [historyCollaborationId, setHistoryCollaborationId] = useState<number | null>(null);
+  const [submitting, setSubmitting] = useState<number | null>(null);
 
   useEffect(() => {
     fetchCollaborations();
   }, [fetchCollaborations]);
+
+  // Handle marking collaboration as submitted
+  const handleMarkAsSubmitted = async (collaborationId: number) => {
+    try {
+      setSubmitting(collaborationId);
+      await apiPatch(`/collaborations/${collaborationId}`, {
+        status: 'submitted',
+        awaitingActionFrom: 'student',
+        nextActionDescription: 'Review submitted work'
+      });
+
+      toast({
+        title: 'Success',
+        description: 'Marked as submitted. The student will be notified.',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+
+      // Refresh collaborations
+      await fetchCollaborations();
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to update collaboration status',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+      console.error(error);
+    } finally {
+      setSubmitting(null);
+    }
+  };
 
   // Group collaborations by type
   const recommendations = collaborations.filter(c => c.collaborationType === 'recommendation');
@@ -70,6 +109,27 @@ function CollaboratorDashboard() {
       default:
         return 'gray';
     }
+  };
+
+  const formatLastUpdated = (date: Date | string | undefined) => {
+    if (!date) return '-';
+    const updatedDate = new Date(date);
+    const now = new Date();
+    const diffMs = now.getTime() - updatedDate.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+
+    return updatedDate.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: updatedDate.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
+    });
   };
 
   const getStatusLabel = (status: string) => {
@@ -105,6 +165,7 @@ function CollaboratorDashboard() {
                 <Th>Application</Th>
                 <Th>Status</Th>
                 <Th>Due Date</Th>
+                <Th>Last Updated</Th>
                 <Th>Actions</Th>
               </Tr>
             </Thead>
@@ -137,14 +198,31 @@ function CollaboratorDashboard() {
                     )}
                   </Td>
                   <Td>
-                    <Button
-                      size="sm"
-                      colorScheme="blue"
-                      variant="outline"
-                      onClick={() => handleViewHistory(collab.id)}
-                    >
-                      View Details
-                    </Button>
+                    <Text fontSize="sm" color="gray.600">
+                      {formatLastUpdated(collab.updatedAt)}
+                    </Text>
+                  </Td>
+                  <Td>
+                    <HStack spacing={2}>
+                      <Button
+                        size="sm"
+                        colorScheme="blue"
+                        variant="outline"
+                        onClick={() => handleViewHistory(collab.id)}
+                      >
+                        View Details
+                      </Button>
+                      {collab.status === 'in_progress' && (
+                        <Button
+                          size="sm"
+                          colorScheme="green"
+                          onClick={() => handleMarkAsSubmitted(collab.id)}
+                          isLoading={submitting === collab.id}
+                        >
+                          Mark as Submitted
+                        </Button>
+                      )}
+                    </HStack>
                   </Td>
                 </Tr>
               ))}
@@ -177,15 +255,31 @@ function CollaboratorDashboard() {
                       Due: {new Date(collab.nextActionDueDate).toLocaleDateString()}
                     </Text>
                   )}
-                  <Button
-                    size="sm"
-                    colorScheme="blue"
-                    variant="outline"
-                    onClick={() => handleViewHistory(collab.id)}
-                    width="100%"
-                  >
-                    View Details
-                  </Button>
+                  <Text fontSize="xs" color="gray.500">
+                    Updated: {formatLastUpdated(collab.updatedAt)}
+                  </Text>
+                  <Stack spacing={2} width="100%">
+                    <Button
+                      size="sm"
+                      colorScheme="blue"
+                      variant="outline"
+                      onClick={() => handleViewHistory(collab.id)}
+                      width="100%"
+                    >
+                      View Details
+                    </Button>
+                    {collab.status === 'in_progress' && (
+                      <Button
+                        size="sm"
+                        colorScheme="green"
+                        onClick={() => handleMarkAsSubmitted(collab.id)}
+                        isLoading={submitting === collab.id}
+                        width="100%"
+                      >
+                        Mark as Submitted
+                      </Button>
+                    )}
+                  </Stack>
                 </Stack>
               </CardBody>
             </Card>

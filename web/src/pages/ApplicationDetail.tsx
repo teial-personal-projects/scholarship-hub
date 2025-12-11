@@ -42,7 +42,7 @@ import {
   ModalBody,
   ModalCloseButton,
 } from '@chakra-ui/react';
-import { apiGet, apiDelete } from '../services/api';
+import { apiGet, apiDelete, apiPatch } from '../services/api';
 import type { ApplicationResponse, EssayResponse, CollaborationResponse, CollaboratorResponse } from '@scholarship-hub/shared';
 import EssayForm from '../components/EssayForm';
 import SendInviteDialog from '../components/SendInviteDialog';
@@ -324,6 +324,27 @@ function ApplicationDetail() {
     }
   };
 
+  // Handle updating collaboration status
+  const handleUpdateCollaborationStatus = async (collaborationId: number, status: string) => {
+    try {
+      await apiPatch(`/collaborations/${collaborationId}`, {
+        status,
+        ...(status === 'completed' && { awaitingActionFrom: null })
+      });
+
+      showSuccess('Success', `Collaboration marked as ${status}`, 3000);
+
+      // Refresh collaborations list
+      if (id) {
+        const collabsData = await apiGet<CollaborationResponse[]>(`/applications/${id}/collaborations`);
+        setCollaborations(collabsData || []);
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update collaboration status';
+      showError('Error', errorMessage);
+    }
+  };
+
   // Handle adding collaboration success
   const handleCollaborationSuccess = async () => {
     if (!id) {
@@ -409,6 +430,27 @@ function ApplicationDetail() {
       default:
         return 'gray';
     }
+  };
+
+  const formatLastUpdated = (date: Date | string | undefined) => {
+    if (!date) return '-';
+    const updatedDate = new Date(date);
+    const now = new Date();
+    const diffMs = now.getTime() - updatedDate.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+
+    return updatedDate.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: updatedDate.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
+    });
   };
 
   if (loading) {
@@ -762,6 +804,7 @@ function ApplicationDetail() {
                             <Th>Collaborator</Th>
                             <Th>Status</Th>
                             <Th>Due Date</Th>
+                            <Th>Last Updated</Th>
                             <Th>Actions</Th>
                           </Tr>
                         </Thead>
@@ -773,8 +816,8 @@ function ApplicationDetail() {
                               return (
                                 <Tr key={collab.id}>
                                   <Td>
-                                    {collaborator 
-                                      ? `${collaborator.firstName} ${collaborator.lastName}` 
+                                    {collaborator
+                                      ? `${collaborator.firstName} ${collaborator.lastName}`
                                       : 'Loading...'}
                                   </Td>
                                   <Td>
@@ -786,6 +829,11 @@ function ApplicationDetail() {
                                     {collab.nextActionDueDate
                                       ? new Date(collab.nextActionDueDate).toLocaleDateString()
                                       : '-'}
+                                  </Td>
+                                  <Td>
+                                    <Text fontSize="sm" color="gray.600">
+                                      {formatLastUpdated(collab.updatedAt)}
+                                    </Text>
                                   </Td>
                                   <Td>
                                     <Menu>
@@ -810,6 +858,11 @@ function ApplicationDetail() {
                                         {shouldShowResend(collab) && (
                                           <MenuItem onClick={() => handleSendInvite(collab)}>
                                             Resend Invite
+                                          </MenuItem>
+                                        )}
+                                        {collab.status === 'submitted' && (
+                                          <MenuItem color="green.500" onClick={() => handleUpdateCollaborationStatus(collab.id, 'completed')}>
+                                            Mark as Completed
                                           </MenuItem>
                                         )}
                                         <MenuItem color="red.500" onClick={() => handleDeleteCollaborationClick(collab.id)}>
@@ -850,6 +903,9 @@ function ApplicationDetail() {
                                         Due: {new Date(collab.nextActionDueDate).toLocaleDateString()}
                                       </Text>
                                     )}
+                                    <Text fontSize="xs" color="gray.500">
+                                      Updated: {formatLastUpdated(collab.updatedAt)}
+                                    </Text>
                                   </Box>
                                   <Menu>
                                     <MenuButton
@@ -904,6 +960,7 @@ function ApplicationDetail() {
                             <Th>Essay</Th>
                             <Th>Status</Th>
                             <Th>Due Date</Th>
+                            <Th>Last Updated</Th>
                             <Th>Actions</Th>
                           </Tr>
                         </Thead>
@@ -932,6 +989,11 @@ function ApplicationDetail() {
                                       : '-'}
                                   </Td>
                                   <Td>
+                                    <Text fontSize="sm" color="gray.600">
+                                      {formatLastUpdated(collab.updatedAt)}
+                                    </Text>
+                                  </Td>
+                                  <Td>
                                     <Menu>
                                       <MenuButton
                                         as={IconButton}
@@ -954,6 +1016,11 @@ function ApplicationDetail() {
                                         {shouldShowResend(collab) && (
                                           <MenuItem onClick={() => handleSendInvite(collab)}>
                                             Resend Invite
+                                          </MenuItem>
+                                        )}
+                                        {collab.status === 'submitted' && (
+                                          <MenuItem color="green.500" onClick={() => handleUpdateCollaborationStatus(collab.id, 'completed')}>
+                                            Mark as Completed
                                           </MenuItem>
                                         )}
                                         <MenuItem color="red.500" onClick={() => handleDeleteCollaborationClick(collab.id)}>
@@ -998,6 +1065,9 @@ function ApplicationDetail() {
                                         Due: {new Date(collab.nextActionDueDate).toLocaleDateString()}
                                       </Text>
                                     )}
+                                    <Text fontSize="xs" color="gray.500">
+                                      Updated: {formatLastUpdated(collab.updatedAt)}
+                                    </Text>
                                   </Box>
                                   <Menu>
                                     <MenuButton
@@ -1051,6 +1121,7 @@ function ApplicationDetail() {
                             <Th>Collaborator</Th>
                             <Th>Status</Th>
                             <Th>Due Date</Th>
+                            <Th>Last Updated</Th>
                             <Th>Actions</Th>
                           </Tr>
                         </Thead>
@@ -1062,8 +1133,8 @@ function ApplicationDetail() {
                               return (
                                 <Tr key={collab.id}>
                                   <Td>
-                                    {collaborator 
-                                      ? `${collaborator.firstName} ${collaborator.lastName}` 
+                                    {collaborator
+                                      ? `${collaborator.firstName} ${collaborator.lastName}`
                                       : 'Loading...'}
                                   </Td>
                                   <Td>
@@ -1075,6 +1146,11 @@ function ApplicationDetail() {
                                     {collab.nextActionDueDate
                                       ? new Date(collab.nextActionDueDate).toLocaleDateString()
                                       : '-'}
+                                  </Td>
+                                  <Td>
+                                    <Text fontSize="sm" color="gray.600">
+                                      {formatLastUpdated(collab.updatedAt)}
+                                    </Text>
                                   </Td>
                                   <Td>
                                     <Menu>
@@ -1099,6 +1175,11 @@ function ApplicationDetail() {
                                         {shouldShowResend(collab) && (
                                           <MenuItem onClick={() => handleSendInvite(collab)}>
                                             Resend Invite
+                                          </MenuItem>
+                                        )}
+                                        {collab.status === 'submitted' && (
+                                          <MenuItem color="green.500" onClick={() => handleUpdateCollaborationStatus(collab.id, 'completed')}>
+                                            Mark as Completed
                                           </MenuItem>
                                         )}
                                         <MenuItem color="red.500" onClick={() => handleDeleteCollaborationClick(collab.id)}>
@@ -1139,6 +1220,9 @@ function ApplicationDetail() {
                                         Due: {new Date(collab.nextActionDueDate).toLocaleDateString()}
                                       </Text>
                                     )}
+                                    <Text fontSize="xs" color="gray.500">
+                                      Updated: {formatLastUpdated(collab.updatedAt)}
+                                    </Text>
                                   </Box>
                                   <Menu>
                                     <MenuButton

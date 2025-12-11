@@ -14,6 +14,7 @@ import {
   Stack,
   HStack,
   Flex,
+  Select,
 } from '@chakra-ui/react';
 import { apiPatch } from '../services/api';
 import type { CollaborationResponse } from '@scholarship-hub/shared';
@@ -35,6 +36,7 @@ function EditCollaborationModal({
   const { showSuccess, showError } = useToastHelpers();
 
   // Form state
+  const [status, setStatus] = useState('');
   const [nextActionDueDate, setNextActionDueDate] = useState('');
   const [notes, setNotes] = useState('');
   const [portalUrl, setPortalUrl] = useState('');
@@ -43,6 +45,7 @@ function EditCollaborationModal({
   // Initialize form with collaboration data
   useEffect(() => {
     if (collaboration && isOpen) {
+      setStatus(collaboration.status);
       setNextActionDueDate(
         collaboration.nextActionDueDate
           ? collaboration.nextActionDueDate.split('T')[0]
@@ -56,6 +59,7 @@ function EditCollaborationModal({
   // Reset form when modal closes
   useEffect(() => {
     if (!isOpen) {
+      setStatus('');
       setNextActionDueDate('');
       setNotes('');
       setPortalUrl('');
@@ -75,6 +79,15 @@ function EditCollaborationModal({
       setSaving(true);
 
       const payload: Record<string, unknown> = {};
+
+      // Add status if changed
+      if (status !== collaboration.status) {
+        payload.status = status;
+        // Clear awaitingActionFrom if marking as completed
+        if (status === 'completed') {
+          payload.awaitingActionFrom = null;
+        }
+      }
 
       // Always include due date for recommendations, optional for others
       if (collaboration.collaborationType === 'recommendation') {
@@ -160,6 +173,18 @@ function EditCollaborationModal({
                 isDisabled
                 variant="filled"
               />
+            </FormControl>
+
+            <FormControl>
+              <FormLabel>Status</FormLabel>
+              <Select value={status} onChange={(e) => setStatus(e.target.value)}>
+                <option value="pending">Pending</option>
+                <option value="invited">Invited</option>
+                <option value="in_progress">In Progress</option>
+                <option value="submitted">Submitted</option>
+                <option value="completed">Completed</option>
+                <option value="declined">Declined</option>
+              </Select>
             </FormControl>
 
             {collaboration.collaborationType === 'recommendation' && (
