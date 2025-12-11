@@ -581,13 +581,6 @@ function ApplicationDetail() {
                 </Box>
               )}
 
-              {application.renewable && (
-                <Box>
-                  <Text fontWeight="bold" mb="1">Renewable</Text>
-                  <Text>Yes</Text>
-                </Box>
-              )}
-
               {application.platform && (
                 <Box>
                   <Text fontWeight="bold" mb="1">Platform</Text>
@@ -620,12 +613,23 @@ function ApplicationDetail() {
               </>
             )}
 
-            {application.renewableTerms && (
+            {(application.renewable || application.renewableTerms) && (
               <>
                 <Divider my="6" />
                 <Box>
-                  <Text fontWeight="bold" mb="2">Renewable Terms</Text>
-                  <Text whiteSpace="pre-wrap">{application.renewableTerms}</Text>
+                  <Text fontWeight="bold" mb="3">Renewable Information</Text>
+                  <SimpleGrid columns={{ base: 1, md: 2 }} spacing="4">
+                    <Box>
+                      <Text fontWeight="semibold" fontSize="sm" color="gray.600" mb="1">Renewable</Text>
+                      <Text>{application.renewable ? 'Yes' : 'No'}</Text>
+                    </Box>
+                    {application.renewableTerms && (
+                      <Box>
+                        <Text fontWeight="semibold" fontSize="sm" color="gray.600" mb="1">Renewal Terms</Text>
+                        <Text whiteSpace="pre-wrap">{application.renewableTerms}</Text>
+                      </Box>
+                    )}
+                  </SimpleGrid>
                 </Box>
               </>
             )}
@@ -636,21 +640,60 @@ function ApplicationDetail() {
                 <Divider my="6" />
                 <Box>
                   <Text fontWeight="bold" mb="3">Links</Text>
-                  <Stack spacing="2">
+                  <Stack spacing="3">
                     {application.orgWebsite && (
-                      <ChakraLink href={application.orgWebsite} isExternal color="blue.500">
-                        Organization Website →
-                      </ChakraLink>
+                      <Button
+                        as={ChakraLink}
+                        href={application.orgWebsite}
+                        isExternal
+                        variant="outline"
+                        colorScheme="blue"
+                        size="sm"
+                        leftIcon={<Text>🌐</Text>}
+                        rightIcon={<Text>→</Text>}
+                        justifyContent="space-between"
+                        width="fit-content"
+                        _hover={{ textDecoration: 'none', transform: 'translateX(2px)' }}
+                        transition="all 0.2s"
+                      >
+                        Visit Organization Website
+                      </Button>
                     )}
                     {application.applicationLink && (
-                      <ChakraLink href={application.applicationLink} isExternal color="blue.500">
-                        Application Portal →
-                      </ChakraLink>
+                      <Button
+                        as={ChakraLink}
+                        href={application.applicationLink}
+                        isExternal
+                        variant="outline"
+                        colorScheme="green"
+                        size="sm"
+                        leftIcon={<Text>📝</Text>}
+                        rightIcon={<Text>→</Text>}
+                        justifyContent="space-between"
+                        width="fit-content"
+                        _hover={{ textDecoration: 'none', transform: 'translateX(2px)' }}
+                        transition="all 0.2s"
+                      >
+                        Open Application Portal
+                      </Button>
                     )}
                     {application.documentInfoLink && (
-                      <ChakraLink href={application.documentInfoLink} isExternal color="blue.500">
-                        Document Information →
-                      </ChakraLink>
+                      <Button
+                        as={ChakraLink}
+                        href={application.documentInfoLink}
+                        isExternal
+                        variant="outline"
+                        colorScheme="purple"
+                        size="sm"
+                        leftIcon={<Text>📄</Text>}
+                        rightIcon={<Text>→</Text>}
+                        justifyContent="space-between"
+                        width="fit-content"
+                        _hover={{ textDecoration: 'none', transform: 'translateX(2px)' }}
+                        transition="all 0.2s"
+                      >
+                        View Document Information
+                      </Button>
                     )}
                   </Stack>
                 </Box>
