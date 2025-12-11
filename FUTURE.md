@@ -106,6 +106,29 @@ This document outlines features and improvements that are planned but not yet im
 
 ## Scraper Enhancements
 
+### Phase 3 (Advanced Scraper Features)
+
+**Status**: Partial (~10%)
+
+**Description**: Advanced features for the scholarship scraper system.
+
+**Current State**: Only expiration tracking is implemented from this phase.
+
+**What's Implemented**:
+- ✅ Expiration tracking (scholarships: active → expired → archived)
+
+**Pending Features**:
+- ❌ Advanced ML models for data quality
+- ❌ Quality scoring algorithm
+- ❌ Community-contributed sources
+- ❌ Real-time scraping triggers
+- ❌ Deep content verification beyond basic URL validation
+- ❌ Content change detection and monitoring
+
+See individual sections below for details on each feature.
+
+---
+
 ### Advanced ML-Based Data Quality Validation
 
 **Status**: Partially implemented (framework exists)
