@@ -6,33 +6,33 @@ const config: ThemeConfig = {
   useSystemColorMode: false,
 };
 
-// Modern Academic Minimalism color palette - Clean, premium, university-like
+// Nature-inspired green/olive color palette - Clean, organic, professional
 const colors = {
   brand: {
-    // Deep academic blue - Primary
-    50: '#E8F4F8',
-    100: '#C5E1ED',
-    200: '#9ECCE1',
-    300: '#76B6D5',
-    400: '#5FA8D3', // Secondary soft blue accent
-    500: '#1B4965', // Primary deep academic blue
-    600: '#153A53',
-    700: '#0F2C3A', // Neutral dark
-    800: '#0A1E28',
-    900: '#051016',
+    // Sage green - Primary
+    50: '#F7FAF4',  // header bg
+    100: '#F5F7F1', // page bg
+    200: '#E6EDD9', // light pill / tab bg
+    300: '#C9D9B5',
+    400: '#A9C28F',
+    500: '#8FAE75', // primary mid
+    600: '#6B8F58',
+    700: '#4B612C', // primary dark
+    800: '#3F5424', // primary dark hover
+    900: '#2A3818',
   },
   accent: {
-    // Soft blue accent - Secondary
-    50: '#E8F4FC',
-    100: '#C5E6F8',
-    200: '#9FD6F4',
-    300: '#78C6F0',
-    400: '#5FA8D3', // Secondary soft blue
-    500: '#4A95C7',
-    600: '#3D7AA3',
-    700: '#305F7F',
-    800: '#23445B',
-    900: '#162937',
+    // Complementary olive accent
+    50: '#F9FAF7',
+    100: '#F0F3EB',
+    200: '#E1E8D4',
+    300: '#C8D6B3',
+    400: '#A8BE8A',
+    500: '#8FAE75',
+    600: '#6B8F58',
+    700: '#556F45',
+    800: '#3F5234',
+    900: '#2A3623',
   },
   purple: {
     // Secondary accent for variety
@@ -109,13 +109,25 @@ const colors = {
     900: '#0F2C3A', // Neutral dark
   },
   highlight: {
-    // Ultra-light blue for cards/background (#CAE9FF)
-    50: '#CAE9FF',
-    100: '#B8E0FF',
-    200: '#A6D7FF',
-    300: '#94CEFF',
-    400: '#82C5FF',
-    500: '#CAE9FF', // Main highlight color
+    // Ultra-light green for cards/background
+    50: '#F2F4EC', // section bg
+    100: '#E8EDE0',
+    200: '#DDE5D0',
+    300: '#D1DDC0',
+    400: '#C6D5B0',
+    500: '#F2F4EC', // Main highlight color
+  },
+  text: {
+    main: '#3D3D3D',
+    muted: '#6B6B6B',
+    inverse: '#FFFFFF',
+  },
+  border: {
+    default: '#D8D8D8',
+  },
+  surfaces: {
+    card: '#FFFFFF',
+    section: '#F2F4EC',
   },
 };
 
@@ -209,8 +221,8 @@ const components = {
 const styles = {
   global: {
     body: {
-      bg: 'gray.50', // Neutral light background
-      color: 'gray.700',
+      bg: 'brand.100', // Neutral light background (#F5F7F1)
+      color: 'text.main', // (#3D3D3D)
     },
   },
 };
@@ -220,6 +232,21 @@ const theme = extendTheme({
   colors,
   components,
   styles,
+  semanticTokens: {
+    colors: {
+      pageBg: 'brand.100',        // #F5F7F1
+      headerBg: 'brand.50',        // #F7FAF4
+      headerBorder: 'brand.700',   // #4B612C
+      primary: 'brand.500',        // #8FAE75
+      primaryDark: 'brand.700',    // #4B612C
+      primaryLight: 'brand.200',   // #E6EDD9
+      sectionBg: 'surfaces.section', // #F2F4EC
+      cardBg: 'surfaces.card',     // #FFFFFF
+      textMain: 'text.main',       // #3D3D3D
+      textMuted: 'text.muted',     // #6B6B6B
+      borderDefault: 'border.default', // #D8D8D8
+    },
+  },
 });
 
 export default theme;
