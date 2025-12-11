@@ -21,9 +21,13 @@ import {
   NumberInputField,
   FormHelperText,
   Flex,
-  Divider,
   Box,
   SimpleGrid,
+  Accordion,
+  AccordionItem,
+  AccordionButton,
+  AccordionPanel,
+  AccordionIcon,
 } from '@chakra-ui/react';
 import { apiGet, apiPost, apiPatch } from '../services/api';
 import type { ApplicationResponse } from '@scholarship-hub/shared';
@@ -220,12 +224,16 @@ function ApplicationForm() {
         </CardHeader>
         <CardBody>
           <form id="application-form" onSubmit={handleSubmit}>
-            <Stack spacing="8">
+            <Accordion defaultIndex={[0, 1, 2, 3, 4]} allowMultiple>
               {/* Basic Information Section */}
-              <Box>
-                <Heading size="sm" mb="4" color="brand.700">
-                  Basic Information
-                </Heading>
+              <AccordionItem border="none">
+                <AccordionButton px="0" py="4" _hover={{ bg: 'transparent' }}>
+                  <Heading size="sm" flex="1" textAlign="left" color="brand.700">
+                    Basic Information
+                  </Heading>
+                  <AccordionIcon />
+                </AccordionButton>
+                <AccordionPanel pb="8" px="0">
                 <Stack spacing="4">
                   {/* Scholarship Name - Required */}
                   <FormControl isRequired>
@@ -287,15 +295,18 @@ function ApplicationForm() {
                     </FormControl>
                   </SimpleGrid>
                 </Stack>
-              </Box>
-
-              <Divider />
+                </AccordionPanel>
+              </AccordionItem>
 
               {/* Status & Tracking Section */}
-              <Box>
-                <Heading size="sm" mb="4" color="brand.700">
-                  Status & Tracking
-                </Heading>
+              <AccordionItem border="none">
+                <AccordionButton px="0" py="4" _hover={{ bg: 'transparent' }}>
+                  <Heading size="sm" flex="1" textAlign="left" color="brand.700">
+                    Status & Tracking
+                  </Heading>
+                  <AccordionIcon />
+                </AccordionButton>
+                <AccordionPanel pb="8" px="0">
                 <Stack spacing="4">
                   <SimpleGrid columns={{ base: 1, md: 2 }} spacing="4">
                     {/* Status - Required */}
@@ -324,15 +335,18 @@ function ApplicationForm() {
                     </FormControl>
                   </SimpleGrid>
                 </Stack>
-              </Box>
-
-              <Divider />
+                </AccordionPanel>
+              </AccordionItem>
 
               {/* Award & Dates Section */}
-              <Box>
-                <Heading size="sm" mb="4" color="brand.700">
-                  Award & Important Dates
-                </Heading>
+              <AccordionItem border="none">
+                <AccordionButton px="0" py="4" _hover={{ bg: 'transparent' }}>
+                  <Heading size="sm" flex="1" textAlign="left" color="brand.700">
+                    Award & Important Dates
+                  </Heading>
+                  <AccordionIcon />
+                </AccordionButton>
+                <AccordionPanel pb="8" px="0">
                 <Stack spacing="4">
                   {/* Award Amounts */}
                   <SimpleGrid columns={{ base: 1, md: 2 }} spacing="4">
@@ -389,15 +403,18 @@ function ApplicationForm() {
                     )}
                   </SimpleGrid>
                 </Stack>
-              </Box>
-
-              <Divider />
+                </AccordionPanel>
+              </AccordionItem>
 
               {/* Requirements & Renewable Section */}
-              <Box>
-                <Heading size="sm" mb="4" color="brand.700">
-                  Requirements & Eligibility
-                </Heading>
+              <AccordionItem border="none">
+                <AccordionButton px="0" py="4" _hover={{ bg: 'transparent' }}>
+                  <Heading size="sm" flex="1" textAlign="left" color="brand.700">
+                    Requirements & Eligibility
+                  </Heading>
+                  <AccordionIcon />
+                </AccordionButton>
+                <AccordionPanel pb="8" px="0">
                 <Stack spacing="4">
                   {/* Requirements */}
                   <FormControl>
@@ -443,15 +460,18 @@ function ApplicationForm() {
                     </Stack>
                   </Box>
                 </Stack>
-              </Box>
-
-              <Divider />
+                </AccordionPanel>
+              </AccordionItem>
 
               {/* Links & Resources Section */}
-              <Box>
-                <Heading size="sm" mb="4" color="brand.700">
-                  Links & Resources
-                </Heading>
+              <AccordionItem border="none">
+                <AccordionButton px="0" py="4" _hover={{ bg: 'transparent' }}>
+                  <Heading size="sm" flex="1" textAlign="left" color="brand.700">
+                    Links & Resources
+                  </Heading>
+                  <AccordionIcon />
+                </AccordionButton>
+                <AccordionPanel pb="8" px="0">
                 <Stack spacing="4">
                   <FormControl>
                     <FormLabel>Organization Website</FormLabel>
@@ -474,9 +494,9 @@ function ApplicationForm() {
                     <FormHelperText>Direct link to the application portal or form</FormHelperText>
                   </FormControl>
                 </Stack>
-              </Box>
-
-            </Stack>
+                </AccordionPanel>
+              </AccordionItem>
+            </Accordion>
           </form>
         </CardBody>
       </Card>

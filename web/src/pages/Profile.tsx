@@ -24,6 +24,11 @@ import {
   TagCloseButton,
   TagLabel,
   Wrap,
+  Accordion,
+  AccordionItem,
+  AccordionButton,
+  AccordionPanel,
+  AccordionIcon,
 } from '@chakra-ui/react';
 import { Global } from '@emotion/react';
 import { apiGet, apiPatch } from '../services/api';
@@ -235,12 +240,16 @@ function Profile() {
         <Stack spacing={{ base: '4', md: '8' }}>
           <Heading size={{ base: 'md', md: 'lg' }}>Profile & Preferences</Heading>
 
-        {/* Profile Information */}
-        <Card>
-          <CardHeader>
-            <Heading size="md">Personal Information</Heading>
-          </CardHeader>
-          <CardBody>
+        <Accordion defaultIndex={[0, 1, 2]} allowMultiple>
+          {/* Profile Information */}
+          <AccordionItem border="none" mb="4">
+            <Card>
+              <AccordionButton as={CardHeader} _hover={{ bg: 'gray.50' }}>
+                <Heading size="md" flex="1" textAlign="left">Personal Information</Heading>
+                <AccordionIcon />
+              </AccordionButton>
+              <AccordionPanel as={CardBody} p="0">
+                <CardBody>
             <Stack spacing="6">
               <SimpleGrid columns={{ base: 1, md: 2 }} spacing="6">
                 <FormControl>
@@ -292,18 +301,25 @@ function Profile() {
                 />
               </FormControl>
             </Stack>
-          </CardBody>
-        </Card>
+                </CardBody>
+              </AccordionPanel>
+            </Card>
+          </AccordionItem>
 
-        {/* Search Preferences */}
-        <Card>
-          <CardHeader>
-            <Heading size="md">Search Preferences</Heading>
-            <Text fontSize="sm" color="gray.500" mt="1">
-              Customize your scholarship search criteria
-            </Text>
-          </CardHeader>
-          <CardBody>
+          {/* Search Preferences */}
+          <AccordionItem border="none" mb="4">
+            <Card>
+              <AccordionButton as={CardHeader} _hover={{ bg: 'gray.50' }}>
+                <Box flex="1" textAlign="left">
+                  <Heading size="md">Search Preferences</Heading>
+                  <Text fontSize="sm" color="gray.500" mt="1">
+                    Customize your scholarship search criteria
+                  </Text>
+                </Box>
+                <AccordionIcon />
+              </AccordionButton>
+              <AccordionPanel as={CardBody} p="0">
+                <CardBody>
             <Stack spacing="6">
               <SimpleGrid columns={{ base: 1, md: 2 }} spacing="6">
                 <FormControl>
@@ -468,18 +484,25 @@ function Profile() {
                 </Checkbox>
               </Stack>
             </Stack>
-          </CardBody>
-        </Card>
+                </CardBody>
+              </AccordionPanel>
+            </Card>
+          </AccordionItem>
 
-        {/* Notification Preferences */}
-        <Card>
-          <CardHeader>
-            <Heading size="md">Notification Preferences</Heading>
-            <Text fontSize="sm" color="gray.500" mt="1">
-              Control when you receive reminder emails
-            </Text>
-          </CardHeader>
-          <CardBody>
+          {/* Notification Preferences */}
+          <AccordionItem border="none" mb="4">
+            <Card>
+              <AccordionButton as={CardHeader} _hover={{ bg: 'gray.50' }}>
+                <Box flex="1" textAlign="left">
+                  <Heading size="md">Notification Preferences</Heading>
+                  <Text fontSize="sm" color="gray.500" mt="1">
+                    Control when you receive reminder emails
+                  </Text>
+                </Box>
+                <AccordionIcon />
+              </AccordionButton>
+              <AccordionPanel as={CardBody} p="0">
+                <CardBody>
             <Stack spacing="4">
               <FormControl display="flex" alignItems="center" flexDirection={{ base: 'column', md: 'row' }}>
                 <Box flex="1" mb={{ base: 2, md: 0 }}>
@@ -509,8 +532,11 @@ function Profile() {
                 />
               </FormControl>
             </Stack>
-          </CardBody>
-        </Card>
+                </CardBody>
+              </AccordionPanel>
+            </Card>
+          </AccordionItem>
+        </Accordion>
 
         {/* Save Button */}
         <Box>

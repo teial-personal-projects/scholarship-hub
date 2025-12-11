@@ -41,6 +41,11 @@ import {
   ModalHeader,
   ModalBody,
   ModalCloseButton,
+  Accordion,
+  AccordionItem,
+  AccordionButton,
+  AccordionPanel,
+  AccordionIcon,
 } from '@chakra-ui/react';
 import { apiGet, apiDelete, apiPatch } from '../services/api';
 import type { ApplicationResponse, EssayResponse, CollaborationResponse, CollaboratorResponse } from '@scholarship-hub/shared';
@@ -515,12 +520,17 @@ function ApplicationDetail() {
           </HStack>
         </Flex>
 
-        {/* Application Details */}
-        <Card>
-          <CardHeader>
-            <Heading size="md">Application Details</Heading>
-          </CardHeader>
-          <CardBody>
+        {/* Main Content Sections */}
+        <Accordion defaultIndex={[0, 1, 2]} allowMultiple>
+          {/* Application Details */}
+          <AccordionItem border="none" mb="4">
+            <Card>
+              <AccordionButton as={CardHeader} _hover={{ bg: 'gray.50' }}>
+                <Heading size="md" flex="1" textAlign="left">Application Details</Heading>
+                <AccordionIcon />
+              </AccordionButton>
+              <AccordionPanel as={CardBody} p="0">
+                <CardBody>
             <SimpleGrid columns={{ base: 1, md: 2 }} spacing="6">
               <Box>
                 <Text fontWeight="bold" color="brand.700" mb="1">Organization</Text>
@@ -681,24 +691,29 @@ function ApplicationDetail() {
                 </Box>
               </>
             )}
-          </CardBody>
-        </Card>
+                </CardBody>
+              </AccordionPanel>
+            </Card>
+          </AccordionItem>
 
-        {/* Essays Section */}
-        <Card>
-          <CardHeader>
-            <Flex justify="space-between" align="center">
-              <Heading size="md">Essays ({essays.length})</Heading>
-              <Button
-                size="sm"
-                colorScheme="blue"
-                onClick={handleAddEssay}
-              >
-                Add Essay
-              </Button>
-            </Flex>
-          </CardHeader>
-          <CardBody>
+          {/* Essays Section */}
+          <AccordionItem border="none" mb="4">
+            <Card>
+              <AccordionButton as={CardHeader} _hover={{ bg: 'gray.50' }}>
+                <Heading size="md" flex="1" textAlign="left">Essays ({essays.length})</Heading>
+                <AccordionIcon />
+              </AccordionButton>
+              <AccordionPanel as={CardBody} p="0">
+                <CardBody>
+                  <Flex justify="flex-end" mb="4">
+                    <Button
+                      size="sm"
+                      colorScheme="blue"
+                      onClick={handleAddEssay}
+                    >
+                      Add Essay
+                    </Button>
+                  </Flex>
             {essays.length === 0 ? (
               <Text color="gray.500">No essays added yet</Text>
             ) : (
@@ -793,24 +808,29 @@ function ApplicationDetail() {
                 </Stack>
               </>
             )}
-          </CardBody>
-        </Card>
+                </CardBody>
+              </AccordionPanel>
+            </Card>
+          </AccordionItem>
 
-        {/* Collaborations Section */}
-        <Card>
-          <CardHeader>
-            <Flex justify="space-between" align="center">
-              <Heading size="md">Collaborations ({collaborations.length})</Heading>
-              <Button
-                size="sm"
-                colorScheme="blue"
-                onClick={onAddCollabOpen}
-              >
-                Add Collaborator
-              </Button>
-            </Flex>
-          </CardHeader>
-          <CardBody>
+          {/* Collaborations Section */}
+          <AccordionItem border="none" mb="4">
+            <Card>
+              <AccordionButton as={CardHeader} _hover={{ bg: 'gray.50' }}>
+                <Heading size="md" flex="1" textAlign="left">Collaborations ({collaborations.length})</Heading>
+                <AccordionIcon />
+              </AccordionButton>
+              <AccordionPanel as={CardBody} p="0">
+                <CardBody>
+                  <Flex justify="flex-end" mb="4">
+                    <Button
+                      size="sm"
+                      colorScheme="blue"
+                      onClick={onAddCollabOpen}
+                    >
+                      Add Collaborator
+                    </Button>
+                  </Flex>
             {collaborations.length === 0 ? (
               <Text color="gray.500">No collaborations added yet. Click "Add Collaborator" to get started.</Text>
             ) : (
@@ -1288,8 +1308,11 @@ function ApplicationDetail() {
                 )}
               </Stack>
             )}
-          </CardBody>
-        </Card>
+                </CardBody>
+              </AccordionPanel>
+            </Card>
+          </AccordionItem>
+        </Accordion>
       </Stack>
 
       {/* Essay Form Modal */}
