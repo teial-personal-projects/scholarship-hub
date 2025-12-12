@@ -212,7 +212,22 @@ const getTypeSpecificData = async (collaborationId: number, collaborationType: s
         .from('essay_review_collaborations')
         .select('*')
         .eq('collaboration_id', collaborationId);
-      return { essayReviews: data || [] };
+      const rows = (data || []) as any[];
+
+      // Most of the app treats essay review collaborations as one-per-essay,
+      // so we provide both:
+      // - flattened fields (matching CollaborationResponse shape)
+      // - the raw rows (for future multi-essay UI)
+      if (rows.length === 0) return {};
+
+      const first = rows[0] || {};
+      return {
+        essayId: first.essay_id,
+        currentDraftVersion: first.current_draft_version ?? undefined,
+        feedbackRounds: first.feedback_rounds ?? undefined,
+        lastFeedbackAt: first.last_feedback_at ?? undefined,
+        essayReviews: rows,
+      };
     }
     case 'recommendation': {
       const { data } = await supabase
@@ -252,6 +267,9 @@ export const createCollaboration = async (
     notes?: string;
     // Type-specific fields
     essayId?: number; // For essayReview
+    currentDraftVersion?: number; // For essayReview
+    feedbackRounds?: number; // For essayReview
+    lastFeedbackAt?: string; // For essayReview
     portalUrl?: string; // For recommendation
     sessionType?: string; // For guidance
     meetingUrl?: string; // For guidance
@@ -265,6 +283,14 @@ export const createCollaboration = async (
   // Validate: Due date is required for recommendation collaborations
   if (collaborationData.collaborationType === 'recommendation' && !collaborationData.nextActionDueDate) {
     throw new AppError('nextActionDueDate is required for recommendation collaborations', 400);
+  }
+
+  // Validate: Essay must belong to user and match application
+  if (collaborationData.collaborationType === 'essayReview' && collaborationData.essayId) {
+    const essay = await verifyEssayOwnership(collaborationData.essayId, userId);
+    if (essay.application_id !== collaborationData.applicationId) {
+      throw new AppError('Essay does not belong to the specified application', 400);
+    }
   }
 
   // Convert camelCase to snake_case for base collaboration
@@ -282,8 +308,10 @@ export const createCollaboration = async (
     dbData.awaiting_action_type = collaborationData.awaitingActionType;
   if (collaborationData.nextActionDescription !== undefined)
     dbData.next_action_description = collaborationData.nextActionDescription;
-  if (collaborationData.nextActionDueDate !== undefined)
-    dbData.next_action_due_date = collaborationData.nextActionDueDate;
+  if (collaborationData.nextActionDueDate !== undefined) {
+    // Store DATE fields as date-only (YYYY-MM-DD) to avoid timezone shifts.
+    dbData.next_action_due_date = collaborationData.nextActionDueDate.split('T')[0];
+  }
   if (collaborationData.notes !== undefined) dbData.notes = collaborationData.notes;
 
   // Create base collaboration
@@ -323,10 +351,23 @@ export const createCollaboration = async (
   // Create type-specific data
   try {
     if (collaborationData.collaborationType === 'essayReview' && collaborationData.essayId) {
-      const { error: essayError } = await supabase.from('essay_review_collaborations').insert({
+      const essayReviewData: Record<string, unknown> = {
         collaboration_id: collaboration.id,
         essay_id: collaborationData.essayId,
-      });
+      };
+      if (collaborationData.currentDraftVersion !== undefined) {
+        essayReviewData.current_draft_version = collaborationData.currentDraftVersion;
+      }
+      if (collaborationData.feedbackRounds !== undefined) {
+        essayReviewData.feedback_rounds = collaborationData.feedbackRounds;
+      }
+      if (collaborationData.lastFeedbackAt !== undefined) {
+        essayReviewData.last_feedback_at = collaborationData.lastFeedbackAt;
+      }
+
+      const { error: essayError } = await supabase
+        .from('essay_review_collaborations')
+        .insert(essayReviewData);
       if (essayError) {
         // Log error (minimal in production)
         if (process.env.NODE_ENV === 'development') {
@@ -335,6 +376,7 @@ export const createCollaboration = async (
             code: essayError.code,
             collaborationId: collaboration.id,
             essayId: collaborationData.essayId,
+            essayReviewData,
           });
         } else {
           console.error('❌ Failed to create essay review collaboration:', {
@@ -415,6 +457,23 @@ export const createCollaboration = async (
     throw typeError;
   }
 
+  // Log creation in history for complete tracking
+  const { error: historyError } = await supabase.from('collaboration_history').insert({
+    collaboration_id: collaboration.id,
+    action: 'created',
+    details: `Collaboration created for ${collaborationData.collaborationType}`,
+  });
+
+  if (historyError) {
+    // Log error but don't fail the collaboration creation
+    if (process.env.NODE_ENV === 'development') {
+      console.error('❌ Failed to create history entry:', {
+        error: historyError.message,
+        collaborationId: collaboration.id,
+      });
+    }
+  }
+
   // Fetch full collaboration with type-specific data
   return getCollaborationById(collaboration.id, userId);
 };
@@ -433,6 +492,10 @@ export const updateCollaboration = async (
     nextActionDueDate?: string;
     notes?: string;
     // Type-specific fields
+    essayId?: number; // For essayReview (selector when multiple essay rows)
+    currentDraftVersion?: number; // For essayReview
+    feedbackRounds?: number; // For essayReview
+    lastFeedbackAt?: string; // For essayReview
     portalUrl?: string; // For recommendation
     questionnaireCompleted?: boolean; // For recommendation
     sessionType?: string; // For guidance
@@ -460,8 +523,10 @@ export const updateCollaboration = async (
     dbUpdates.awaiting_action_type = updates.awaitingActionType;
   if (updates.nextActionDescription !== undefined)
     dbUpdates.next_action_description = updates.nextActionDescription;
-  if (updates.nextActionDueDate !== undefined)
-    dbUpdates.next_action_due_date = updates.nextActionDueDate;
+  if (updates.nextActionDueDate !== undefined) {
+    // Store DATE fields as date-only (YYYY-MM-DD) to avoid timezone shifts.
+    dbUpdates.next_action_due_date = updates.nextActionDueDate.split('T')[0];
+  }
   if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
 
   // Update base collaboration
@@ -475,11 +540,46 @@ export const updateCollaboration = async (
   }
 
   // Update type-specific data
-  if (existing.collaboration_type === 'recommendation') {
+  if (existing.collaboration_type === 'essayReview') {
+    const essayUpdates: Record<string, unknown> = {};
+    if (updates.currentDraftVersion !== undefined) {
+      essayUpdates.current_draft_version = updates.currentDraftVersion;
+    }
+    if (updates.feedbackRounds !== undefined) {
+      essayUpdates.feedback_rounds = updates.feedbackRounds;
+    }
+    if (updates.lastFeedbackAt !== undefined) {
+      // Ensure date is stored as UTC midnight to prevent timezone shifts
+      const dateValue = updates.lastFeedbackAt.includes('T')
+        ? updates.lastFeedbackAt
+        : `${updates.lastFeedbackAt}T00:00:00Z`;
+      essayUpdates.last_feedback_at = dateValue;
+    }
+
+    if (Object.keys(essayUpdates).length > 0) {
+      // Note: essay_review_collaborations can have multiple rows per collaboration (one per essay)
+      // If essayId is provided, update only that row; otherwise update all.
+      let query = supabase
+        .from('essay_review_collaborations')
+        .update(essayUpdates)
+        .eq('collaboration_id', collaborationId);
+
+      if (updates.essayId !== undefined) {
+        query = query.eq('essay_id', updates.essayId);
+      }
+
+      const { error } = await query;
+
+      if (error) throw error;
+    }
+  } else if (existing.collaboration_type === 'recommendation') {
     const recUpdates: Record<string, unknown> = {};
-    if (updates.portalUrl !== undefined) recUpdates.portal_url = updates.portalUrl;
-    if (updates.questionnaireCompleted !== undefined)
+    if (updates.portalUrl !== undefined) {
+      recUpdates.portal_url = updates.portalUrl;
+    }
+    if (updates.questionnaireCompleted !== undefined) {
       recUpdates.questionnaire_completed = updates.questionnaireCompleted;
+    }
 
     if (Object.keys(recUpdates).length > 0) {
       const { error } = await supabase
@@ -491,9 +591,19 @@ export const updateCollaboration = async (
     }
   } else if (existing.collaboration_type === 'guidance') {
     const guidanceUpdates: Record<string, unknown> = {};
-    if (updates.sessionType !== undefined) guidanceUpdates.session_type = updates.sessionType;
-    if (updates.meetingUrl !== undefined) guidanceUpdates.meeting_url = updates.meetingUrl;
-    if (updates.scheduledFor !== undefined) guidanceUpdates.scheduled_for = updates.scheduledFor;
+    if (updates.sessionType !== undefined) {
+      guidanceUpdates.session_type = updates.sessionType;
+    }
+    if (updates.meetingUrl !== undefined) {
+      guidanceUpdates.meeting_url = updates.meetingUrl;
+    }
+    if (updates.scheduledFor !== undefined) {
+      // Ensure date is stored as UTC midnight to prevent timezone shifts
+      const dateValue = updates.scheduledFor.includes('T')
+        ? updates.scheduledFor
+        : `${updates.scheduledFor}T00:00:00Z`;
+      guidanceUpdates.scheduled_for = dateValue;
+    }
 
     if (Object.keys(guidanceUpdates).length > 0) {
       const { error } = await supabase
@@ -505,8 +615,130 @@ export const updateCollaboration = async (
     }
   }
 
+  // Re-fetch after updates so we only log when the DB actually changed.
+  const updated = await getCollaborationById(collaborationId, userId);
+
+  // Track ALL changes (base + type-specific) in a single array
+  const allChanges: string[] = [];
+
+  // Base fields (only if included in request)
+  if (updates.status !== undefined && updated.status !== existing.status) {
+    allChanges.push(`status: ${existing.status} → ${updated.status}`);
+  }
+  if (
+    updates.awaitingActionFrom !== undefined &&
+    updated.awaiting_action_from !== existing.awaiting_action_from
+  ) {
+    allChanges.push(
+      `awaiting action from: ${existing.awaiting_action_from || 'none'} → ${updated.awaiting_action_from || 'none'}`
+    );
+  }
+  if (
+    updates.awaitingActionType !== undefined &&
+    updated.awaiting_action_type !== existing.awaiting_action_type
+  ) {
+    allChanges.push(
+      `awaiting action type: ${existing.awaiting_action_type || 'none'} → ${updated.awaiting_action_type || 'none'}`
+    );
+  }
+  if (
+    updates.nextActionDescription !== undefined &&
+    updated.next_action_description !== existing.next_action_description
+  ) {
+    allChanges.push(
+      `next action: ${existing.next_action_description || 'none'} → ${updated.next_action_description || 'none'}`
+    );
+  }
+  if (updates.nextActionDueDate !== undefined) {
+    const oldDate = existing.next_action_due_date ? String(existing.next_action_due_date).split('T')[0] : null;
+    const newDate = updated.next_action_due_date ? String(updated.next_action_due_date).split('T')[0] : null;
+    if (oldDate !== newDate) {
+      allChanges.push(`due date: ${oldDate || 'none'} → ${newDate || 'none'}`);
+    }
+  }
+  if (updates.notes !== undefined) {
+    const oldNotes = existing.notes ?? null;
+    const newNotes = updated.notes ?? null;
+    if (oldNotes !== newNotes) allChanges.push('notes updated');
+  }
+
+  // Type-specific (only if included in request)
+  if (existing.collaboration_type === 'essayReview') {
+    if (updates.currentDraftVersion !== undefined && updated.currentDraftVersion !== existing.currentDraftVersion) {
+      allChanges.push(`draft version updated to ${updated.currentDraftVersion ?? 'none'}`);
+    }
+    if (updates.feedbackRounds !== undefined && updated.feedbackRounds !== existing.feedbackRounds) {
+      allChanges.push(`feedback rounds updated to ${updated.feedbackRounds ?? 'none'}`);
+    }
+    if (updates.lastFeedbackAt !== undefined && updated.lastFeedbackAt !== existing.lastFeedbackAt) {
+      const dateOnly = String(updated.lastFeedbackAt).split('T')[0];
+      allChanges.push(`feedback received on ${dateOnly}`);
+    }
+  } else if (existing.collaboration_type === 'recommendation') {
+    if (updates.portalUrl !== undefined && (updated as any).portal_url !== (existing as any).portal_url) {
+      allChanges.push(`portal URL ${(updated as any).portal_url ? 'updated' : 'removed'}`);
+    }
+    if (
+      updates.questionnaireCompleted !== undefined &&
+      (updated as any).questionnaire_completed !== (existing as any).questionnaire_completed
+    ) {
+      allChanges.push(
+        `questionnaire ${(updated as any).questionnaire_completed ? 'completed' : 'marked incomplete'}`
+      );
+    }
+  } else if (existing.collaboration_type === 'guidance') {
+    if (updates.sessionType !== undefined && (updated as any).session_type !== (existing as any).session_type) {
+      allChanges.push(`session type updated to ${(updated as any).session_type ?? 'none'}`);
+    }
+    if (updates.meetingUrl !== undefined && (updated as any).meeting_url !== (existing as any).meeting_url) {
+      allChanges.push(`meeting URL ${(updated as any).meeting_url ? 'updated' : 'removed'}`);
+    }
+    if (updates.scheduledFor !== undefined && (updated as any).scheduled_for !== (existing as any).scheduled_for) {
+      const dateOnly = String((updated as any).scheduled_for).split('T')[0];
+      allChanges.push(`scheduled for ${dateOnly}`);
+    }
+  }
+
+  // Create a single history record with ALL changes from this save operation
+  if (allChanges.length > 0) {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('📝 Creating update history:', {
+        collaborationId,
+        changes: allChanges,
+      });
+    }
+
+    const action = updates.status !== undefined && updates.status !== existing.status
+      ? updates.status
+      : 'updated';
+
+    const details = allChanges.join(', ');
+
+    const { error: historyError } = await supabase.from('collaboration_history').insert({
+      collaboration_id: collaborationId,
+      action,
+      details,
+    });
+
+    if (historyError) {
+      console.error('❌ Failed to create history entry:', {
+        error: historyError.message,
+        code: historyError.code,
+        collaborationId,
+        changes: allChanges,
+      });
+      throw historyError;
+    }
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log('✅ Update history created successfully');
+    }
+  } else if (process.env.NODE_ENV === 'development') {
+    console.log('⏭️  No substantive changes detected, skipping history');
+  }
+
   // Return updated collaboration
-  return getCollaborationById(collaborationId, userId);
+  return updated;
 };
 
 /**
@@ -684,11 +916,8 @@ export const sendCollaborationInvitation = async (
     studentName,
     applicationName: collaboration.applications.scholarship_name,
     inviteToken,
-    dueDate: collaboration.next_action_due_date
-      ? new Date(collaboration.next_action_due_date).toISOString()
-      : collaboration.applications.due_date
-      ? new Date(collaboration.applications.due_date).toISOString()
-      : undefined,
+    // Pass through the stored date string to avoid timezone shifts in formatting
+    dueDate: (collaboration.next_action_due_date as string | null) || (collaboration.applications.due_date as string | null) || undefined,
     notes: collaboration.notes || undefined,
   });
 
@@ -836,11 +1065,8 @@ export const resendCollaborationInvitation = async (
     studentName,
     applicationName: collaboration.applications.scholarship_name,
     inviteToken: newInviteToken,
-    dueDate: collaboration.next_action_due_date
-      ? new Date(collaboration.next_action_due_date).toISOString()
-      : collaboration.applications.due_date
-      ? new Date(collaboration.applications.due_date).toISOString()
-      : undefined,
+    // Pass through the stored date string to avoid timezone shifts in formatting
+    dueDate: (collaboration.next_action_due_date as string | null) || (collaboration.applications.due_date as string | null) || undefined,
     notes: collaboration.notes || undefined,
   });
 

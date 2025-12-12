@@ -26,6 +26,7 @@ import {
 import { apiGet, apiPost } from '../services/api';
 import { useToastHelpers } from '../utils/toast';
 import { useAuth } from '../contexts/AuthContext';
+import { formatDateNoTimezone } from '../utils/date';
 
 interface InviteDetails {
   collaboration: {
@@ -238,11 +239,7 @@ function CollaboratorInvite() {
                   Due Date
                 </Text>
                 <Text fontWeight="semibold">
-                  {new Date(inviteDetails.collaboration.nextActionDueDate).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  })}
+                  {formatDateNoTimezone(inviteDetails.collaboration.nextActionDueDate)}
                 </Text>
               </Box>
             )}

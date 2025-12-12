@@ -48,7 +48,7 @@ describe('CollaborationHistory', () => {
 
     renderWithProviders(<CollaborationHistory collaborationId={collaborationId} />);
 
-    expect(screen.getByText(/loading/i)).toBeInTheDocument();
+    expect(screen.getByText(/loading history/i)).toBeInTheDocument();
   });
 
   it('should fetch and display collaboration history', async () => {
@@ -68,14 +68,16 @@ describe('CollaborationHistory', () => {
   it('should display history entries in chronological order', async () => {
     vi.mocked(api.apiGet).mockResolvedValue(mockHistory);
 
-    renderWithProviders(<CollaborationHistory collaborationId={collaborationId} />);
+    const { container } = renderWithProviders(<CollaborationHistory collaborationId={collaborationId} />);
 
     await waitFor(() => {
       expect(screen.getByText('Collaboration created')).toBeInTheDocument();
     });
 
-    const historyItems = screen.getAllByRole('listitem');
-    expect(historyItems).toHaveLength(3);
+    // Ensure rendered order matches the array order returned by the API
+    const text = container.textContent || '';
+    expect(text.indexOf('Collaboration created')).toBeLessThan(text.indexOf('Invitation sent to collaborator'));
+    expect(text.indexOf('Invitation sent to collaborator')).toBeLessThan(text.indexOf('Reminder email sent'));
   });
 
   it('should display empty state when no history exists', async () => {

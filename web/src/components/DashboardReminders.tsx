@@ -22,6 +22,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { apiGet } from '../services/api';
 import type { DashboardReminders } from '@scholarship-hub/shared';
+import { parseDateOnlyToLocalDate } from '../utils/date';
 
 function DashboardReminders() {
   const navigate = useNavigate();
@@ -53,11 +54,14 @@ function DashboardReminders() {
   const getDaysUntilDue = (dueDate: string): number => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const due = new Date(dueDate);
-    due.setHours(0, 0, 0, 0);
-    const diffTime = due.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
+
+    // Avoid timezone shift for DATE strings (YYYY-MM-DD)
+    const due = dueDate.includes('T') ? new Date(dueDate) : parseDateOnlyToLocalDate(dueDate);
+    const dueDateObj = due ?? new Date(dueDate);
+    dueDateObj.setHours(0, 0, 0, 0);
+
+    const diffTime = dueDateObj.getTime() - today.getTime();
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   };
 
   const getUrgencyColor = (daysUntilDue: number): string => {

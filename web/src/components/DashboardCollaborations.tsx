@@ -28,6 +28,15 @@ import { useNavigate } from 'react-router-dom';
 import { apiGet } from '../services/api';
 import type { ApplicationResponse, CollaborationResponse, CollaborationResponseWithSnakeCase, CollaboratorResponse } from '@scholarship-hub/shared';
 
+// Helper function to format dates without timezone conversion
+const formatDate = (dateString: string | null | undefined): string => {
+  if (!dateString) return 'N/A';
+  // Extract just the date part (YYYY-MM-DD) to avoid timezone issues
+  const datePart = dateString.split('T')[0];
+  const [year, month, day] = datePart.split('-');
+  return `${month}/${day}/${year}`;
+};
+
 function DashboardCollaborations() {
   const navigate = useNavigate();
   const [applications, setApplications] = useState<ApplicationResponse[]>([]);
@@ -236,7 +245,7 @@ function DashboardCollaborations() {
         </Td>
         <Td color="gray.700">
           {collab.nextActionDueDate
-            ? new Date(collab.nextActionDueDate).toLocaleDateString()
+            ? formatDate(collab.nextActionDueDate)
             : '-'}
         </Td>
         <Td>
@@ -311,7 +320,7 @@ function DashboardCollaborations() {
               {collab.nextActionDueDate && (
                 <Text>
                   <Text as="span" fontWeight="semibold">Due:</Text>{' '}
-                  {new Date(collab.nextActionDueDate).toLocaleDateString()}
+                  {formatDate(collab.nextActionDueDate)}
                 </Text>
               )}
             </HStack>

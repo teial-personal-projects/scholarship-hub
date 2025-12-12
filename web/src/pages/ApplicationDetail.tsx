@@ -55,6 +55,7 @@ import CollaborationHistory from '../components/CollaborationHistory';
 import AddCollaborationModal from '../components/AddCollaborationModal';
 import EditCollaborationModal from '../components/EditCollaborationModal';
 import { useRef } from 'react';
+import { formatDateNoTimezone } from '../utils/date';
 import { useToastHelpers } from '../utils/toast';
 
 function ApplicationDetail() {
@@ -877,7 +878,7 @@ function ApplicationDetail() {
                                   </Td>
                                   <Td>
                                     {collab.nextActionDueDate
-                                      ? new Date(collab.nextActionDueDate).toLocaleDateString()
+                                      ? formatDateNoTimezone(collab.nextActionDueDate)
                                       : '-'}
                                   </Td>
                                   <Td>
@@ -950,7 +951,7 @@ function ApplicationDetail() {
                                     </HStack>
                                     {collab.nextActionDueDate && (
                                       <Text fontSize="sm" color="gray.600">
-                                        Due: {new Date(collab.nextActionDueDate).toLocaleDateString()}
+                                        Due: {formatDateNoTimezone(collab.nextActionDueDate)}
                                       </Text>
                                     )}
                                     <Text fontSize="xs" color="gray.500">
@@ -1035,7 +1036,7 @@ function ApplicationDetail() {
                                   </Td>
                                   <Td>
                                     {collab.nextActionDueDate
-                                      ? new Date(collab.nextActionDueDate).toLocaleDateString()
+                                      ? formatDateNoTimezone(collab.nextActionDueDate)
                                       : '-'}
                                   </Td>
                                   <Td>
@@ -1112,7 +1113,7 @@ function ApplicationDetail() {
                                     </HStack>
                                     {collab.nextActionDueDate && (
                                       <Text fontSize="sm" color="gray.600">
-                                        Due: {new Date(collab.nextActionDueDate).toLocaleDateString()}
+                                        Due: {formatDateNoTimezone(collab.nextActionDueDate)}
                                       </Text>
                                     )}
                                     <Text fontSize="xs" color="gray.500">
@@ -1194,7 +1195,7 @@ function ApplicationDetail() {
                                   </Td>
                                   <Td>
                                     {collab.nextActionDueDate
-                                      ? new Date(collab.nextActionDueDate).toLocaleDateString()
+                                      ? formatDateNoTimezone(collab.nextActionDueDate)
                                       : '-'}
                                   </Td>
                                   <Td>
@@ -1267,7 +1268,7 @@ function ApplicationDetail() {
                                     </HStack>
                                     {collab.nextActionDueDate && (
                                       <Text fontSize="sm" color="gray.600">
-                                        Due: {new Date(collab.nextActionDueDate).toLocaleDateString()}
+                                        Due: {formatDateNoTimezone(collab.nextActionDueDate)}
                                       </Text>
                                     )}
                                     <Text fontSize="xs" color="gray.500">
@@ -1379,7 +1380,7 @@ function ApplicationDetail() {
           <ModalCloseButton />
           <ModalBody pb={6}>
             {historyCollaborationId && (
-              <CollaborationHistory collaborationId={historyCollaborationId} />
+              <CollaborationHistory collaborationId={historyCollaborationId} isOpen={isHistoryOpen} />
             )}
           </ModalBody>
         </ModalContent>

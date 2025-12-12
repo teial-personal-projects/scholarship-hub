@@ -98,7 +98,8 @@ function EditCollaborationModal({
 
       // Add notes if changed
       if (notes !== (collaboration.notes || '')) {
-        payload.notes = notes || undefined;
+        // Use null when cleared so backend persists the change (and logs history)
+        payload.notes = notes.trim() ? notes : null;
       }
 
       // Add type-specific fields

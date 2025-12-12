@@ -8,6 +8,20 @@ import he from 'he';
 import { config } from '../config/index.js';
 import { AppError } from '../middleware/error-handler.js';
 
+// Format DATE strings (YYYY-MM-DD) without timezone shifts
+function formatDateNoTimezone(
+  dateString: string,
+  options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' }
+): string {
+  if (!dateString.includes('T')) {
+    const [y, m, d] = dateString.split('-').map((v) => Number(v));
+    if (y && m && d) {
+      return new Date(y, m - 1, d).toLocaleDateString('en-US', options);
+    }
+  }
+  return new Date(dateString).toLocaleDateString('en-US', options);
+}
+
 // Initialize Resend client
 const resend = config.resend.apiKey ? new Resend(config.resend.apiKey) : null;
 
@@ -85,11 +99,7 @@ function generateEmailContent(params: SendCollaborationInviteParams): string {
     : '';
 
   const dueDateInfo = dueDate
-    ? `<p><strong>Due Date:</strong> ${he.encode(new Date(dueDate).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      }))}</p>`
+    ? `<p><strong>Due Date:</strong> ${he.encode(formatDateNoTimezone(dueDate))}</p>`
     : '';
 
   // Escape notes first, then replace newlines with <br> tags
@@ -268,13 +278,7 @@ function generateApplicationDueSoonEmail(params: SendApplicationReminderParams):
 
   const escapedName = he.encode(studentName);
   const escapedScholarship = he.encode(scholarshipName);
-  const formattedDate = he.encode(
-    new Date(dueDate).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    })
-  );
+  const formattedDate = he.encode(formatDateNoTimezone(dueDate));
 
   const urgencyColor = daysUntilDue <= 1 ? '#dc2626' : daysUntilDue <= 3 ? '#ea580c' : '#2563eb';
   const urgencyText = daysUntilDue === 1 ? 'tomorrow' : `in ${daysUntilDue} days`;
@@ -331,13 +335,7 @@ function generateApplicationOverdueEmail(params: SendApplicationReminderParams):
 
   const escapedName = he.encode(studentName);
   const escapedScholarship = he.encode(scholarshipName);
-  const formattedDate = he.encode(
-    new Date(dueDate).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    })
-  );
+  const formattedDate = he.encode(formatDateNoTimezone(dueDate));
 
   const daysOverdue = Math.abs(daysUntilDue);
   const overdueText = daysOverdue === 1 ? '1 day ago' : `${daysOverdue} days ago`;
@@ -396,13 +394,7 @@ function generateCollaboratorDueSoonEmail(params: SendCollaborationReminderParam
   const escapedStudent = studentName ? he.encode(studentName) : 'a student';
   const escapedApplication = applicationName ? he.encode(applicationName) : '';
 
-  const formattedDate = he.encode(
-    new Date(dueDate).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    })
-  );
+  const formattedDate = he.encode(formatDateNoTimezone(dueDate));
 
   const urgencyColor = daysUntilDue <= 1 ? '#dc2626' : daysUntilDue <= 3 ? '#ea580c' : '#2563eb';
   const urgencyText = daysUntilDue === 1 ? 'tomorrow' : `in ${daysUntilDue} days`;

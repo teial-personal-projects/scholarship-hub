@@ -159,7 +159,11 @@ describe('collaborations.service', () => {
 
       const result = await getCollaborationById(1, 1);
 
-      expect(result).toEqual(mockCollaborations.recommendationPending);
+      // Service flattens collaborator info onto `collaborator`
+      expect(result).toMatchObject({
+        ...mockCollaborations.recommendationPending,
+        collaborator: { user_id: 1 },
+      });
     });
   });
 
@@ -172,6 +176,7 @@ describe('collaborations.service', () => {
         collaboratorId: 1,
         applicationId: 1,
         collaborationType: 'recommendation' as const,
+        nextActionDueDate: '2024-12-31',
         portalUrl: 'https://portal.example.com',
       };
 
@@ -615,11 +620,22 @@ describe('collaborations.service', () => {
         }),
       });
 
+      // Mock for history insert (status change logging)
+      const mockHistoryInsert = vi.fn().mockResolvedValue({
+        data: null,
+        error: null,
+      });
+
       const mockFrom = vi.fn((table: string) => {
         if (table === 'collaborations') {
           return {
             select: mockSelect,
             update: mockUpdate,
+          };
+        }
+        if (table === 'collaboration_history') {
+          return {
+            insert: mockHistoryInsert,
           };
         }
         if (table === 'recommendation_collaborations' || 

@@ -27,16 +27,22 @@ interface HistoryEntry {
 
 interface CollaborationHistoryProps {
   collaborationId: number;
+  /**
+   * Optional: if rendered inside a modal/drawer, pass isOpen so we refetch
+   * whenever it becomes visible (avoids stale timeline).
+   */
+  isOpen?: boolean;
 }
 
-const CollaborationHistory: React.FC<CollaborationHistoryProps> = ({ collaborationId }) => {
+const CollaborationHistory: React.FC<CollaborationHistoryProps> = ({ collaborationId, isOpen }) => {
   const { showError } = useToastHelpers();
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (isOpen === false) return;
     fetchHistory();
-  }, [collaborationId]);
+  }, [collaborationId, isOpen]);
 
   const fetchHistory = async () => {
     try {

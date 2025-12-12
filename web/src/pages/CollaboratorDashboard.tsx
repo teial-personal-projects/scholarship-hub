@@ -41,6 +41,7 @@ import { useCollaborations } from '../hooks/useCollaborations';
 import type { CollaborationResponse } from '@scholarship-hub/shared';
 import CollaborationHistory from '../components/CollaborationHistory';
 import { apiPatch } from '../services/api';
+import { formatDateNoTimezone } from '../utils/date';
 
 function CollaboratorDashboard() {
   const { collaborations, loading, fetchCollaborations } = useCollaborations();
@@ -192,7 +193,7 @@ function CollaboratorDashboard() {
                   </Td>
                   <Td>
                     {collab.nextActionDueDate ? (
-                      new Date(collab.nextActionDueDate).toLocaleDateString()
+                      formatDateNoTimezone(collab.nextActionDueDate)
                     ) : (
                       <Text color="gray.400">-</Text>
                     )}
@@ -252,7 +253,7 @@ function CollaboratorDashboard() {
                   </Flex>
                   {collab.nextActionDueDate && (
                     <Text fontSize="sm" color="gray.600">
-                      Due: {new Date(collab.nextActionDueDate).toLocaleDateString()}
+                      Due: {formatDateNoTimezone(collab.nextActionDueDate)}
                     </Text>
                   )}
                   <Text fontSize="xs" color="gray.500">
@@ -347,7 +348,7 @@ function CollaboratorDashboard() {
           <ModalCloseButton />
           <ModalBody pb={6}>
             {historyCollaborationId && (
-              <CollaborationHistory collaborationId={historyCollaborationId} />
+              <CollaborationHistory collaborationId={historyCollaborationId} isOpen={isHistoryOpen} />
             )}
           </ModalBody>
         </ModalContent>
