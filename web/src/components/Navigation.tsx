@@ -3,6 +3,7 @@ import {
   Box,
   Flex,
   HStack,
+  Image,
   Text,
   Menu,
   MenuButton,
@@ -115,7 +116,12 @@ export function Navigation() {
             />
             <Link to="/dashboard" style={{ textDecoration: 'none' }}>
               <HStack spacing="3" cursor="pointer" _hover={{ opacity: 0.9, transform: 'scale(1.02)' }} transition="all 0.2s">
-                <Box fontSize={{ base: 'xl', md: '2xl' }}>🎓</Box>
+                <Image
+                  src="/favicon.ico"
+                  alt="Scholarship Hub"
+                  boxSize={{ base: '24px', md: '28px' }}
+                  borderRadius="sm"
+                />
                 <Text fontSize={{ base: 'md', md: 'lg' }} fontWeight="bold" color="white">
                   Scholarship Hub
                 </Text>

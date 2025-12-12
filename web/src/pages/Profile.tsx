@@ -246,7 +246,7 @@ function Profile() {
             <Card>
               <AccordionButton as={CardHeader} _hover={{ bg: 'gray.50' }}>
                 <Heading size="md" flex="1" textAlign="left">Personal Information</Heading>
-                <AccordionIcon />
+                <AccordionIcon fontSize="2xl" color="brand.700" />
               </AccordionButton>
               <AccordionPanel as={CardBody} p="0">
                 <CardBody>
@@ -316,7 +316,7 @@ function Profile() {
                     Customize your scholarship search criteria
                   </Text>
                 </Box>
-                <AccordionIcon />
+                <AccordionIcon fontSize="2xl" color="brand.700" />
               </AccordionButton>
               <AccordionPanel as={CardBody} p="0">
                 <CardBody>
@@ -499,7 +499,7 @@ function Profile() {
                     Control when you receive reminder emails
                   </Text>
                 </Box>
-                <AccordionIcon />
+                <AccordionIcon fontSize="2xl" color="brand.700" />
               </AccordionButton>
               <AccordionPanel as={CardBody} p="0">
                 <CardBody>

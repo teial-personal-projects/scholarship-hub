@@ -231,7 +231,7 @@ function ApplicationForm() {
                   <Heading size="sm" flex="1" textAlign="left" color="brand.700">
                     Basic Information
                   </Heading>
-                  <AccordionIcon />
+                  <AccordionIcon fontSize="xl" color="brand.700" />
                 </AccordionButton>
                 <AccordionPanel pb="8" px="0">
                 <Stack spacing="4">
@@ -304,7 +304,7 @@ function ApplicationForm() {
                   <Heading size="sm" flex="1" textAlign="left" color="brand.700">
                     Status & Tracking
                   </Heading>
-                  <AccordionIcon />
+                  <AccordionIcon fontSize="xl" color="brand.700" />
                 </AccordionButton>
                 <AccordionPanel pb="8" px="0">
                 <Stack spacing="4">
@@ -344,7 +344,7 @@ function ApplicationForm() {
                   <Heading size="sm" flex="1" textAlign="left" color="brand.700">
                     Award & Important Dates
                   </Heading>
-                  <AccordionIcon />
+                  <AccordionIcon fontSize="xl" color="brand.700" />
                 </AccordionButton>
                 <AccordionPanel pb="8" px="0">
                 <Stack spacing="4">
@@ -412,7 +412,7 @@ function ApplicationForm() {
                   <Heading size="sm" flex="1" textAlign="left" color="brand.700">
                     Requirements & Eligibility
                   </Heading>
-                  <AccordionIcon />
+                  <AccordionIcon fontSize="xl" color="brand.700" />
                 </AccordionButton>
                 <AccordionPanel pb="8" px="0">
                 <Stack spacing="4">
@@ -469,7 +469,7 @@ function ApplicationForm() {
                   <Heading size="sm" flex="1" textAlign="left" color="brand.700">
                     Links & Resources
                   </Heading>
-                  <AccordionIcon />
+                  <AccordionIcon fontSize="xl" color="brand.700" />
                 </AccordionButton>
                 <AccordionPanel pb="8" px="0">
                 <Stack spacing="4">

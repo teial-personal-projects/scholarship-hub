@@ -300,8 +300,10 @@ function DashboardPendingResponses() {
         borderTopRadius="xl"
         borderBottom="1px solid"
         borderColor="brand.200"
+        py={{ base: '3', md: '4' }}
+        px={{ base: '4', md: '6' }}
       >
-        <Heading size="md" color="brand.700">
+        <Heading size="sm" color="brand.700">
           Pending Responses
         </Heading>
       </CardHeader>

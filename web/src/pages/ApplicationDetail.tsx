@@ -126,12 +126,16 @@ function ApplicationDetail() {
           // Collaborator data is now included in each collaboration response
           if (collabsData && collabsData.length > 0) {
             const collaboratorMap = new Map<number, CollaboratorResponse>();
+            // Type for collaboration response that may include collaborator data
+            type CollaborationWithCollaborator = CollaborationResponse & {
+              collaborator?: CollaboratorResponse;
+            };
             for (const collab of collabsData) {
-              // Check if collaborator is in the response (not in type yet, so use any)
-              const collabAny = collab as any;
-              if (collabAny.collaborator && collabAny.collaborator.id) {
+              // Check if collaborator is in the response
+              const collabWithCollaborator = collab as CollaborationWithCollaborator;
+              if (collabWithCollaborator.collaborator?.id) {
                 // Use collaborator from response
-                collaboratorMap.set(collabAny.collaborator.id, collabAny.collaborator);
+                collaboratorMap.set(collabWithCollaborator.collaborator.id, collabWithCollaborator.collaborator);
               } else if (!collaboratorMap.has(collab.collaboratorId)) {
                 // Fallback: fetch collaborator if not in response
                 try {
@@ -527,7 +531,7 @@ function ApplicationDetail() {
             <Card>
               <AccordionButton as={CardHeader} _hover={{ bg: 'gray.50' }}>
                 <Heading size="md" flex="1" textAlign="left">Application Details</Heading>
-                <AccordionIcon />
+                <AccordionIcon fontSize="2xl" color="brand.700" />
               </AccordionButton>
               <AccordionPanel as={CardBody} p="0">
                 <CardBody>
@@ -701,7 +705,7 @@ function ApplicationDetail() {
             <Card>
               <AccordionButton as={CardHeader} _hover={{ bg: 'gray.50' }}>
                 <Heading size="md" flex="1" textAlign="left">Essays ({essays.length})</Heading>
-                <AccordionIcon />
+                <AccordionIcon fontSize="2xl" color="brand.700" />
               </AccordionButton>
               <AccordionPanel as={CardBody} p="0">
                 <CardBody>
@@ -818,7 +822,7 @@ function ApplicationDetail() {
             <Card>
               <AccordionButton as={CardHeader} _hover={{ bg: 'gray.50' }}>
                 <Heading size="md" flex="1" textAlign="left">Collaborations ({collaborations.length})</Heading>
-                <AccordionIcon />
+                <AccordionIcon fontSize="2xl" color="brand.700" />
               </AccordionButton>
               <AccordionPanel as={CardBody} p="0">
                 <CardBody>

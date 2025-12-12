@@ -207,9 +207,11 @@ function Dashboard() {
                 borderTopRadius="xl"
                 borderBottom="1px solid"
                 borderColor="brand.200"
+                py={{ base: '3', md: '4' }}
+                px={{ base: '4', md: '6' }}
               >
                 <Flex justify="space-between" align="center">
-                  <Heading size="md" color="brand.700">
+                  <Heading size="sm" color="brand.700">
                     📚 New Scholarships for You
                   </Heading>
                   <Button
@@ -265,8 +267,10 @@ function Dashboard() {
             borderTopRadius="xl"
             borderBottom="1px solid"
             borderColor="brand.200"
+            py={{ base: '3', md: '4' }}
+            px={{ base: '4', md: '6' }}
           >
-            <Heading size="md" color="brand.700">
+            <Heading size="sm" color="brand.700">
               Your Applications
             </Heading>
           </CardHeader>
