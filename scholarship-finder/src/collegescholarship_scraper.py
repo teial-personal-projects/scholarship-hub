@@ -14,7 +14,7 @@ from bs4.element import Tag, NavigableString
 from urllib.parse import urljoin, urlparse
 from datetime import datetime
 from .base_scraper import BaseScraper
-from ..utils_python import Scholarship, ScrapingResult, ScrapingMetadata, normalize_deadline_value
+from .utils_python import Scholarship, ScrapingResult, ScrapingMetadata, normalize_deadline_value
 
 logger = logging.getLogger(__name__)
 

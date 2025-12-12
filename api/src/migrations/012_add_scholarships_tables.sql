@@ -313,7 +313,6 @@ INSERT INTO scholarship_sources (name, url, source_type, scraper_class, enabled,
 VALUES
   ('CollegeScholarships', 'www.collegescholarships.org', 'website', 'CollegeScholarshipsScraper', true, 8),
   ('CareerOneStop', 'https://www.careeronestop.org', 'website', 'CareerOneStopScraper', true, 7),
-  ('Petersons', 'https://www.petersons.com/', 'website', 'PetersonsScraper', true, 9)
 ON CONFLICT (name) DO NOTHING;
 
 -- Insert a sample scholarship (for testing purposes)

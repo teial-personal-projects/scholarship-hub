@@ -32,7 +32,7 @@ STANDARD_EXTRACTION_DELAY = int(os.getenv('AI_DISCOVERY_STANDARD_EXTRACTION_DELA
 from .source_discovery_engine import SourceDiscoveryEngine
 from .content_extraction_pipeline import ContentExtractionPipeline, ExtractedScholarship
 from .config.config_loader import SourceCategoryConfig
-from ..utils_python import ScrapingResult, Scholarship
+from .utils_python import ScrapingResult, Scholarship
 
 logger = logging.getLogger(__name__)
 

@@ -11,9 +11,9 @@ from abc import ABC, abstractmethod
 from typing import List, Optional
 from tenacity import retry, stop_after_attempt, wait_exponential
 
-from ..utils_python import Scholarship, ScrapingResult, ScrapingMetadata
+from .utils_python import Scholarship, ScrapingResult, ScrapingMetadata
 from .constants import SCRAPER_MIN_REQUEST_DELAY_SEC, MAX_CAREERONESTOP_PAGES
-from ..utils_python.database_manager import DatabaseManagerFactory
+from .utils_python.database_manager import DatabaseManagerFactory
 
 logger = logging.getLogger(__name__)
 

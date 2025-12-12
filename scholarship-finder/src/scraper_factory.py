@@ -7,8 +7,8 @@ from .careeronestop_scraper import CareerOneStopScraper
 from .collegescholarship_scraper import CollegeScholarshipScraper
 # from .general_scraper import GeneralScraper
 from .ai_discovery_scraper import AIDiscoveryScraper
-from ..utils_python import ScrapingResult
-from ..utils_python import get_scraper_type
+from .utils_python import ScrapingResult
+from .utils_python import get_scraper_type
 
 logger = logging.getLogger(__name__)
 
@@ -56,10 +56,10 @@ class ScraperFactory:
     _scrapers: Dict[str, Type[BaseScraper]] = {
         # CareerOneStop scrapers (Python implementation)
         'careeronestop': CareerOneStopScraper,
-        
+
         # CollegeScholarship scrapers (Python implementation)
         'collegescholarship': CollegeScholarshipScraper,
-        
+
         # AI-powered discovery scrapers (Python implementation)
         'ai_discovery': AIDiscoveryScraper
     }

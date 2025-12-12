@@ -12,7 +12,6 @@ psycopg>=3.1.0  # Modern PostgreSQL adapter (replaces psycopg2)
 
 # Scraping
 selenium==4.15.0
-playwright>=1.40.0  # Using 1.57.0+ for Python 3.13 compatibility
 
 # Utilities
 python-dotenv==1.0.1
