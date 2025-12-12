@@ -201,7 +201,7 @@ function Dashboard() {
 
           {/* Recommended Scholarships Widget */}
           {recommendedScholarships.length > 0 && (
-            <Card variant="academic" bg="white">
+            <Card variant="elevated" bg="white">
               <CardHeader
                 bg="highlight.50"
                 borderTopRadius="xl"
@@ -261,7 +261,7 @@ function Dashboard() {
           )}
 
           {/* Applications Section */}
-        <Card variant="academic" bg="white">
+        <Card variant="elevated" bg="white">
           <CardHeader
             bg="highlight.50"
             borderTopRadius="xl"

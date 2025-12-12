@@ -182,7 +182,7 @@ function DashboardCollaborations() {
 
   if (loading) {
     return (
-      <Card variant="academic" bg="white">
+      <Card variant="elevated" bg="white">
         <CardBody>
           <Stack align="center" py="4">
             <Spinner size="lg" />
@@ -195,7 +195,7 @@ function DashboardCollaborations() {
 
   if (error) {
     return (
-      <Card variant="academic" bg="white">
+      <Card variant="elevated" bg="white">
         <CardBody>
           <Text color="error.500">{error}</Text>
         </CardBody>
@@ -322,7 +322,7 @@ function DashboardCollaborations() {
   };
 
   return (
-    <Card variant="academic" bg="white">
+    <Card variant="elevated" bg="white">
       <CardHeader
         bg="highlight.50"
         borderTopRadius="xl"

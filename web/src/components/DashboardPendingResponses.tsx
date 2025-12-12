@@ -149,7 +149,7 @@ function DashboardPendingResponses() {
 
   if (loading) {
     return (
-      <Card variant="academic" bg="white">
+      <Card variant="elevated" bg="white">
         <CardBody>
           <Stack align="center" py="4">
             <Spinner size="lg" />
@@ -162,7 +162,7 @@ function DashboardPendingResponses() {
 
   if (error) {
     return (
-      <Card variant="academic" bg="white">
+      <Card variant="elevated" bg="white">
         <CardBody>
           <Text color="error.500">{error}</Text>
         </CardBody>
@@ -294,7 +294,7 @@ function DashboardPendingResponses() {
   };
 
   return (
-    <Card variant="academic" bg="white">
+    <Card variant="elevated" bg="white">
       <CardHeader
         bg="highlight.50"
         borderTopRadius="xl"
