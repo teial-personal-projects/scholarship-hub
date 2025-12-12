@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
+  Alert,
+  AlertDescription,
+  AlertIcon,
+  AlertTitle,
   Box,
   Button,
   Container,
@@ -489,41 +493,219 @@ function ApplicationDetail() {
     );
   }
 
+  const awardAmountText = (() => {
+    const min = application.minAward ?? application.maxAward;
+    const max = application.maxAward ?? application.minAward ?? application.maxAward;
+
+    if (min == null || max == null) return 'Not specified';
+    return `$${min.toLocaleString()} - $${max.toLocaleString()}`;
+  })();
+
   return (
-    <Container maxW="7xl" py={{ base: '4', md: '12' }} px={{ base: '4', md: '6' }}>
-      <Stack spacing={{ base: '4', md: '6' }}>
-        {/* Header */}
-        <Flex justify="space-between" align="start" flexWrap="wrap" gap="4">
-          <Box flex="1" minW="0">
-            <Heading size={{ base: 'md', md: 'lg' }} mb="2">
-              {application.scholarshipName}
-            </Heading>
-            <HStack spacing="2" flexWrap="wrap">
-              <Badge colorScheme={getStatusColor(application.status)} fontSize={{ base: 'sm', md: 'md' }}>
-                {application.status}
-              </Badge>
-              {application.targetType && (
-                <Badge colorScheme="purple" fontSize={{ base: 'sm', md: 'md' }}>{application.targetType}</Badge>
+    <Box
+      bgGradient="linear(to-b, gray.50, white)"
+      minH="100vh"
+      py={{ base: '4', md: '12' }}
+    >
+      <Container as="main" maxW="7xl" px={{ base: '4', md: '6' }}>
+        <Stack spacing={{ base: '4', md: '6' }}>
+        {/* Skip link for keyboard users */}
+        <ChakraLink
+          href="#main-content"
+          position="absolute"
+          left="4"
+          top="2"
+          px="3"
+          py="2"
+          bg="white"
+          borderRadius="md"
+          boxShadow="md"
+          transform="translateY(-200%)"
+          _focusVisible={{ transform: 'translateY(0)' }}
+          zIndex={1000}
+        >
+          Skip to content
+        </ChakraLink>
+
+        <Box id="main-content" tabIndex={-1} />
+
+        {/* Hero summary */}
+        <Card
+          variant="outline"
+          borderRadius="2xl"
+          overflow="hidden"
+          bg="white"
+          borderColor="blackAlpha.100"
+          boxShadow="0 10px 30px rgba(15, 23, 42, 0.08)"
+        >
+          <Box
+            px={{ base: 4, md: 6 }}
+            pt={{ base: 4, md: 6 }}
+            pb="4"
+            bgGradient="linear(to-r, brand.50, white)"
+            borderBottomWidth="1px"
+            borderColor="blackAlpha.100"
+          >
+            <Stack spacing="4">
+              <Stack
+                direction={{ base: 'column', md: 'row' }}
+                justify="space-between"
+                align={{ base: 'stretch', md: 'flex-start' }}
+                spacing="4"
+              >
+                <Box flex="1" minW="0">
+                  <Heading size={{ base: 'md', md: 'lg' }} mb="2" noOfLines={2}>
+                    {application.scholarshipName}
+                  </Heading>
+                  <HStack spacing="2" flexWrap="wrap">
+                    <Badge
+                      colorScheme={getStatusColor(application.status)}
+                      fontSize={{ base: 'sm', md: 'md' }}
+                      px="2.5"
+                      py="1"
+                      borderRadius="full"
+                      textTransform="none"
+                    >
+                      {application.status}
+                    </Badge>
+                    {application.targetType && (
+                      <Badge
+                        colorScheme="purple"
+                        fontSize={{ base: 'sm', md: 'md' }}
+                        px="2.5"
+                        py="1"
+                        borderRadius="full"
+                        textTransform="none"
+                      >
+                        {application.targetType}
+                      </Badge>
+                    )}
+                    {application.organization && (
+                      <Text color="gray.700" fontSize={{ base: 'sm', md: 'md' }}>
+                        {application.organization}
+                      </Text>
+                    )}
+                  </HStack>
+                </Box>
+
+                <Stack
+                  direction={{ base: 'column', sm: 'row' }}
+                  spacing="3"
+                  justify={{ base: 'stretch', md: 'flex-end' }}
+                  align={{ base: 'stretch', sm: 'center' }}
+                  flexWrap="wrap"
+                >
+                  {application.applicationLink && (
+                    <Button
+                      as={ChakraLink}
+                      href={application.applicationLink}
+                      isExternal
+                      colorScheme="green"
+                      size={{ base: 'md', md: 'md' }}
+                      leftIcon={<Text aria-hidden>↗</Text>}
+                      boxShadow="sm"
+                    >
+                      Open Application Portal
+                    </Button>
+                  )}
+                  {application.orgWebsite && (
+                    <Button
+                      as={ChakraLink}
+                      href={application.orgWebsite}
+                      isExternal
+                      variant="outline"
+                      colorScheme="blue"
+                      size={{ base: 'md', md: 'md' }}
+                      leftIcon={<Text aria-hidden>↗</Text>}
+                    >
+                      Visit Organization Website
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    colorScheme="brand"
+                    onClick={() => navigate(`/applications/${id}/edit`)}
+                    size={{ base: 'md', md: 'md' }}
+                    leftIcon={<Text aria-hidden>✎</Text>}
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    colorScheme="brand"
+                    onClick={() => navigate('/applications')}
+                    size={{ base: 'md', md: 'md' }}
+                    leftIcon={<Text aria-hidden>←</Text>}
+                  >
+                    Back
+                  </Button>
+                </Stack>
+              </Stack>
+
+              <SimpleGrid as="dl" columns={{ base: 1, sm: 3 }} spacing="3">
+                <Box
+                  p="3.5"
+                  borderRadius="xl"
+                  bg="white"
+                  borderWidth="1px"
+                  borderColor="blackAlpha.100"
+                >
+                  <Text as="dt" fontSize="sm" color="gray.700">
+                    Due date
+                  </Text>
+                  <Text as="dd" fontSize={{ base: 'md', md: 'lg' }} fontWeight="semibold">
+                    {application.dueDate ? formatDateNoTimezone(application.dueDate) : 'Not specified'}
+                  </Text>
+                </Box>
+                <Box
+                  p="3.5"
+                  borderRadius="xl"
+                  bg="white"
+                  borderWidth="1px"
+                  borderColor="blackAlpha.100"
+                >
+                  <Text as="dt" fontSize="sm" color="gray.700">
+                    Submission date
+                  </Text>
+                  <Text as="dd" fontSize={{ base: 'md', md: 'lg' }} fontWeight="semibold">
+                    {application.submissionDate ? formatDateNoTimezone(application.submissionDate) : '—'}
+                  </Text>
+                </Box>
+                <Box
+                  p="3.5"
+                  borderRadius="xl"
+                  bg="white"
+                  borderWidth="1px"
+                  borderColor="blackAlpha.100"
+                >
+                  <Text as="dt" fontSize="sm" color="gray.700">
+                    Award amount
+                  </Text>
+                  <Text as="dd" fontSize={{ base: 'md', md: 'lg' }} fontWeight="semibold">
+                    {awardAmountText}
+                  </Text>
+                </Box>
+              </SimpleGrid>
+
+              {application.currentAction && (
+                <Alert
+                  status="info"
+                  variant="subtle"
+                  borderRadius="xl"
+                  bg="brand.50"
+                  borderWidth="1px"
+                  borderColor="brand.100"
+                >
+                  <AlertIcon />
+                  <Box>
+                    <AlertTitle>Current action</AlertTitle>
+                    <AlertDescription color="gray.800">{application.currentAction}</AlertDescription>
+                  </Box>
+                </Alert>
               )}
-            </HStack>
+            </Stack>
           </Box>
-          <HStack spacing="3" flexWrap="wrap">
-            <Button
-              colorScheme="blue"
-              onClick={() => navigate(`/applications/${id}/edit`)}
-              size={{ base: 'sm', md: 'md' }}
-            >
-              Edit Application
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => navigate('/applications')}
-              size={{ base: 'sm', md: 'md' }}
-            >
-              Back to List
-            </Button>
-          </HStack>
-        </Flex>
+        </Card>
 
         {/* Main Content Sections */}
         <Accordion defaultIndex={[0, 1, 2]} allowMultiple>
@@ -536,67 +718,38 @@ function ApplicationDetail() {
               </AccordionButton>
               <AccordionPanel as={CardBody} p="0">
                 <CardBody>
-            <SimpleGrid columns={{ base: 1, md: 2 }} spacing="6">
+            <SimpleGrid as="dl" columns={{ base: 1, md: 2 }} spacing="6">
               <Box>
-                <Text fontWeight="bold" color="brand.700" mb="1">Organization</Text>
-                <Text>{application.organization || 'Not specified'}</Text>
-              </Box>
-
-              <Box>
-                <Text fontWeight="bold" color="brand.700" mb="1">Due Date</Text>
-                <Text>
-                  {application.dueDate ? formatDateNoTimezone(application.dueDate) : 'Not specified'}
+                <Text as="dt" fontWeight="bold" color="brand.700" mb="1">
+                  Organization
                 </Text>
+                <Text as="dd">{application.organization || 'Not specified'}</Text>
               </Box>
-
-              {application.openDate && (
-                <Box>
-                  <Text fontWeight="bold" color="brand.700" mb="1">Open Date</Text>
-                  <Text>{formatDateNoTimezone(application.openDate)}</Text>
-                </Box>
-              )}
-
-              {application.submissionDate && (
-                <Box>
-                  <Text fontWeight="bold" color="brand.700" mb="1">Submission Date</Text>
-                  <Text>{formatDateNoTimezone(application.submissionDate)}</Text>
-                </Box>
-              )}
-
-              {(application.minAward || application.maxAward) && (
-                <Box>
-                  <Text fontWeight="bold" color="brand.700" mb="1">Award Amount</Text>
-                  <Text>
-                    {(() => {
-                      const min = application.minAward ?? application.maxAward;
-                      const max = application.maxAward ?? application.minAward ?? application.maxAward;
-
-                      if (min == null || max == null) return 'Not specified';
-
-                      return `$${min.toLocaleString()} - $${max.toLocaleString()}`;
-                    })()}
-                  </Text>
-                </Box>
-              )}
 
               {application.platform && (
                 <Box>
-                  <Text fontWeight="bold" color="brand.700" mb="1">Platform</Text>
-                  <Text>{application.platform}</Text>
+                  <Text as="dt" fontWeight="bold" color="brand.700" mb="1">
+                    Platform
+                  </Text>
+                  <Text as="dd">{application.platform}</Text>
                 </Box>
               )}
 
               {application.theme && (
                 <Box>
-                  <Text fontWeight="bold" color="brand.700" mb="1">Theme/Focus</Text>
-                  <Text>{application.theme}</Text>
+                  <Text as="dt" fontWeight="bold" color="brand.700" mb="1">
+                    Theme/Focus
+                  </Text>
+                  <Text as="dd">{application.theme}</Text>
                 </Box>
               )}
 
-              {application.currentAction && (
+              {application.openDate && (
                 <Box>
-                  <Text fontWeight="bold" color="brand.700" mb="1">Current Action</Text>
-                  <Text>{application.currentAction}</Text>
+                  <Text as="dt" fontWeight="bold" color="brand.700" mb="1">
+                    Open Date
+                  </Text>
+                  <Text as="dd">{formatDateNoTimezone(application.openDate)}</Text>
                 </Box>
               )}
             </SimpleGrid>
@@ -632,53 +785,7 @@ function ApplicationDetail() {
               </>
             )}
 
-            {/* Links */}
-            {(application.orgWebsite || application.applicationLink) && (
-              <>
-                <Divider my="6" />
-                <Box>
-                  <Text fontWeight="bold" color="brand.700" mb="3">Links</Text>
-                  <Stack spacing="3">
-                    {application.orgWebsite && (
-                      <Button
-                        as={ChakraLink}
-                        href={application.orgWebsite}
-                        isExternal
-                        variant="outline"
-                        colorScheme="blue"
-                        size="sm"
-                        leftIcon={<Text>🌐</Text>}
-                        rightIcon={<Text>→</Text>}
-                        justifyContent="space-between"
-                        width="fit-content"
-                        _hover={{ textDecoration: 'none', transform: 'translateX(2px)' }}
-                        transition="all 0.2s"
-                      >
-                        Visit Organization Website
-                      </Button>
-                    )}
-                    {application.applicationLink && (
-                      <Button
-                        as={ChakraLink}
-                        href={application.applicationLink}
-                        isExternal
-                        variant="outline"
-                        colorScheme="green"
-                        size="sm"
-                        leftIcon={<Text>📝</Text>}
-                        rightIcon={<Text>→</Text>}
-                        justifyContent="space-between"
-                        width="fit-content"
-                        _hover={{ textDecoration: 'none', transform: 'translateX(2px)' }}
-                        transition="all 0.2s"
-                      >
-                        Open Application Portal
-                      </Button>
-                    )}
-                  </Stack>
-                </Box>
-              </>
-            )}
+            {/* Links moved to hero summary */}
                 </CardBody>
               </AccordionPanel>
             </Card>
@@ -1294,7 +1401,36 @@ function ApplicationDetail() {
             </Card>
           </AccordionItem>
         </Accordion>
-      </Stack>
+
+        {/* Sticky mobile primary action */}
+        {application.applicationLink && (
+          <Box
+            display={{ base: 'block', md: 'none' }}
+            position="sticky"
+            bottom="0"
+            pt="3"
+            pb="calc(env(safe-area-inset-bottom, 0px) + 12px)"
+            bg="whiteAlpha.900"
+            backdropFilter="blur(10px)"
+            borderTopWidth="1px"
+            borderColor="blackAlpha.100"
+            zIndex={10}
+          >
+            <Button
+              as={ChakraLink}
+              href={application.applicationLink}
+              isExternal
+              colorScheme="green"
+              size="lg"
+              width="100%"
+              leftIcon={<Text aria-hidden>↗</Text>}
+              boxShadow="sm"
+            >
+              Open Application Portal
+            </Button>
+          </Box>
+        )}
+        </Stack>
 
       {/* Essay Form Modal */}
       <EssayForm
@@ -1405,7 +1541,8 @@ function ApplicationDetail() {
           </AlertDialogContent>
         </AlertDialogOverlay>
       </AlertDialog>
-    </Container>
+      </Container>
+    </Box>
   );
 }
 
