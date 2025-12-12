@@ -554,10 +554,18 @@ function ApplicationDetail() {
                 spacing="4"
               >
                 <Box flex="1" minW="0">
-                  <Heading size={{ base: 'md', md: 'lg' }} mb="2" noOfLines={2}>
-                    {application.scholarshipName}
-                  </Heading>
-                  <HStack spacing="2" flexWrap="wrap">
+                  <Stack spacing="1">
+                    <Heading size={{ base: 'md', md: 'lg' }} noOfLines={2}>
+                      {application.scholarshipName}
+                    </Heading>
+                    {application.organization && (
+                      <Text color="gray.700" fontSize={{ base: 'sm', md: 'md' }} fontWeight="medium">
+                        by {application.organization}
+                      </Text>
+                    )}
+                  </Stack>
+
+                  <HStack spacing="2" flexWrap="wrap" mt="2">
                     <Badge
                       colorScheme={getStatusColor(application.status)}
                       fontSize={{ base: 'sm', md: 'md' }}
@@ -580,65 +588,94 @@ function ApplicationDetail() {
                         {application.targetType}
                       </Badge>
                     )}
-                    {application.organization && (
-                      <Text color="gray.700" fontSize={{ base: 'sm', md: 'md' }}>
-                        {application.organization}
-                      </Text>
+                    {application.platform && (
+                      <Badge
+                        variant="subtle"
+                        colorScheme="gray"
+                        fontSize={{ base: 'sm', md: 'md' }}
+                        px="2.5"
+                        py="1"
+                        borderRadius="full"
+                        textTransform="none"
+                      >
+                        {application.platform}
+                      </Badge>
                     )}
                   </HStack>
                 </Box>
 
                 <Stack
                   direction={{ base: 'column', sm: 'row' }}
-                  spacing="3"
+                  spacing={{ base: 3, sm: 4 }}
                   justify={{ base: 'stretch', md: 'flex-end' }}
                   align={{ base: 'stretch', sm: 'center' }}
                   flexWrap="wrap"
                 >
-                  {application.applicationLink && (
-                    <Button
-                      as={ChakraLink}
-                      href={application.applicationLink}
-                      isExternal
-                      colorScheme="green"
-                      size={{ base: 'md', md: 'md' }}
-                      leftIcon={<Text aria-hidden>↗</Text>}
-                      boxShadow="sm"
-                    >
-                      Open Application Portal
-                    </Button>
+                  {/* External links (primary actions) */}
+                  <Stack
+                    direction={{ base: 'column', sm: 'row' }}
+                    spacing="3"
+                    align={{ base: 'stretch', sm: 'center' }}
+                  >
+                    {application.applicationLink && (
+                      <Button
+                        as={ChakraLink}
+                        href={application.applicationLink}
+                        isExternal
+                        colorScheme="green"
+                        size={{ base: 'md', md: 'md' }}
+                        leftIcon={<Text aria-hidden>↗</Text>}
+                        boxShadow="sm"
+                      >
+                        Open Application Portal
+                      </Button>
+                    )}
+                    {application.orgWebsite && (
+                      <Button
+                        as={ChakraLink}
+                        href={application.orgWebsite}
+                        isExternal
+                        variant="outline"
+                        colorScheme="blue"
+                        size={{ base: 'md', md: 'md' }}
+                        leftIcon={<Text aria-hidden>↗</Text>}
+                      >
+                        Visit Organization Website
+                      </Button>
+                    )}
+                  </Stack>
+
+                  {/* Visual separator so links don't feel grouped with page actions */}
+                  {(application.applicationLink || application.orgWebsite) && (
+                    <Divider
+                      orientation="vertical"
+                      h="10"
+                      borderColor="blackAlpha.200"
+                      display={{ base: 'none', sm: 'block' }}
+                    />
                   )}
-                  {application.orgWebsite && (
+
+                  {/* Page actions */}
+                  <HStack spacing="2" justify={{ base: 'stretch', sm: 'flex-end' }}>
                     <Button
-                      as={ChakraLink}
-                      href={application.orgWebsite}
-                      isExternal
                       variant="outline"
-                      colorScheme="blue"
+                      colorScheme="brand"
+                      onClick={() => navigate(`/applications/${id}/edit`)}
                       size={{ base: 'md', md: 'md' }}
-                      leftIcon={<Text aria-hidden>↗</Text>}
+                      leftIcon={<Text aria-hidden>✎</Text>}
                     >
-                      Visit Organization Website
+                      Edit
                     </Button>
-                  )}
-                  <Button
-                    variant="outline"
-                    colorScheme="brand"
-                    onClick={() => navigate(`/applications/${id}/edit`)}
-                    size={{ base: 'md', md: 'md' }}
-                    leftIcon={<Text aria-hidden>✎</Text>}
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    colorScheme="brand"
-                    onClick={() => navigate('/applications')}
-                    size={{ base: 'md', md: 'md' }}
-                    leftIcon={<Text aria-hidden>←</Text>}
-                  >
-                    Back
-                  </Button>
+                    <Button
+                      variant="ghost"
+                      colorScheme="brand"
+                      onClick={() => navigate('/applications')}
+                      size={{ base: 'md', md: 'md' }}
+                      leftIcon={<Text aria-hidden>←</Text>}
+                    >
+                      Back
+                    </Button>
+                  </HStack>
                 </Stack>
               </Stack>
 
