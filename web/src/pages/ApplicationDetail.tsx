@@ -896,7 +896,7 @@ function ApplicationDetail() {
                                       />
                                       <MenuList>
                                         <MenuItem onClick={() => handleViewHistory(collab.id)}>
-                                          View Details
+                                          View History
                                         </MenuItem>
                                         <MenuItem onClick={() => handleEditCollaboration(collab)}>
                                           Edit
@@ -967,7 +967,7 @@ function ApplicationDetail() {
                                     />
                                     <MenuList>
                                       <MenuItem onClick={() => handleViewHistory(collab.id)}>
-                                        View Details
+                                        View History
                                       </MenuItem>
                                       <MenuItem onClick={() => handleEditCollaboration(collab)}>
                                         Edit
@@ -1054,7 +1054,7 @@ function ApplicationDetail() {
                                       />
                                       <MenuList>
                                         <MenuItem onClick={() => handleViewHistory(collab.id)}>
-                                          View Details
+                                          View History
                                         </MenuItem>
                                         <MenuItem onClick={() => handleEditCollaboration(collab)}>
                                           Edit
@@ -1129,7 +1129,7 @@ function ApplicationDetail() {
                                     />
                                     <MenuList>
                                       <MenuItem onClick={() => handleViewHistory(collab.id)}>
-                                        View Details
+                                        View History
                                       </MenuItem>
                                       <MenuItem onClick={() => handleEditCollaboration(collab)}>
                                         Edit
@@ -1213,7 +1213,7 @@ function ApplicationDetail() {
                                       />
                                       <MenuList>
                                         <MenuItem onClick={() => handleViewHistory(collab.id)}>
-                                          View Details
+                                          View History
                                         </MenuItem>
                                         <MenuItem onClick={() => handleEditCollaboration(collab)}>
                                           Edit
@@ -1284,7 +1284,7 @@ function ApplicationDetail() {
                                     />
                                     <MenuList>
                                       <MenuItem onClick={() => handleViewHistory(collab.id)}>
-                                        View Details
+                                        View History
                                       </MenuItem>
                                       <MenuItem onClick={() => handleEditCollaboration(collab)}>
                                         Edit

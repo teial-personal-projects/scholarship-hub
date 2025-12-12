@@ -211,7 +211,7 @@ function CollaboratorDashboard() {
                         variant="outline"
                         onClick={() => handleViewHistory(collab.id)}
                       >
-                        View Details
+                        View History
                       </Button>
                       {collab.status === 'in_progress' && (
                         <Button
@@ -267,7 +267,7 @@ function CollaboratorDashboard() {
                       onClick={() => handleViewHistory(collab.id)}
                       width="100%"
                     >
-                      View Details
+                      View History
                     </Button>
                     {collab.status === 'in_progress' && (
                       <Button
