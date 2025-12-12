@@ -173,7 +173,6 @@ export const mockCollaborations: Record<string, CollaborationResponse> = {
     id: 2,
     collaboratorId: 2,
     applicationId: 1,
-    essayId: 1,
     collaborationType: 'essayReview',
     status: 'in_progress',
     awaitingActionFrom: 'collaborator',

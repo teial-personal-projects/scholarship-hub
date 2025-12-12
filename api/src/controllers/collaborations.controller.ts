@@ -40,33 +40,14 @@ export const getCollaborationsByApplication = asyncHandler(
 
 /**
  * GET /api/essays/:essayId/collaborations
- * Get all collaborations for an essay
+ * Deprecated: essay review collaborations no longer link to a specific essay.
  */
-export const getCollaborationsByEssay = asyncHandler(
-  async (req: Request, res: Response) => {
-    if (!req.user) {
-      res.status(401).json({ error: 'Unauthorized' });
-      return;
-    }
-
-    const essayId = parseInt(req.params.essayId || '', 10);
-
-    if (isNaN(essayId)) {
-      res.status(400).json({ error: 'Invalid essay ID' });
-      return;
-    }
-
-    const collaborations = await collaborationsService.getCollaborationsByEssayId(
-      essayId,
-      req.user.userId
-    );
-
-    // Convert to camelCase
-    const response = collaborations.map((collab) => toCamelCase(collab));
-
-    res.json(response);
-  }
-);
+export const getCollaborationsByEssay = asyncHandler(async (_req: Request, res: Response) => {
+  res.status(410).json({
+    error: 'Gone',
+    message: 'Essay-specific collaborations are no longer supported (essayReview no longer stores essayId).',
+  });
+});
 
 /**
  * POST /api/collaborations
@@ -88,7 +69,6 @@ export const createCollaboration = asyncHandler(async (req: Request, res: Respon
     nextActionDescription,
     nextActionDueDate,
     notes,
-    essayId,
     currentDraftVersion,
     feedbackRounds,
     lastFeedbackAt,
@@ -116,15 +96,6 @@ export const createCollaboration = asyncHandler(async (req: Request, res: Respon
     return;
   }
 
-  // Validate essayReview requires essayId
-  if (collaborationType === 'essayReview' && !essayId) {
-    res.status(400).json({
-      error: 'Validation Error',
-      message: 'essayId is required for essayReview collaborations',
-    });
-    return;
-  }
-
   // Validate recommendation requires nextActionDueDate
   if (collaborationType === 'recommendation' && !nextActionDueDate) {
     res.status(400).json({
@@ -144,7 +115,6 @@ export const createCollaboration = asyncHandler(async (req: Request, res: Respon
     nextActionDescription,
     nextActionDueDate,
     notes,
-    essayId,
     currentDraftVersion,
     feedbackRounds,
     lastFeedbackAt,
@@ -213,7 +183,6 @@ export const updateCollaboration = asyncHandler(async (req: Request, res: Respon
     nextActionDueDate,
     notes,
     // Essay review tracking (optional)
-    essayId,
     currentDraftVersion,
     feedbackRounds,
     lastFeedbackAt,
@@ -234,7 +203,6 @@ export const updateCollaboration = asyncHandler(async (req: Request, res: Respon
       nextActionDescription,
       nextActionDueDate,
       notes,
-      essayId,
       currentDraftVersion,
       feedbackRounds,
       lastFeedbackAt,

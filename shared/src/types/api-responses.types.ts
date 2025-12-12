@@ -108,7 +108,6 @@ export interface CollaborationResponse {
   createdAt: string;
   updatedAt: string;
   // Essay review specific
-  essayId?: number;
   currentDraftVersion?: number;
   feedbackRounds?: number;
   lastFeedbackAt?: string;

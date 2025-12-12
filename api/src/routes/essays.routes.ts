@@ -11,7 +11,7 @@ router.use(auth);
 router.use(requireRole(['student']));
 
 // Nested collaborations routes - must come before /:id route
-// GET /api/essays/:essayId/collaborations - List collaborations for an essay
+// GET /api/essays/:essayId/collaborations - Deprecated (essayReview no longer stores essayId)
 router.get('/:essayId/collaborations', collaborationsController.getCollaborationsByEssay);
 
 // GET /api/essays/:id - Get essay details

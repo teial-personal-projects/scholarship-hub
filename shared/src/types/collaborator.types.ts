@@ -72,7 +72,6 @@ export interface BaseCollaboration {
 // Essay Review specific collaboration
 export interface EssayReviewCollaboration extends BaseCollaboration {
   collaborationType: 'essayReview';
-  essayId: number; // Required for essay reviews
   awaitingActionType?: EssayActionType;
 
   // Essay-specific tracking fields

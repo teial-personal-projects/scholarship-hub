@@ -30,7 +30,6 @@ interface AssignCollaboratorModalProps {
   isOpen: boolean;
   onClose: () => void;
   applicationId: number;
-  essayId?: number; // Optional - if assigning to specific essay
   onSuccess?: () => void;
 }
 
@@ -38,7 +37,6 @@ const AssignCollaboratorModal: React.FC<AssignCollaboratorModalProps> = ({
   isOpen,
   onClose,
   applicationId,
-  essayId,
   onSuccess,
 }) => {
   const { showSuccess, showError } = useToastHelpers();
@@ -55,11 +53,11 @@ const AssignCollaboratorModal: React.FC<AssignCollaboratorModalProps> = ({
       fetchCollaborators();
       // Reset form
       setCollaboratorId('');
-      setCollaborationType(essayId ? 'essayReview' : 'recommendation');
+      setCollaborationType('recommendation');
       setNotes('');
       setNextActionDueDate('');
     }
-  }, [isOpen, essayId, fetchCollaborators]);
+  }, [isOpen, fetchCollaborators]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,12 +70,6 @@ const AssignCollaboratorModal: React.FC<AssignCollaboratorModalProps> = ({
 
     if (!collaborationType) {
       showError('Validation Error', 'Please select a collaboration type', 3000);
-      return;
-    }
-
-    // If essay review type, essayId is required
-    if (collaborationType === 'essayReview' && !essayId) {
-      showError('Validation Error', 'Essay ID is required for essay review collaborations', 3000);
       return;
     }
 
@@ -96,11 +88,6 @@ const AssignCollaboratorModal: React.FC<AssignCollaboratorModalProps> = ({
 
     if (nextActionDueDate) {
       payload.nextActionDueDate = nextActionDueDate;
-    }
-
-    // Add essayId if this is an essay review
-    if (collaborationType === 'essayReview' && essayId) {
-      payload.essayId = essayId;
     }
 
     try {

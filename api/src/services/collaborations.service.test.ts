@@ -295,14 +295,13 @@ describe('collaborations.service', () => {
       expect(mockInsert).toHaveBeenCalled();
     });
 
-    it('should create an essay review collaboration with essay_id', async () => {
+    it('should create an essay review collaboration', async () => {
       const { supabase } = await import('../config/supabase.js');
       const { createCollaboration } = await import('./collaborations.service.js');
 
       const newCollab = {
         collaboratorId: 1,
         applicationId: 1,
-        essayId: 1,
         collaborationType: 'essayReview' as const,
       };
 
@@ -344,24 +343,6 @@ describe('collaborations.service', () => {
         eq: mockAppFirstEq,
       });
 
-      // Mock for verifyEssayOwnership - supports chained .eq() calls
-      const mockEssaySingle = vi.fn().mockResolvedValue({
-        data: { id: 1, application_id: 1, applications: { user_id: 1 } },
-        error: null,
-      });
-
-      const mockEssaySecondEq = vi.fn().mockReturnValue({
-        single: mockEssaySingle,
-      });
-
-      const mockEssayFirstEq = vi.fn().mockReturnValue({
-        eq: mockEssaySecondEq,
-      });
-
-      const mockEssaySelect = vi.fn().mockReturnValue({
-        eq: mockEssayFirstEq,
-      });
-
       // Mock for insert
       const mockInsert = vi.fn().mockReturnValue({
         select: vi.fn().mockReturnValue({
@@ -390,14 +371,16 @@ describe('collaborations.service', () => {
         eq: mockGetByIdFirstEq,
       });
 
-      // Mock for getTypeSpecificData (called by getCollaborationById) - essayReview returns array
-      const mockTypeSpecificArray = vi.fn().mockResolvedValue({
-        data: [],
+      // Mock for getTypeSpecificData (called by getCollaborationById) - essayReview returns single row
+      const mockTypeSpecificSingle = vi.fn().mockResolvedValue({
+        data: {},
         error: null,
       });
 
       const mockTypeSpecificSelect = vi.fn().mockReturnValue({
-        eq: mockTypeSpecificArray,
+        eq: vi.fn().mockReturnValue({
+          single: mockTypeSpecificSingle,
+        }),
       });
 
       const mockFrom = vi.fn((table: string) => {
@@ -409,11 +392,6 @@ describe('collaborations.service', () => {
         if (table === 'applications') {
           return {
             select: mockAppSelect,
-          };
-        }
-        if (table === 'essays') {
-          return {
-            select: mockEssaySelect,
           };
         }
         if (table === 'collaborations') {

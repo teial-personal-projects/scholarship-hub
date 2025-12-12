@@ -13,7 +13,6 @@ import {
   Text,
   Stack,
   Button,
-  HStack,
   Box,
   Badge,
   Divider,
@@ -33,7 +32,6 @@ interface InviteDetails {
     id: number;
     collaborationType: string;
     applicationId: number;
-    essayId?: number;
     nextActionDueDate?: string;
     notes?: string;
   };

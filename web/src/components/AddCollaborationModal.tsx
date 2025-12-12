@@ -27,7 +27,7 @@ interface AddCollaborationModalProps {
   isOpen: boolean;
   onClose: () => void;
   applicationId: number;
-  essays: EssayResponse[];
+  essays: EssayResponse[]; // kept for backward compatibility; no longer used for essayReview selection
   onSuccess: () => void;
 }
 
@@ -43,7 +43,6 @@ function AddCollaborationModal({
   // Form state
   const [collaboratorId, setCollaboratorId] = useState<number | null>(null);
   const [collaborationType, setCollaborationType] = useState<'recommendation' | 'essayReview' | 'guidance'>('recommendation');
-  const [essayId, setEssayId] = useState<number | null>(null);
   const [nextActionDueDate, setNextActionDueDate] = useState('');
   const [notes, setNotes] = useState('');
   const [sessionType, setSessionType] = useState<'one-on-one' | 'group' | 'workshop' | ''>('');
@@ -80,7 +79,6 @@ function AddCollaborationModal({
     if (!isOpen) {
       setCollaboratorId(null);
       setCollaborationType('recommendation');
-      setEssayId(null);
       setNextActionDueDate('');
       setNotes('');
       setSessionType('');
@@ -93,11 +91,6 @@ function AddCollaborationModal({
   const handleSubmit = async () => {
     if (!collaboratorId) {
       showError('Validation Error', 'Please select a collaborator');
-      return;
-    }
-
-    if (collaborationType === 'essayReview' && !essayId) {
-      showError('Validation Error', 'Please select an essay for review');
       return;
     }
 
@@ -129,10 +122,6 @@ function AddCollaborationModal({
       }
 
       // Add type-specific fields
-      if (collaborationType === 'essayReview' && essayId) {
-        payload.essayId = essayId;
-      }
-
       if (collaborationType === 'guidance') {
         if (sessionType) {
           payload.sessionType = sessionType;
@@ -196,7 +185,6 @@ function AddCollaborationModal({
                 loadingText="Adding..."
                 isDisabled={
                   !collaboratorId ||
-                  (collaborationType === 'essayReview' && !essayId) ||
                   (collaborationType === 'recommendation' && !nextActionDueDate)
                 }
               >
@@ -254,29 +242,7 @@ function AddCollaborationModal({
               </Select>
             </FormControl>
 
-            {collaborationType === 'essayReview' && (
-              <FormControl isRequired>
-                <FormLabel>Essay to Review</FormLabel>
-                {essays.length === 0 ? (
-                  <Alert status="warning">
-                    <AlertIcon />
-                    <Text>No essays available. Please add an essay first before requesting a review.</Text>
-                  </Alert>
-                ) : (
-                  <Select
-                    placeholder="Select essay"
-                    value={essayId || ''}
-                    onChange={(e) => setEssayId(parseInt(e.target.value, 10))}
-                  >
-                    {essays.map((essay) => (
-                      <option key={essay.id} value={essay.id}>
-                        {essay.theme || 'Untitled Essay'}
-                      </option>
-                    ))}
-                  </Select>
-                )}
-              </FormControl>
-            )}
+            {/* Essay review collaborations no longer link to a specific essay */}
 
             {collaborationType === 'recommendation' && (
               <FormControl>

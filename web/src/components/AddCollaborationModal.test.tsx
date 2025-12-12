@@ -40,7 +40,7 @@ describe('AddCollaborationModal', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByLabelText(/collaborator/i)).toBeInTheDocument();
+      expect(screen.getByRole('combobox', { name: /^collaborator$/i })).toBeInTheDocument();
     });
 
     expect(screen.getByLabelText(/collaboration type/i)).toBeInTheDocument();
@@ -99,18 +99,21 @@ describe('AddCollaborationModal', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByLabelText(/collaborator/i)).toBeInTheDocument();
+        expect(screen.getByRole('combobox', { name: /^collaborator$/i })).toBeInTheDocument();
       });
 
       // Select collaborator
-      await user.selectOptions(screen.getByLabelText(/collaborator/i), '1');
+      await user.selectOptions(screen.getByRole('combobox', { name: /^collaborator$/i }), '1');
+
+      // Recommendation requires due date
+      await user.type(screen.getByLabelText(/^due date/i), '2024-12-15');
 
       // Select type (recommendation is default)
       const typeSelect = screen.getByLabelText(/collaboration type/i);
       expect(typeSelect).toHaveValue('recommendation');
 
       // Submit
-      await user.click(screen.getByRole('button', { name: /add collaborator/i }));
+      await user.click(screen.getByRole('button', { name: /^add$/i }));
 
       await waitFor(() => {
         expect(api.apiPost).toHaveBeenCalledWith('/collaborations', expect.objectContaining({
@@ -144,7 +147,7 @@ describe('AddCollaborationModal', () => {
   });
 
   describe('Essay Review Collaboration', () => {
-    it('should create essay review collaboration with essay selection', async () => {
+    it('should create essay review collaboration', async () => {
       const user = userEvent.setup();
       vi.mocked(api.apiGet).mockResolvedValue([mockCollaborators.teacher]);
       vi.mocked(api.apiPost).mockResolvedValue({ success: true });
@@ -160,39 +163,30 @@ describe('AddCollaborationModal', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByLabelText(/collaborator/i)).toBeInTheDocument();
+        expect(screen.getByRole('combobox', { name: /^collaborator$/i })).toBeInTheDocument();
       });
 
       // Select collaborator
-      await user.selectOptions(screen.getByLabelText(/collaborator/i), '1');
+      await user.selectOptions(screen.getByRole('combobox', { name: /^collaborator$/i }), '1');
 
       // Select essay review type
       await user.selectOptions(screen.getByLabelText(/collaboration type/i), 'essayReview');
 
-      // Essay selection should appear
-      await waitFor(() => {
-        expect(screen.getByLabelText(/essay to review/i)).toBeInTheDocument();
-      });
-
-      // Select essay
-      await user.selectOptions(screen.getByLabelText(/essay to review/i), '1');
-
       // Submit
-      await user.click(screen.getByRole('button', { name: /add collaborator/i }));
+      await user.click(screen.getByRole('button', { name: /^add$/i }));
 
       await waitFor(() => {
         expect(api.apiPost).toHaveBeenCalledWith('/collaborations', expect.objectContaining({
           collaboratorId: 1,
           applicationId: 1,
           collaborationType: 'essayReview',
-          essayId: 1,
         }));
       });
 
       expect(mockOnSuccess).toHaveBeenCalled();
     });
 
-    it('should show warning when no essays exist for essay review', async () => {
+    it('should not show warning when no essays exist for essay review', async () => {
       const user = userEvent.setup();
       vi.mocked(api.apiGet).mockResolvedValue([mockCollaborators.teacher]);
 
@@ -207,16 +201,14 @@ describe('AddCollaborationModal', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByLabelText(/collaborator/i)).toBeInTheDocument();
+        expect(screen.getByRole('combobox', { name: /^collaborator$/i })).toBeInTheDocument();
       });
 
       // Select essay review type
       await user.selectOptions(screen.getByLabelText(/collaboration type/i), 'essayReview');
 
-      // Warning should appear
-      await waitFor(() => {
-        expect(screen.getByText(/no essays available/i)).toBeInTheDocument();
-      });
+      // No essay selection UI/warning should appear anymore
+      expect(screen.queryByText(/no essays available/i)).not.toBeInTheDocument();
     });
   });
 
@@ -237,11 +229,11 @@ describe('AddCollaborationModal', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByLabelText(/collaborator/i)).toBeInTheDocument();
+        expect(screen.getByRole('combobox', { name: /^collaborator$/i })).toBeInTheDocument();
       });
 
       // Select collaborator
-      await user.selectOptions(screen.getByLabelText(/collaborator/i), '2');
+      await user.selectOptions(screen.getByRole('combobox', { name: /^collaborator$/i }), '2');
 
       // Select guidance type
       await user.selectOptions(screen.getByLabelText(/collaboration type/i), 'guidance');
@@ -255,7 +247,7 @@ describe('AddCollaborationModal', () => {
       await user.selectOptions(screen.getByLabelText(/session type/i), 'one-on-one');
 
       // Submit
-      await user.click(screen.getByRole('button', { name: /add collaborator/i }));
+      await user.click(screen.getByRole('button', { name: /^add$/i }));
 
       await waitFor(() => {
         expect(api.apiPost).toHaveBeenCalledWith('/collaborations', expect.objectContaining({
@@ -285,14 +277,14 @@ describe('AddCollaborationModal', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByLabelText(/collaborator/i)).toBeInTheDocument();
+        expect(screen.getByRole('combobox', { name: /^collaborator$/i })).toBeInTheDocument();
       });
 
-      const submitButton = screen.getByRole('button', { name: /add collaborator/i });
+      const submitButton = screen.getByRole('button', { name: /^add$/i });
       expect(submitButton).toBeDisabled();
     });
 
-    it('should disable submit button when essay review selected but no essay chosen', async () => {
+    it('should not disable submit button when essay review selected', async () => {
       const user = userEvent.setup();
       vi.mocked(api.apiGet).mockResolvedValue([mockCollaborators.teacher]);
 
@@ -307,18 +299,17 @@ describe('AddCollaborationModal', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByLabelText(/collaborator/i)).toBeInTheDocument();
+        expect(screen.getByRole('combobox', { name: /^collaborator$/i })).toBeInTheDocument();
       });
 
       // Select collaborator
-      await user.selectOptions(screen.getByLabelText(/collaborator/i), '1');
+      await user.selectOptions(screen.getByRole('combobox', { name: /^collaborator$/i }), '1');
 
       // Select essay review type
       await user.selectOptions(screen.getByLabelText(/collaboration type/i), 'essayReview');
 
-      // Submit button should be disabled
-      const submitButton = screen.getByRole('button', { name: /add collaborator/i });
-      expect(submitButton).toBeDisabled();
+      const submitButton = screen.getByRole('button', { name: /^add$/i });
+      expect(submitButton).toBeEnabled();
     });
   });
 

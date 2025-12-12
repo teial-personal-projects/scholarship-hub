@@ -45,24 +45,6 @@ const verifyApplicationOwnership = async (applicationId: number, userId: number)
 };
 
 /**
- * Verify that an essay belongs to the user
- */
-const verifyEssayOwnership = async (essayId: number, userId: number) => {
-  const { data, error } = await supabase
-    .from('essays')
-    .select('id, application_id, applications!inner(user_id)')
-    .eq('id', essayId)
-    .eq('applications.user_id', userId)
-    .single();
-
-  if (error || !data) {
-    throw new AppError('Essay not found', 404);
-  }
-
-  return data;
-};
-
-/**
  * Get all collaborations for a specific application (with invite data)
  */
 export const getCollaborationsByApplicationId = async (
@@ -121,42 +103,6 @@ export const getCollaborationsByApplicationId = async (
 };
 
 /**
- * Get all collaborations for a specific essay
- */
-export const getCollaborationsByEssayId = async (
-  essayId: number,
-  userId: number
-) => {
-  // Verify essay ownership
-  await verifyEssayOwnership(essayId, userId);
-
-  // Get essay review collaborations for this essay
-  const { data: essayReviewCollabs, error: reviewError } = await supabase
-    .from('essay_review_collaborations')
-    .select('collaboration_id')
-    .eq('essay_id', essayId);
-
-  if (reviewError) throw reviewError;
-
-  if (!essayReviewCollabs || essayReviewCollabs.length === 0) {
-    return [];
-  }
-
-  // Get full collaboration details for these essay reviews
-  const collaborationIds = essayReviewCollabs.map((erc) => erc.collaboration_id);
-
-  const { data, error } = await supabase
-    .from('collaborations')
-    .select('*')
-    .in('id', collaborationIds)
-    .order('created_at', { ascending: false });
-
-  if (error) throw error;
-
-  return data || [];
-};
-
-/**
  * Get a single collaboration by ID (with ownership verification)
  */
 export const getCollaborationById = async (collaborationId: number, userId: number) => {
@@ -211,22 +157,17 @@ const getTypeSpecificData = async (collaborationId: number, collaborationType: s
       const { data } = await supabase
         .from('essay_review_collaborations')
         .select('*')
-        .eq('collaboration_id', collaborationId);
-      const rows = (data || []) as any[];
+        .eq('collaboration_id', collaborationId)
+        .single();
 
-      // Most of the app treats essay review collaborations as one-per-essay,
-      // so we provide both:
-      // - flattened fields (matching CollaborationResponse shape)
-      // - the raw rows (for future multi-essay UI)
-      if (rows.length === 0) return {};
+      // Essay review collaborations are now one-to-one with collaborations (no essay_id link)
+      const row = data as any;
+      if (!row) return {};
 
-      const first = rows[0] || {};
       return {
-        essayId: first.essay_id,
-        currentDraftVersion: first.current_draft_version ?? undefined,
-        feedbackRounds: first.feedback_rounds ?? undefined,
-        lastFeedbackAt: first.last_feedback_at ?? undefined,
-        essayReviews: rows,
+        currentDraftVersion: row.current_draft_version ?? undefined,
+        feedbackRounds: row.feedback_rounds ?? undefined,
+        lastFeedbackAt: row.last_feedback_at ?? undefined,
       };
     }
     case 'recommendation': {
@@ -266,7 +207,6 @@ export const createCollaboration = async (
     nextActionDueDate?: string;
     notes?: string;
     // Type-specific fields
-    essayId?: number; // For essayReview
     currentDraftVersion?: number; // For essayReview
     feedbackRounds?: number; // For essayReview
     lastFeedbackAt?: string; // For essayReview
@@ -283,14 +223,6 @@ export const createCollaboration = async (
   // Validate: Due date is required for recommendation collaborations
   if (collaborationData.collaborationType === 'recommendation' && !collaborationData.nextActionDueDate) {
     throw new AppError('nextActionDueDate is required for recommendation collaborations', 400);
-  }
-
-  // Validate: Essay must belong to user and match application
-  if (collaborationData.collaborationType === 'essayReview' && collaborationData.essayId) {
-    const essay = await verifyEssayOwnership(collaborationData.essayId, userId);
-    if (essay.application_id !== collaborationData.applicationId) {
-      throw new AppError('Essay does not belong to the specified application', 400);
-    }
   }
 
   // Convert camelCase to snake_case for base collaboration
@@ -350,10 +282,9 @@ export const createCollaboration = async (
 
   // Create type-specific data
   try {
-    if (collaborationData.collaborationType === 'essayReview' && collaborationData.essayId) {
+    if (collaborationData.collaborationType === 'essayReview') {
       const essayReviewData: Record<string, unknown> = {
         collaboration_id: collaboration.id,
-        essay_id: collaborationData.essayId,
       };
       if (collaborationData.currentDraftVersion !== undefined) {
         essayReviewData.current_draft_version = collaborationData.currentDraftVersion;
@@ -375,7 +306,6 @@ export const createCollaboration = async (
             error: essayError.message,
             code: essayError.code,
             collaborationId: collaboration.id,
-            essayId: collaborationData.essayId,
             essayReviewData,
           });
         } else {
@@ -492,7 +422,6 @@ export const updateCollaboration = async (
     nextActionDueDate?: string;
     notes?: string;
     // Type-specific fields
-    essayId?: number; // For essayReview (selector when multiple essay rows)
     currentDraftVersion?: number; // For essayReview
     feedbackRounds?: number; // For essayReview
     lastFeedbackAt?: string; // For essayReview
@@ -557,18 +486,10 @@ export const updateCollaboration = async (
     }
 
     if (Object.keys(essayUpdates).length > 0) {
-      // Note: essay_review_collaborations can have multiple rows per collaboration (one per essay)
-      // If essayId is provided, update only that row; otherwise update all.
-      let query = supabase
+      const { error } = await supabase
         .from('essay_review_collaborations')
         .update(essayUpdates)
         .eq('collaboration_id', collaborationId);
-
-      if (updates.essayId !== undefined) {
-        query = query.eq('essay_id', updates.essayId);
-      }
-
-      const { error } = await query;
 
       if (error) throw error;
     }

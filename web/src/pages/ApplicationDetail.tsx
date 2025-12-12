@@ -1008,7 +1008,6 @@ function ApplicationDetail() {
                         <Thead>
                           <Tr>
                             <Th>Collaborator</Th>
-                            <Th>Essay</Th>
                             <Th>Status</Th>
                             <Th>Due Date</Th>
                             <Th>Last Updated</Th>
@@ -1020,7 +1019,6 @@ function ApplicationDetail() {
                             .filter((c) => c.collaborationType === 'essayReview')
                             .map((collab) => {
                               const collaborator = collaborators.get(collab.collaboratorId);
-                              const essay = essays.find((e) => e.id === collab.essayId);
                               return (
                                 <Tr key={collab.id}>
                                   <Td>
@@ -1028,7 +1026,6 @@ function ApplicationDetail() {
                                       ? `${collaborator.firstName} ${collaborator.lastName}` 
                                       : 'Loading...'}
                                   </Td>
-                                  <Td>{essay?.theme || 'Unknown Essay'}</Td>
                                   <Td>
                                     <Badge colorScheme={getCollaborationStatusColor(collab.status)}>
                                       {collab.status}
@@ -1092,7 +1089,6 @@ function ApplicationDetail() {
                         .filter((c) => c.collaborationType === 'essayReview')
                         .map((collab) => {
                           const collaborator = collaborators.get(collab.collaboratorId);
-                          const essay = essays.find((e) => e.id === collab.essayId);
                           return (
                             <Card key={collab.id}>
                               <CardBody>
@@ -1102,9 +1098,6 @@ function ApplicationDetail() {
                                       {collaborator 
                                         ? `${collaborator.firstName} ${collaborator.lastName}` 
                                         : 'Loading...'}
-                                    </Text>
-                                    <Text fontSize="sm" color="gray.600" mb="2">
-                                      Essay: {essay?.theme || 'Unknown Essay'}
                                     </Text>
                                     <HStack spacing="2" mb="2">
                                       <Badge colorScheme={getCollaborationStatusColor(collab.status)}>

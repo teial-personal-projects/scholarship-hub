@@ -127,7 +127,6 @@ describe('Collaborations Routes', () => {
       const newCollaboration = {
         collaboratorId: 1,
         applicationId: 1,
-        essayId: 1,
         collaborationType: 'essayReview',
         notes: 'Need essay review',
       };

@@ -180,11 +180,7 @@ function CollaboratorDashboard() {
                   <Td>
                     {/* Application name would come from joined data */}
                     Application #{collab.applicationId}
-                    {collab.essayId && (
-                      <Text fontSize="sm" color="gray.500">
-                        Essay #{collab.essayId}
-                      </Text>
-                    )}
+                        {/* essayReview collaborations no longer link to a specific essay */}
                   </Td>
                   <Td>
                     <Badge colorScheme={getStatusColor(collab.status)}>
@@ -244,7 +240,7 @@ function CollaboratorDashboard() {
                       </Text>
                       <Text fontSize="sm" color="gray.600" mb="2">
                         Application #{collab.applicationId}
-                        {collab.essayId && ` • Essay #${collab.essayId}`}
+                        {/* essayReview collaborations no longer link to a specific essay */}
                       </Text>
                     </Box>
                     <Badge colorScheme={getStatusColor(collab.status)}>
