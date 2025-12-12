@@ -312,7 +312,7 @@ CREATE TRIGGER update_user_scholarships_updated_at
 INSERT INTO scholarship_sources (name, url, source_type, scraper_class, enabled, priority)
 VALUES
   ('CollegeScholarships', 'www.collegescholarships.org', 'website', 'CollegeScholarshipsScraper', true, 8),
-  ('CareerOneStop', 'https://www.careeronestop.org', 'website', 'CareerOneStopScraper', true, 7),
+  ('CareerOneStop', 'https://www.careeronestop.org', 'website', 'CareerOneStopScraper', true, 7)
 ON CONFLICT (name) DO NOTHING;
 
 -- Insert a sample scholarship (for testing purposes)

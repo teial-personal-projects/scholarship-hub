@@ -199,6 +199,9 @@ function Dashboard() {
             </Button>
           </HStack>
 
+          {/* Summary / Reminders (move to top) */}
+          <DashboardReminders />
+
           {/* Recommended Scholarships Widget */}
           {recommendedScholarships.length > 0 && (
             <Card variant="elevated" bg="white">
@@ -712,9 +715,6 @@ function Dashboard() {
 
           {/* Pending Responses Section */}
           <DashboardPendingResponses />
-
-          {/* Reminders Section */}
-          <DashboardReminders />
       </Stack>
     </Container>
     </Box>
