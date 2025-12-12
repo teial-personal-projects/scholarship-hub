@@ -584,13 +584,14 @@ function ApplicationDetail() {
                 <Box>
                   <Text fontWeight="bold" color="brand.700" mb="1">Award Amount</Text>
                   <Text>
-                    {application.minAward && application.maxAward
-                      ? `$${application.minAward.toLocaleString()} - $${application.maxAward.toLocaleString()}`
-                      : application.minAward
-                      ? `$${application.minAward.toLocaleString()}+`
-                      : application.maxAward
-                      ? `Up to $${application.maxAward.toLocaleString()}`
-                      : 'Not specified'}
+                    {(() => {
+                      const min = application.minAward ?? application.maxAward;
+                      const max = application.maxAward ?? application.minAward ?? application.maxAward;
+
+                      if (min == null || max == null) return 'Not specified';
+
+                      return `$${min.toLocaleString()} - $${max.toLocaleString()}`;
+                    })()}
                   </Text>
                 </Box>
               )}
