@@ -373,7 +373,7 @@ function ApplicationForm() {
                   </SimpleGrid>
 
                   {/* Dates */}
-                  <SimpleGrid columns={{ base: 1, md: status === 'Submitted' ? 3 : 2 }} spacing="4">
+                  <SimpleGrid columns={{ base: 1, md: 3 }} spacing="4">
                     <FormControl>
                       <FormLabel>Open Date</FormLabel>
                       <Input
@@ -390,17 +390,14 @@ function ApplicationForm() {
                         onChange={(e) => setDueDate(e.target.value)}
                       />
                     </FormControl>
-                    {/* Submission Date (if submitted) */}
-                    {status === 'Submitted' && (
-                      <FormControl>
-                        <FormLabel>Submission Date</FormLabel>
-                        <Input
-                          type="date"
-                          value={submissionDate}
-                          onChange={(e) => setSubmissionDate(e.target.value)}
-                        />
-                      </FormControl>
-                    )}
+                    <FormControl>
+                      <FormLabel>Submission Date (Optional)</FormLabel>
+                      <Input
+                        type="date"
+                        value={submissionDate}
+                        onChange={(e) => setSubmissionDate(e.target.value)}
+                      />
+                    </FormControl>
                   </SimpleGrid>
                 </Stack>
                 </AccordionPanel>

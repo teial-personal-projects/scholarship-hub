@@ -545,39 +545,21 @@ function ApplicationDetail() {
               <Box>
                 <Text fontWeight="bold" color="brand.700" mb="1">Due Date</Text>
                 <Text>
-                  {application.dueDate
-                    ? new Date(application.dueDate).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                      })
-                    : 'Not specified'}
+                  {application.dueDate ? formatDateNoTimezone(application.dueDate) : 'Not specified'}
                 </Text>
               </Box>
 
               {application.openDate && (
                 <Box>
                   <Text fontWeight="bold" color="brand.700" mb="1">Open Date</Text>
-                  <Text>
-                    {new Date(application.openDate).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                    })}
-                  </Text>
+                  <Text>{formatDateNoTimezone(application.openDate)}</Text>
                 </Box>
               )}
 
               {application.submissionDate && (
                 <Box>
                   <Text fontWeight="bold" color="brand.700" mb="1">Submission Date</Text>
-                  <Text>
-                    {new Date(application.submissionDate).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                    })}
-                  </Text>
+                  <Text>{formatDateNoTimezone(application.submissionDate)}</Text>
                 </Box>
               )}
 
