@@ -5,12 +5,13 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalCloseButton,
+  DialogRoot,
+  DialogBackdrop,
+  DialogPositioner,
+  DialogContent,
+  DialogHeader,
+  DialogBody,
+  DialogCloseTrigger,
   Button,
   FormControl,
   FormLabel,
@@ -106,11 +107,24 @@ const AssignCollaboratorModal: React.FC<AssignCollaboratorModalProps> = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size={{ base: 'full', md: 'md' }} isCentered>
-      <ModalOverlay />
-      <ModalContent mx={{ base: 0, md: 'auto' }} my={{ base: 0, md: 'auto' }} maxH={{ base: '100vh', md: '90vh' }} overflowY="auto">
+    <DialogRoot
+      open={isOpen}
+      onOpenChange={(details) => {
+        if (!details.open) onClose();
+      }}
+    >
+      <DialogBackdrop />
+      <DialogPositioner>
+        <DialogContent
+          mx={{ base: 0, md: 'auto' }}
+          my={{ base: 0, md: 'auto' }}
+          maxH={{ base: '100vh', md: '90vh' }}
+          overflowY="auto"
+          w={{ base: '100vw', md: 'auto' }}
+          maxW={{ base: '100vw', md: 'md' }}
+        >
         <form id="assign-collaborator-form" onSubmit={handleSubmit}>
-          <ModalHeader
+          <DialogHeader
             position="sticky"
             top="0"
             zIndex={10}
@@ -144,10 +158,10 @@ const AssignCollaboratorModal: React.FC<AssignCollaboratorModalProps> = ({
                 </Button>
               </HStack>
             </Flex>
-          </ModalHeader>
-          <ModalCloseButton isDisabled={isLoading} />
+          </DialogHeader>
+          <DialogCloseTrigger disabled={isLoading} />
 
-          <ModalBody>
+          <DialogBody>
             <VStack spacing={4}>
               <FormControl isRequired>
                 <FormLabel>Select Collaborator</FormLabel>
@@ -206,10 +220,11 @@ const AssignCollaboratorModal: React.FC<AssignCollaboratorModalProps> = ({
                 After assigning, you can send an invitation email to the collaborator from the application details page.
               </Text>
             </VStack>
-          </ModalBody>
+          </DialogBody>
         </form>
-      </ModalContent>
-    </Modal>
+      </DialogContent>
+    </DialogPositioner>
+  </DialogRoot>
   );
 };
 

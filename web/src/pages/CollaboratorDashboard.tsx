@@ -24,12 +24,13 @@ import {
   Button,
   Spinner,
   Box,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalCloseButton,
+  DialogRoot,
+  DialogBackdrop,
+  DialogPositioner,
+  DialogContent,
+  DialogHeader,
+  DialogBody,
+  DialogCloseTrigger,
   useDisclosure,
   Card,
   CardBody,
@@ -48,7 +49,12 @@ function CollaboratorDashboard() {
   const { showSuccess, showError } = useToastHelpers();
 
   // History modal state
-  const { isOpen: isHistoryOpen, onOpen: onHistoryOpen, onClose: onHistoryClose } = useDisclosure();
+  const {
+    open: isHistoryOpen,
+    onOpen: onHistoryOpen,
+    onClose: onHistoryClose,
+    setOpen: setHistoryOpen,
+  } = useDisclosure();
   const [historyCollaborationId, setHistoryCollaborationId] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState<number | null>(null);
 
@@ -325,18 +331,27 @@ function CollaboratorDashboard() {
       </Stack>
 
       {/* Collaboration History Modal */}
-      <Modal isOpen={isHistoryOpen} onClose={onHistoryClose} size={{ base: 'full', md: 'lg' }} isCentered>
-        <ModalOverlay />
-        <ModalContent mx={{ base: 0, md: 'auto' }} my={{ base: 0, md: 'auto' }} maxH={{ base: '100vh', md: '90vh' }} overflowY="auto">
-          <ModalHeader>Collaboration History</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody pb={6}>
+      <DialogRoot open={isHistoryOpen} onOpenChange={(details) => setHistoryOpen(details.open)}>
+        <DialogBackdrop />
+        <DialogPositioner>
+          <DialogContent
+            mx={{ base: 0, md: 'auto' }}
+            my={{ base: 0, md: 'auto' }}
+            maxH={{ base: '100vh', md: '90vh' }}
+            overflowY="auto"
+            w={{ base: '100vw', md: 'auto' }}
+            maxW={{ base: '100vw', md: 'lg' }}
+          >
+          <DialogHeader>Collaboration History</DialogHeader>
+          <DialogCloseTrigger />
+          <DialogBody pb={6}>
             {historyCollaborationId && (
               <CollaborationHistory collaborationId={historyCollaborationId} isOpen={isHistoryOpen} />
             )}
-          </ModalBody>
-        </ModalContent>
-      </Modal>
+          </DialogBody>
+        </DialogContent>
+        </DialogPositioner>
+      </DialogRoot>
     </Container>
   );
 }

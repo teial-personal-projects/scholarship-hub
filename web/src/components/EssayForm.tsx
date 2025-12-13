@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import {
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalCloseButton,
+  DialogRoot,
+  DialogBackdrop,
+  DialogPositioner,
+  DialogContent,
+  DialogHeader,
+  DialogBody,
+  DialogCloseTrigger,
   Button,
   FormControl,
   FormLabel,
@@ -93,11 +94,24 @@ function EssayForm({ isOpen, onClose, applicationId, essay, onSuccess }: EssayFo
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} size={{ base: 'full', md: 'lg' }} isCentered>
-      <ModalOverlay />
-      <ModalContent mx={{ base: 0, md: 'auto' }} my={{ base: 0, md: 'auto' }} maxH={{ base: '100vh', md: '90vh' }} overflowY="auto">
+    <DialogRoot
+      open={isOpen}
+      onOpenChange={(details) => {
+        if (!details.open) handleClose();
+      }}
+    >
+      <DialogBackdrop />
+      <DialogPositioner>
+        <DialogContent
+          mx={{ base: 0, md: 'auto' }}
+          my={{ base: 0, md: 'auto' }}
+          maxH={{ base: '100vh', md: '90vh' }}
+          overflowY="auto"
+          w={{ base: '100vw', md: 'auto' }}
+          maxW={{ base: '100vw', md: 'lg' }}
+        >
         <form id="essay-form" onSubmit={handleSubmit}>
-          <ModalHeader
+          <DialogHeader
             position="sticky"
             top="0"
             zIndex={10}
@@ -130,9 +144,9 @@ function EssayForm({ isOpen, onClose, applicationId, essay, onSuccess }: EssayFo
                 </Button>
               </HStack>
             </Flex>
-          </ModalHeader>
-          <ModalCloseButton isDisabled={submitting} />
-          <ModalBody>
+          </DialogHeader>
+          <DialogCloseTrigger disabled={submitting} />
+          <DialogBody>
             <Stack spacing="4">
               <FormControl>
                 <FormLabel>Theme/Topic</FormLabel>
@@ -179,10 +193,11 @@ function EssayForm({ isOpen, onClose, applicationId, essay, onSuccess }: EssayFo
                 <FormHelperText>Current status of this essay</FormHelperText>
               </FormControl>
             </Stack>
-          </ModalBody>
+          </DialogBody>
         </form>
-      </ModalContent>
-    </Modal>
+      </DialogContent>
+    </DialogPositioner>
+  </DialogRoot>
   );
 }
 

@@ -285,15 +285,16 @@ toaster.create({
 - Mounted `<Toaster />` in `web/src/main.tsx` so notifications render globally
 - Removed the last direct `useToast()` usage (`CollaboratorDashboard`)
 
-### [ ] Step 5.2: Migrate Modal → Dialog
-**Files affected** (13 files):
-- CollaboratorForm.tsx
-- ApplicationForm.tsx
-- EssayForm.tsx
-- EditCollaborationModal.tsx
-- AddCollaborationModal.tsx
-- AssignCollaboratorModal.tsx
-- SendInviteDialog.tsx
+### [✅] Step 5.2: Migrate Modal → Dialog
+**Files migrated (this repo)**:
+- `web/src/components/CollaboratorForm.tsx`
+- `web/src/components/EssayForm.tsx`
+- `web/src/components/EditCollaborationModal.tsx`
+- `web/src/components/AddCollaborationModal.tsx`
+- `web/src/components/AssignCollaboratorModal.tsx`
+- `web/src/components/SendInviteDialog.tsx`
+- `web/src/pages/CollaboratorDashboard.tsx` (history modal)
+- `web/src/pages/ApplicationDetail.tsx` (history modal)
 
 **Prop Changes**:
 - `isOpen` → `open`
@@ -330,6 +331,9 @@ toaster.create({
   </Dialog.Positioner>
 </Dialog.Root>
 ```
+
+**Status (this repo)**:
+- No remaining `<Modal ...>` usage in `web/src`
 
 ### [ ] Step 5.3: Migrate FormControl → Field
 **Files affected** (15+ files with forms)

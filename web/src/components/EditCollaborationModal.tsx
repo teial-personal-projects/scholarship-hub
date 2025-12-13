@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import {
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalCloseButton,
+  DialogRoot,
+  DialogBackdrop,
+  DialogPositioner,
+  DialogContent,
+  DialogHeader,
+  DialogBody,
+  DialogCloseTrigger,
   Button,
   FormControl,
   FormLabel,
@@ -125,10 +126,23 @@ function EditCollaborationModal({
   if (!collaboration) return null;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size={{ base: 'full', md: 'xl' }} isCentered>
-      <ModalOverlay />
-      <ModalContent mx={{ base: 0, md: 'auto' }} my={{ base: 0, md: 'auto' }} maxH={{ base: '100vh', md: '90vh' }} overflowY="auto">
-        <ModalHeader
+    <DialogRoot
+      open={isOpen}
+      onOpenChange={(details) => {
+        if (!details.open) onClose();
+      }}
+    >
+      <DialogBackdrop />
+      <DialogPositioner>
+      <DialogContent
+          mx={{ base: 0, md: 'auto' }}
+          my={{ base: 0, md: 'auto' }}
+          maxH={{ base: '100vh', md: '90vh' }}
+          overflowY="auto"
+          w={{ base: '100vw', md: 'auto' }}
+          maxW={{ base: '100vw', md: 'xl' }}
+        >
+        <DialogHeader
           position="sticky"
           top="0"
           zIndex={10}
@@ -163,9 +177,9 @@ function EditCollaborationModal({
               </Button>
             </HStack>
           </Flex>
-        </ModalHeader>
-        <ModalCloseButton isDisabled={updateCollaboration.isPending} />
-        <ModalBody>
+        </DialogHeader>
+        <DialogCloseTrigger disabled={updateCollaboration.isPending} />
+        <DialogBody>
           <Stack spacing="4">
             <FormControl>
               <FormLabel>Collaboration Type</FormLabel>
@@ -220,9 +234,10 @@ function EditCollaborationModal({
               />
             </FormControl>
           </Stack>
-        </ModalBody>
-      </ModalContent>
-    </Modal>
+        </DialogBody>
+      </DialogContent>
+      </DialogPositioner>
+    </DialogRoot>
   );
 }
 

@@ -5,12 +5,13 @@
 
 import React, { useState } from 'react';
 import {
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalCloseButton,
+  DialogRoot,
+  DialogBackdrop,
+  DialogPositioner,
+  DialogContent,
+  DialogHeader,
+  DialogBody,
+  DialogCloseTrigger,
   Button,
   Text,
   VStack,
@@ -140,10 +141,23 @@ const SendInviteDialog: React.FC<SendInviteDialogProps> = ({
   const isResend = collaboration.status === 'invited' && collaboration.invite;
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} size={{ base: 'full', md: 'md' }} isCentered>
-      <ModalOverlay />
-      <ModalContent mx={{ base: 0, md: 'auto' }} my={{ base: 0, md: 'auto' }} maxH={{ base: '100vh', md: '90vh' }} overflowY="auto">
-        <ModalHeader
+    <DialogRoot
+      open={isOpen}
+      onOpenChange={(details) => {
+        if (!details.open) handleClose();
+      }}
+    >
+      <DialogBackdrop />
+      <DialogPositioner>
+      <DialogContent
+          mx={{ base: 0, md: 'auto' }}
+          my={{ base: 0, md: 'auto' }}
+          maxH={{ base: '100vh', md: '90vh' }}
+          overflowY="auto"
+          w={{ base: '100vw', md: 'auto' }}
+          maxW={{ base: '100vw', md: 'md' }}
+        >
+        <DialogHeader
           position="sticky"
           top="0"
           zIndex={10}
@@ -213,10 +227,10 @@ const SendInviteDialog: React.FC<SendInviteDialogProps> = ({
               </Button>
             </HStack>
           </Flex>
-        </ModalHeader>
-        <ModalCloseButton isDisabled={isLoading} />
+        </DialogHeader>
+        <DialogCloseTrigger disabled={isLoading} />
 
-        <ModalBody>
+        <DialogBody>
           <VStack align="stretch" spacing={4}>
             <Box>
               <Text fontSize="sm" color="gray.600" mb={1}>
@@ -276,9 +290,10 @@ const SendInviteDialog: React.FC<SendInviteDialogProps> = ({
               </>
             )}
           </VStack>
-        </ModalBody>
-      </ModalContent>
-    </Modal>
+        </DialogBody>
+      </DialogContent>
+      </DialogPositioner>
+    </DialogRoot>
   );
 };
 

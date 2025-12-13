@@ -36,12 +36,13 @@ import {
   AlertDialogHeader,
   AlertDialogContent,
   AlertDialogOverlay,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalCloseButton,
+  DialogRoot,
+  DialogBackdrop,
+  DialogPositioner,
+  DialogContent,
+  DialogHeader,
+  DialogBody,
+  DialogCloseTrigger,
   Accordion,
   AccordionItem,
   AccordionButton,
@@ -87,7 +88,12 @@ function ApplicationDetail() {
   const [selectedCollaboration, setSelectedCollaboration] = useState<CollaborationResponse | null>(null);
 
   // Collaboration history
-  const { isOpen: isHistoryOpen, onOpen: onHistoryOpen, onClose: onHistoryClose } = useDisclosure();
+  const {
+    open: isHistoryOpen,
+    onOpen: onHistoryOpen,
+    onClose: onHistoryClose,
+    setOpen: setHistoryOpen,
+  } = useDisclosure();
   const [historyCollaborationId, setHistoryCollaborationId] = useState<number | null>(null);
 
   // Add collaboration modal
@@ -1765,18 +1771,20 @@ function ApplicationDetail() {
       />
 
       {/* Collaboration History Modal */}
-      <Modal isOpen={isHistoryOpen} onClose={onHistoryClose} size="lg">
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Collaboration History</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody pb={6}>
+      <DialogRoot open={isHistoryOpen} onOpenChange={(details) => setHistoryOpen(details.open)}>
+        <DialogBackdrop />
+        <DialogPositioner>
+          <DialogContent maxW={{ base: '100vw', md: 'lg' }} w={{ base: '100vw', md: 'auto' }}>
+          <DialogHeader>Collaboration History</DialogHeader>
+          <DialogCloseTrigger />
+          <DialogBody pb={6}>
             {historyCollaborationId && (
               <CollaborationHistory collaborationId={historyCollaborationId} isOpen={isHistoryOpen} />
             )}
-          </ModalBody>
-        </ModalContent>
-      </Modal>
+          </DialogBody>
+        </DialogContent>
+        </DialogPositioner>
+      </DialogRoot>
 
       {/* Add Collaboration Modal */}
       <AddCollaborationModal
