@@ -11,6 +11,19 @@ This plan outlines the step-by-step process to upgrade the Scholarship Hub web a
 
 ---
 
+## Phase 0: Decisions (do this before changing code)
+
+### Decision 0.1: Do we need color mode (dark/light) in this app?
+This repo is a Vite + React Router app and currently uses light mode. Chakra v3 examples often show `next-themes`, but it is not strictly required unless you want runtime theme switching.
+
+- If **NO** (recommended for minimal migration): keep light mode only and skip `next-themes`.
+- If **YES**: adopt `next-themes` and migrate any color-mode related APIs accordingly.
+
+### Decision 0.2: Will we use Chakra CLI “snippets” with `@/` imports?
+Some snippet examples use `@/components/ui/...`. If you follow that convention, you must configure TS + Vite path aliases, otherwise use relative imports.
+
+---
+
 ## Phase 1: Preparation & Environment Setup
 
 ### Step 1.1: Verify Node.js Version
@@ -67,6 +80,14 @@ npx @chakra-ui/cli snippet add
 ```
 
 **What this does**: Downloads pre-built component compositions (like Toaster) that replace built-in v2 components.
+
+### Step 2.3b: (Optional) Configure `@/*` path alias for snippet imports
+Only needed if you plan to import snippets with `@/…` paths.
+
+- **TypeScript** (`web/tsconfig.json`): add `paths` mapping
+- **Vite** (`web/vite.config.ts`): add alias mapping
+
+If you don’t want aliases, keep snippet imports relative (recommended).
 
 ### Step 2.4: Install Icon Library
 Since `@chakra-ui/icons` is deprecated, install a replacement:
@@ -146,14 +167,14 @@ Component theming now uses "recipes" instead of `baseStyle` and `variants`.
 
 This will require rewriting each component's theme configuration using the recipe pattern.
 
-### Step 3.3: Remove Color Mode Configuration
-Chakra v3 uses `next-themes` for color mode. Remove:
-- `ColorModeProvider`
-- `useColorMode` references
-- `LightMode`, `DarkMode` components
+### Step 3.3: (Optional) Color mode support
+Chakra v3 examples often use `next-themes` to manage color mode, but in a Vite app it is optional.
 
-Install `next-themes`:
+- If you decided **NO color mode** (Phase 0.1): keep the app light-only and do not add `next-themes`.
+- If you decided **YES**: install and wire `next-themes`, then migrate any `useColorMode` usage.
+
 ```bash
+# only if you want runtime theme switching
 npm install next-themes
 ```
 
@@ -175,19 +196,19 @@ import { ChakraProvider } from '@chakra-ui/react';
 </ChakraProvider>
 ```
 
-**New**:
+**New (v3)**:
 ```typescript
-import { Provider } from '@chakra-ui/react';
-import { ThemeProvider } from 'next-themes';
+import { ChakraProvider } from '@chakra-ui/react';
+import { system } from './theme'; // createSystem(defaultConfig, ...)
 
-<Provider value={customConfig}>
-  <ThemeProvider attribute="class" disableTransitionOnChange>
-    <AuthProvider>
-      <App />
-    </AuthProvider>
-  </ThemeProvider>
-</Provider>
+<ChakraProvider value={system}>
+  <AuthProvider>
+    <App />
+  </AuthProvider>
+</ChakraProvider>
 ```
+
+If you chose to use `next-themes` (Phase 0.1), wrap the app with `ThemeProvider` as an additional layer. Otherwise, omit it.
 
 ---
 
@@ -430,20 +451,47 @@ import { Separator } from '@chakra-ui/react';
 </Table.ScrollArea>
 ```
 
-### Step 5.8: Update Boolean Props Throughout
-**Global find and replace** in all `.tsx` files:
-- `isOpen` → `open`
-- `isDisabled` → `disabled`
-- `isInvalid` → `invalid`
-- `isRequired` → `required`
-- `isLoading` → `loading`
+### Step 5.8: Avoid global find/replace for boolean props
+**Do NOT** do a blind repo-wide `isOpen → open` replacement. Chakra v3 changes are component-specific and not always 1:1.
 
-**IMPORTANT**: Review each change manually to ensure it's appropriate for the component.
+Recommended approach:
+- Migrate by **component family** (Dialog, Field, Tabs, Table, Menu, Accordion, etc.)
+- Run `npm run type-check` after each family and address errors locally
+- Let TypeScript guide you to correct prop names
 
 ### Step 5.9: Update Style Props
 - `colorScheme` → `colorPalette`
 - `noOfLines` → `lineClamp`
 - `truncated` → `truncate`
+
+### Step 5.10: Migrate Menu (used heavily in this repo)
+**Files affected**:
+- `web/src/pages/ApplicationDetail.tsx`
+- `web/src/pages/Applications.tsx`
+- `web/src/pages/Collaborators.tsx`
+- `web/src/components/Navigation.tsx`
+
+Chakra v3 typically moves toward compound/slot APIs; plan dedicated time to migrate menus, triggers, and item rendering.
+
+### Step 5.11: Migrate Accordion
+**Files affected**:
+- `web/src/pages/ApplicationDetail.tsx`
+- `web/src/components/ApplicationForm.tsx`
+- `web/src/pages/Profile.tsx`
+
+Treat this similarly to Tabs migration.
+
+### Step 5.12: Migrate AlertDialog usages
+This repo uses `AlertDialog` for confirmations. Chakra v3 may consolidate on Dialog primitives/snippets for alertdialog behavior.
+
+**Files affected** (examples):
+- `web/src/pages/ApplicationDetail.tsx`
+- `web/src/pages/Applications.tsx`
+- `web/src/pages/Collaborators.tsx`
+
+Decide whether to:
+- use a dedicated alertdialog snippet, or
+- implement alertdialog semantics via `Dialog` primitives.
 
 ---
 
@@ -462,6 +510,11 @@ npm run test
 ```
 
 Update test files as needed for new component APIs.
+
+### Step 6.4: Update test provider wrapper
+**File**: `web/src/test/helpers/render.tsx`
+
+Ensure tests wrap components with the v3 `ChakraProvider` using the new `system` value, and render any required snippet providers (e.g., Toaster) if tests rely on them.
 
 ### Step 6.3: Visual Regression Testing
 Compare before/after screenshots of:
@@ -613,6 +666,14 @@ If migration fails or introduces critical bugs:
 ### Pitfall 2: Theme Not Applied
 **Error**: Components appear unstyled
 **Solution**: Ensure `createSystem` is properly configured and Provider wraps the app
+
+### Pitfall 6: Snippet imports fail (`@/…` not found)
+**Error**: `Cannot find module '@/components/ui/toaster'`
+**Solution**: Either configure TS/Vite path aliases (Phase 2.3b) or switch snippet imports to relative paths.
+
+### Pitfall 7: Visual regressions from theme rewrite
+This repo has a large custom theme (`web/src/theme.ts`) with custom component variants. Expect visual drift even if TypeScript passes.
+**Solution**: Rebuild key variants first (Card/Button/Badge) and do targeted visual QA on the most-used pages.
 
 ### Pitfall 3: Toast Not Working
 **Error**: `useToast is not a function`
