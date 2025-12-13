@@ -25,6 +25,7 @@ import DashboardCollaborations from '../components/DashboardCollaborations';
 import DashboardPendingResponses from '../components/DashboardPendingResponses';
 import type { UserProfile, ApplicationResponse, ScholarshipResponse } from '@scholarship-hub/shared';
 import { useToastHelpers } from '../utils/toast';
+import { formatScholarshipAward } from '../utils/scholarship';
 
 function Dashboard() {
   const { user, loading: authLoading } = useAuth();
@@ -218,36 +219,39 @@ function Dashboard() {
               </Card.Header>
               <Card.Body>
                 <Stack gap={4}>
-                  {recommendedScholarships.map((scholarship) => (
-                    <Card.Root
-                      key={scholarship.id}
-                      variant="outline"
-                      _hover={{ shadow: 'sm' }}
-                      cursor="pointer"
-                      onClick={() => navigate(`/scholarships/${scholarship.id}`)}
-                    >
-                      <Card.Body>
-                        <Flex justify="space-between" align="start">
-                          <Box flex="1">
-                            <Heading size="sm" mb={1}>{scholarship.name}</Heading>
-                            {scholarship.organization && (
-                              <Text fontSize="sm" color="gray.600">{scholarship.organization}</Text>
+                  {recommendedScholarships.map((scholarship) => {
+                    const awardText = formatScholarshipAward(scholarship);
+                    return (
+                      <Card.Root
+                        key={scholarship.id}
+                        variant="outline"
+                        _hover={{ shadow: 'sm' }}
+                        cursor="pointer"
+                        onClick={() => navigate(`/scholarships/${scholarship.id}`)}
+                      >
+                        <Card.Body>
+                          <Flex justify="space-between" align="start">
+                            <Box flex="1">
+                              <Heading size="sm" mb={1}>{scholarship.name}</Heading>
+                              {scholarship.organization && (
+                                <Text fontSize="sm" color="gray.600">{scholarship.organization}</Text>
+                              )}
+                            </Box>
+                            {awardText && (
+                              <Badge colorPalette="green" ml={2}>
+                                {awardText}
+                              </Badge>
                             )}
-                          </Box>
-                          {scholarship.amount && (
-                            <Badge colorPalette="green" ml={2}>
-                              ${scholarship.amount.toLocaleString()}
-                            </Badge>
+                          </Flex>
+                          {scholarship.deadline && (
+                            <Text fontSize="sm" color="gray.500" mt={2}>
+                              📅 Due: {new Date(scholarship.deadline).toLocaleDateString()}
+                            </Text>
                           )}
-                        </Flex>
-                        {scholarship.deadline && (
-                          <Text fontSize="sm" color="gray.500" mt={2}>
-                            📅 Due: {new Date(scholarship.deadline).toLocaleDateString()}
-                          </Text>
-                        )}
-                      </Card.Body>
-                    </Card.Root>
-                  ))}
+                        </Card.Body>
+                      </Card.Root>
+                    );
+                  })}
                 </Stack>
               </Card.Body>
             </Card.Root>

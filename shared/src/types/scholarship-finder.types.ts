@@ -7,7 +7,8 @@ export interface ScholarshipResponse {
   id: number;
   name: string;
   organization?: string;
-  amount?: number;
+  min_award?: number;
+  max_award?: number;
   description?: string;
   eligibility?: string;
   requirements?: string;

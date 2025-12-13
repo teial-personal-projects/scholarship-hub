@@ -50,8 +50,13 @@ export function calculateMatchScore(
   }
 
   // Amount preference
-  if (preferences?.minAmount && scholarship.amount) {
-    if (scholarship.amount >= preferences.minAmount) {
+  const awardAmount =
+    scholarship.max_award ??
+    scholarship.min_award;
+
+  if (preferences?.minAmount && awardAmount) {
+    const awardValue = typeof awardAmount === 'string' ? Number(awardAmount) : awardAmount;
+    if (Number.isFinite(awardValue) && awardValue >= preferences.minAmount) {
       score += weights.amount;
       reasons.push(`Award amount meets your minimum`);
     }

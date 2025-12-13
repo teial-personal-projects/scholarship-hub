@@ -22,21 +22,9 @@ import {
   Flex,
 } from '@chakra-ui/react';
 import { apiGet, apiPost } from '../services/api';
-import type { ScholarshipResponse } from '@scholarship-hub/shared';
+import type { ScholarshipResponse, ScholarshipSearchParams } from '@scholarship-hub/shared';
 import { useToastHelpers } from '../utils/toast';
-
-interface ScholarshipSearchParams {
-  query?: string;
-  category?: string;
-  minAmount?: number;
-  maxAmount?: number;
-  deadlineBefore?: string;
-  educationLevel?: string;
-  fieldOfStudy?: string;
-  targetType?: string;
-  page?: number;
-  limit?: number;
-}
+import { formatScholarshipAward } from '../utils/scholarship';
 
 function ScholarshipSearch() {
   const navigate = useNavigate();
@@ -217,11 +205,15 @@ function ScholarshipSearch() {
                           <Text color="gray.600" fontSize="sm">{scholarship.organization}</Text>
                         )}
                       </Box>
-                      {scholarship.amount && (
+                      {(() => {
+                        const awardText = formatScholarshipAward(scholarship);
+                        if (!awardText) return null;
+                        return (
                         <Badge colorPalette="green" fontSize="md" px={3} py={1}>
-                          ${scholarship.amount.toLocaleString()}
+                          {awardText}
                         </Badge>
-                      )}
+                        );
+                      })()}
                     </Flex>
 
                     {/* Description */}

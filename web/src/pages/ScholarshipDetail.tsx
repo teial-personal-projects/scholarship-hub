@@ -21,6 +21,7 @@ import {
 import { apiGet, apiPost } from '../services/api';
 import type { ScholarshipResponse } from '@scholarship-hub/shared';
 import { useToastHelpers } from '../utils/toast';
+import { formatScholarshipAward } from '../utils/scholarship';
 
 function ScholarshipDetail() {
   const { id } = useParams<{ id: string }>();
@@ -109,14 +110,18 @@ function ScholarshipDetail() {
         <CardRoot>
           <CardBody>
             <Stack gap={4}>
-              {scholarship.amount && (
-                <HStack>
-                  <Text fontWeight="bold">💰 Amount:</Text>
-                  <Badge colorPalette="green" fontSize="lg" px={3} py={1}>
-                    ${scholarship.amount.toLocaleString()}
-                  </Badge>
-                </HStack>
-              )}
+              {(() => {
+                const awardText = formatScholarshipAward(scholarship);
+                if (!awardText) return null;
+                return (
+                  <HStack>
+                    <Text fontWeight="bold">💰 Amount:</Text>
+                    <Badge colorPalette="green" fontSize="lg" px={3} py={1}>
+                      {awardText}
+                    </Badge>
+                  </HStack>
+                );
+              })()}
 
               {scholarship.deadline && (
                 <HStack>

@@ -6,58 +6,11 @@ import { supabase } from '../config/supabase.js';
 import { AppError } from '../middleware/error-handler.js';
 import { DB_ERROR_CODES, isDbErrorCode } from '../constants/db-errors.js';
 import { calculateMatchScore } from './scholarship-matching.service.js';
-
-export interface ScholarshipSearchParams {
-  query?: string;
-  category?: string;
-  minAmount?: number;
-  maxAmount?: number;
-  deadlineBefore?: string;
-  educationLevel?: string;
-  fieldOfStudy?: string;
-  targetType?: string;
-  page?: number;
-  limit?: number;
-}
-
-export interface ScholarshipResponse {
-  id: number;
-  name: string;
-  organization?: string;
-  amount?: number;
-  description?: string;
-  eligibility?: string;
-  requirements?: string;
-  url: string;
-  application_url?: string;
-  source_url?: string;
-  deadline?: string;
-  deadline_type?: 'fixed' | 'rolling' | 'varies';
-  recurring?: boolean;
-  category?: string;
-  target_type?: string;
-  education_level?: string;
-  field_of_study?: string;
-  status: 'active' | 'expired' | 'invalid' | 'archived';
-  verified: boolean;
-  source_type: 'scraper' | 'ai_discovery' | 'manual';
-  source_name?: string;
-  discovered_at: string;
-  last_verified_at?: string;
-  expires_at?: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface UserScholarshipPreferences {
-  category?: string;
-  targetType?: string;
-  minAmount?: number;
-  maxAmount?: number;
-  educationLevel?: string;
-  fieldOfStudy?: string;
-  keywords?: string[];
-}
+import type {
+  ScholarshipResponse,
+  ScholarshipSearchParams,
+  UserScholarshipPreferences,
+} from '@scholarship-hub/shared';
 
 /**
  * Search scholarships with filters
@@ -88,10 +41,10 @@ export async function searchScholarships(
 
   // Amount range
   if (params.minAmount !== undefined) {
-    query = query.gte('amount', params.minAmount);
+    query = query.gte('min_award', params.minAmount);
   }
   if (params.maxAmount !== undefined) {
-    query = query.lte('amount', params.maxAmount);
+    query = query.lte('max_award', params.maxAmount);
   }
 
   // Deadline filter
@@ -230,7 +183,7 @@ export async function getRecommendedScholarships(
       query = query.eq('target_type', prefs.targetType);
     }
     if (prefs.minAmount !== undefined) {
-      query = query.gte('amount', prefs.minAmount);
+      query = query.gte('min_award', prefs.minAmount);
     }
     if (prefs.educationLevel) {
       query = query.eq('education_level', prefs.educationLevel);
@@ -259,7 +212,7 @@ export async function getRecommendedScholarships(
   }
 
   query = query
-    .order('amount', { ascending: false })
+    .order('max_award', { ascending: false })
     .limit(limit * 2); // Fetch more to score and sort
 
   const { data, error } = await query;
