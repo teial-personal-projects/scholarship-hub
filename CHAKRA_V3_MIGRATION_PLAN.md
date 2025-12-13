@@ -559,7 +559,7 @@ Recommended approach:
 - No remaining v2 accordion APIs found in `web/src` (`AccordionButton` / `AccordionPanel` / `AccordionIcon`, `defaultIndex`, `allowMultiple`)
 - Pages/components use v3 accordion primitives (`AccordionRoot`, `AccordionItemTrigger`, `AccordionItemContent`, `AccordionItemBody`, `AccordionItemIndicator`) with required `value`s
 
-### [ ] Step 5.12: Migrate AlertDialog usages
+### [✅] Step 5.12: Migrate AlertDialog usages
 This repo uses `AlertDialog` for confirmations. Chakra v3 may consolidate on Dialog primitives/snippets for alertdialog behavior.
 
 **Files affected** (examples):
@@ -571,6 +571,10 @@ Decide whether to:
 - use a dedicated alertdialog snippet, or
 - implement alertdialog semantics via `Dialog` primitives.
 PLEASE USE PRIMITIVES
+
+**Status (this repo)**:
+- Confirmations are implemented using **`Dialog` primitives** (no AlertDialog snippet)
+- No remaining `AlertDialog*` usage in `web/src`
 ---
 
 ## Phase 6: Testing Strategy
