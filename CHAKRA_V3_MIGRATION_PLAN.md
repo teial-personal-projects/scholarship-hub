@@ -13,37 +13,43 @@ This plan outlines the step-by-step process to upgrade the Scholarship Hub web a
 
 ## Phase 0: Decisions (do this before changing code)
 
-### Decision 0.1: Do we need color mode (dark/light) in this app?
+### ✅ Decision 0.1: Do we need color mode (dark/light) in this app?
 This repo is a Vite + React Router app and currently uses light mode. Chakra v3 examples often show `next-themes`, but it is not strictly required unless you want runtime theme switching.
 
-- If **NO** (recommended for minimal migration): keep light mode only and skip `next-themes`.
-- If **YES**: adopt `next-themes` and migrate any color-mode related APIs accordingly.
+- **Decision**: **NO** — keep the app **light-only**.
+  - Do **not** install `next-themes`
+  - Do **not** add a `ThemeProvider` layer
+  - Do **not** migrate to any new dark-mode APIs (not needed)
 
-### Decision 0.2: Will we use Chakra CLI “snippets” with `@/` imports?
+### ✅ Decision 0.2: Will we use Chakra CLI “snippets” with `@/` imports?
 Some snippet examples use `@/components/ui/...`. If you follow that convention, you must configure TS + Vite path aliases, otherwise use relative imports.
+
+- **Decision**: **YES** — we will use Chakra v3 CLI snippets (e.g., Toaster).
+- **Recommendation (this repo)**: use **relative imports** for snippet files to avoid alias config churn.
+  - If you *want* `@/…` imports, complete **Step 2.3b** (TS + Vite aliases) first.
 
 ---
 
 ## Phase 1: Preparation & Environment Setup
 
-### Step 1.1: Verify Node.js Version
+### [ ] Step 1.1: Verify Node.js Version
 ```bash
 node --version  # Should be 20.x or higher
 ```
 If not, install Node 20 LTS before proceeding.
 
-### Step 1.2: Create a Migration Branch
+### [ ] Step 1.2: Create a Migration Branch
 ```bash
 git checkout -b feature/chakra-v3-upgrade
 ```
 
-### Step 1.3: Backup Current State
+### [ ] Step 1.3: Backup Current State
 ```bash
 git add -A
 git commit -m "Pre-Chakra v3 migration checkpoint"
 ```
 
-### Step 1.4: Document Current Component Usage
+### [ ] Step 1.4: Document Current Component Usage
 Run analysis to understand what needs to change:
 ```bash
 cd web/src
@@ -61,7 +67,7 @@ grep -r "Tabs" --include="*.tsx" | wc -l
 
 ## Phase 2: Package Updates
 
-### Step 2.1: Uninstall Deprecated Packages
+### [ ] Step 2.1: Uninstall Deprecated Packages
 ```bash
 cd web
 npm uninstall @emotion/styled framer-motion
@@ -69,19 +75,19 @@ npm uninstall @emotion/styled framer-motion
 
 **Why**: Chakra UI v3 no longer depends on these packages.
 
-### Step 2.2: Update Chakra UI and Emotion
+### [ ] Step 2.2: Update Chakra UI and Emotion
 ```bash
 npm install @chakra-ui/react@latest @emotion/react@latest
 ```
 
-### Step 2.3: Install Required Snippets
+### [ ] Step 2.3: Install Required Snippets
 ```bash
 npx @chakra-ui/cli snippet add
 ```
 
 **What this does**: Downloads pre-built component compositions (like Toaster) that replace built-in v2 components.
 
-### Step 2.3b: (Optional) Configure `@/*` path alias for snippet imports
+### [ ] Step 2.3b: (Optional) Configure `@/*` path alias for snippet imports
 Only needed if you plan to import snippets with `@/…` paths.
 
 - **TypeScript** (`web/tsconfig.json`): add `paths` mapping
@@ -89,7 +95,7 @@ Only needed if you plan to import snippets with `@/…` paths.
 
 If you don’t want aliases, keep snippet imports relative (recommended).
 
-### Step 2.4: Install Icon Library
+### [ ] Step 2.4: Install Icon Library
 Since `@chakra-ui/icons` is deprecated, install a replacement:
 ```bash
 npm install lucide-react
@@ -99,7 +105,7 @@ npm install react-icons
 
 **Recommendation**: Use `lucide-react` for consistency with modern React patterns.
 
-### Step 2.5: Verify Package Installation
+### [ ] Step 2.5: Verify Package Installation
 ```bash
 npm ls @chakra-ui/react
 npm ls @emotion/react
@@ -109,7 +115,7 @@ npm ls @emotion/react
 
 ## Phase 3: Theme Migration
 
-### Step 3.1: Update Theme Configuration File
+### [ ] Step 3.1: Update Theme Configuration File
 **File**: `web/src/theme.ts`
 
 **Changes Required**:
@@ -154,7 +160,7 @@ const customConfig = createSystem(defaultConfig, {
 });
 ```
 
-### Step 3.2: Update Component Style Overrides
+### [ ] Step 3.2: Update Component Style Overrides
 Component theming now uses "recipes" instead of `baseStyle` and `variants`.
 
 **Migration needed for**:
@@ -167,10 +173,10 @@ Component theming now uses "recipes" instead of `baseStyle` and `variants`.
 
 This will require rewriting each component's theme configuration using the recipe pattern.
 
-### Step 3.3: (Optional) Color mode support
+### [ ] Step 3.3: (Optional) Color mode support
 Chakra v3 examples often use `next-themes` to manage color mode, but in a Vite app it is optional.
 
-- If you decided **NO color mode** (Phase 0.1): keep the app light-only and do not add `next-themes`.
+- For **this project** (Phase 0.1 = NO): keep the app light-only and do not add `next-themes`.
 - If you decided **YES**: install and wire `next-themes`, then migrate any `useColorMode` usage.
 
 ```bash
@@ -182,7 +188,7 @@ npm install next-themes
 
 ## Phase 4: Provider Setup Migration
 
-### Step 4.1: Update main.tsx
+### [ ] Step 4.1: Update main.tsx
 **File**: `web/src/main.tsx`
 
 **Current**:
@@ -210,11 +216,13 @@ import { system } from './theme'; // createSystem(defaultConfig, ...)
 
 If you chose to use `next-themes` (Phase 0.1), wrap the app with `ThemeProvider` as an additional layer. Otherwise, omit it.
 
+For **this project** (Phase 0.1 = NO): omit it.
+
 ---
 
 ## Phase 5: Component Migration (Critical Components First)
 
-### Step 5.1: Migrate Toast System
+### [ ] Step 5.1: Migrate Toast System
 **Files affected**:
 - `web/src/utils/toast.ts`
 - All files using `useToastHelpers` (10+ files)
@@ -252,7 +260,7 @@ toaster.create({
 });
 ```
 
-### Step 5.2: Migrate Modal → Dialog
+### [ ] Step 5.2: Migrate Modal → Dialog
 **Files affected** (13 files):
 - CollaboratorForm.tsx
 - ApplicationForm.tsx
@@ -298,7 +306,7 @@ toaster.create({
 </Dialog.Root>
 ```
 
-### Step 5.3: Migrate FormControl → Field
+### [ ] Step 5.3: Migrate FormControl → Field
 **Files affected** (15+ files with forms)
 
 **Changes**:
@@ -328,7 +336,7 @@ toaster.create({
 </Field.Root>
 ```
 
-### Step 5.4: Migrate Stack Components
+### [ ] Step 5.4: Migrate Stack Components
 **Files affected**: Almost all component files use Stack, VStack, HStack
 
 **Changes**:
@@ -351,7 +359,7 @@ toaster.create({
 </Stack>
 ```
 
-### Step 5.5: Migrate Tabs
+### [ ] Step 5.5: Migrate Tabs
 **Files affected**:
 - DashboardCollaborations.tsx
 - DashboardPendingResponses.tsx
@@ -386,7 +394,7 @@ toaster.create({
 </Tabs.Root>
 ```
 
-### Step 5.6: Migrate Divider → Separator
+### [ ] Step 5.6: Migrate Divider → Separator
 **Files affected**:
 - CollaborationHistory.tsx
 
@@ -401,7 +409,7 @@ import { Separator } from '@chakra-ui/react';
 <Separator />
 ```
 
-### Step 5.7: Migrate Table Components
+### [ ] Step 5.7: Migrate Table Components
 **Files affected**:
 - DashboardCollaborations.tsx
 - DashboardPendingResponses.tsx
@@ -451,7 +459,7 @@ import { Separator } from '@chakra-ui/react';
 </Table.ScrollArea>
 ```
 
-### Step 5.8: Avoid global find/replace for boolean props
+### [ ] Step 5.8: Avoid global find/replace for boolean props
 **Do NOT** do a blind repo-wide `isOpen → open` replacement. Chakra v3 changes are component-specific and not always 1:1.
 
 Recommended approach:
@@ -459,12 +467,12 @@ Recommended approach:
 - Run `npm run type-check` after each family and address errors locally
 - Let TypeScript guide you to correct prop names
 
-### Step 5.9: Update Style Props
+### [ ] Step 5.9: Update Style Props
 - `colorScheme` → `colorPalette`
 - `noOfLines` → `lineClamp`
 - `truncated` → `truncate`
 
-### Step 5.10: Migrate Menu (used heavily in this repo)
+### [ ] Step 5.10: Migrate Menu (used heavily in this repo)
 **Files affected**:
 - `web/src/pages/ApplicationDetail.tsx`
 - `web/src/pages/Applications.tsx`
@@ -473,7 +481,7 @@ Recommended approach:
 
 Chakra v3 typically moves toward compound/slot APIs; plan dedicated time to migrate menus, triggers, and item rendering.
 
-### Step 5.11: Migrate Accordion
+### [ ] Step 5.11: Migrate Accordion
 **Files affected**:
 - `web/src/pages/ApplicationDetail.tsx`
 - `web/src/components/ApplicationForm.tsx`
@@ -481,7 +489,7 @@ Chakra v3 typically moves toward compound/slot APIs; plan dedicated time to migr
 
 Treat this similarly to Tabs migration.
 
-### Step 5.12: Migrate AlertDialog usages
+### [ ] Step 5.12: Migrate AlertDialog usages
 This repo uses `AlertDialog` for confirmations. Chakra v3 may consolidate on Dialog primitives/snippets for alertdialog behavior.
 
 **Files affected** (examples):
@@ -497,26 +505,26 @@ Decide whether to:
 
 ## Phase 6: Testing Strategy
 
-### Step 6.1: Component-by-Component Testing
+### [ ] Step 6.1: Component-by-Component Testing
 After migrating each component type:
 1. Run TypeScript type check: `npm run type-check`
 2. Run the dev server: `npm run dev`
 3. Manually test the affected pages/components
 4. Check for console errors
 
-### Step 6.2: Run Existing Tests
+### [ ] Step 6.2: Run Existing Tests
 ```bash
 npm run test
 ```
 
 Update test files as needed for new component APIs.
 
-### Step 6.4: Update test provider wrapper
+### [ ] Step 6.4: Update test provider wrapper
 **File**: `web/src/test/helpers/render.tsx`
 
 Ensure tests wrap components with the v3 `ChakraProvider` using the new `system` value, and render any required snippet providers (e.g., Toaster) if tests rely on them.
 
-### Step 6.3: Visual Regression Testing
+### [ ] Step 6.3: Visual Regression Testing
 Compare before/after screenshots of:
 - Dashboard
 - Application Detail page
@@ -527,14 +535,14 @@ Compare before/after screenshots of:
 
 ## Phase 7: Build & Production Verification
 
-### Step 7.1: Production Build
+### [ ] Step 7.1: Production Build
 ```bash
 npm run build
 ```
 
 Resolve any build errors.
 
-### Step 7.2: Preview Production Build
+### [ ] Step 7.2: Preview Production Build
 ```bash
 npm run preview
 ```
@@ -545,15 +553,15 @@ Test key user flows.
 
 ## Phase 8: Cleanup & Documentation
 
-### Step 8.1: Remove Old Code
+### [ ] Step 8.1: Remove Old Code
 - Remove any v2-specific workarounds
 - Remove commented-out v2 code
 - Clean up unused imports
 
-### Step 8.2: Update Documentation
+### [ ] Step 8.2: Update Documentation
 Update any developer documentation referencing Chakra UI components.
 
-### Step 8.3: Final Commit
+### [ ] Step 8.3: Final Commit
 ```bash
 git add -A
 git commit -m "Migrate to Chakra UI v3
