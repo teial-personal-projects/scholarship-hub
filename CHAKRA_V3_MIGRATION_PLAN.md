@@ -537,14 +537,17 @@ Recommended approach:
 - `noOfLines` → `lineClamp`
 - `truncated` → `truncate`
 
-### [ ] Step 5.10: Migrate Menu (used heavily in this repo)
+### [✅] Step 5.10: Migrate Menu (used heavily in this repo)
 **Files affected**:
 - `web/src/pages/ApplicationDetail.tsx`
 - `web/src/pages/Applications.tsx`
 - `web/src/pages/Collaborators.tsx`
 - `web/src/components/Navigation.tsx`
 
-Chakra v3 typically moves toward compound/slot APIs; plan dedicated time to migrate menus, triggers, and item rendering.
+**Status (this repo)**:
+- Migrated legacy `Menu` / `MenuButton` / `MenuList` to v3 `MenuRoot` / `MenuTrigger` / `MenuPositioner` / `MenuContent`
+- Added required `value` props on `MenuItem` where needed
+- Completed in the files listed above
 
 ### [ ] Step 5.11: Migrate Accordion
 **Files affected**:
@@ -565,7 +568,7 @@ This repo uses `AlertDialog` for confirmations. Chakra v3 may consolidate on Dia
 Decide whether to:
 - use a dedicated alertdialog snippet, or
 - implement alertdialog semantics via `Dialog` primitives.
-
+PLEASE USE PRIMITIVES
 ---
 
 ## Phase 6: Testing Strategy
