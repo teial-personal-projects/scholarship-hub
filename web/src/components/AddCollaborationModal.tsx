@@ -34,7 +34,6 @@ function AddCollaborationModal({
   isOpen,
   onClose,
   applicationId,
-  essays,
   onSuccess,
 }: AddCollaborationModalProps) {
   const { showSuccess, showError } = useToastHelpers();
