@@ -10,17 +10,13 @@ import {
   Heading,
   Text,
   Input,
-  Select,
+  NativeSelect,
   Stack,
   HStack,
   Button,
   Card,
-  CardBody,
   Badge,
-  RangeSlider,
-  RangeSliderTrack,
-  RangeSliderFilledTrack,
-  RangeSliderThumb,
+  Slider,
   Spinner,
   VStack,
   Flex,
@@ -58,7 +54,7 @@ function ScholarshipSearch() {
     limit: 20
   });
 
-  const [amountRange, setAmountRange] = useState([0, 50000]);
+  const [maxAmount, setMaxAmount] = useState(50000);
 
   useEffect(() => {
     searchScholarships();
@@ -90,8 +86,8 @@ function ScholarshipSearch() {
   const handleSearch = () => {
     setSearchParams({
       ...searchParams,
-      minAmount: amountRange[0],
-      maxAmount: amountRange[1],
+      minAmount: 0,
+      maxAmount: maxAmount,
       page: 1
     });
     searchScholarships();
@@ -118,8 +114,8 @@ function ScholarshipSearch() {
         </Box>
 
         {/* Search Filters */}
-        <Card>
-          <CardBody>
+        <Card.Root>
+          <Card.Body>
             <VStack gap={4} align="stretch">
               {/* Keyword Search */}
               <Box>
@@ -141,57 +137,62 @@ function ScholarshipSearch() {
                 {/* Category */}
                 <Box flex="1" minW="200px">
                   <Text fontWeight="semibold" mb={2}>Category</Text>
-                  <Select
-                    value={searchParams.category}
-                    onChange={(e) => setSearchParams({ ...searchParams, category: e.target.value })}
-                  >
-                    <option value="">All Categories</option>
-                    <option value="STEM">STEM</option>
-                    <option value="Business">Business</option>
-                    <option value="Healthcare">Healthcare</option>
-                    <option value="Arts">Arts</option>
-                    <option value="Education">Education</option>
-                  </Select>
+                  <NativeSelect.Root>
+                    <NativeSelect.Field
+                      value={searchParams.category}
+                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSearchParams({ ...searchParams, category: e.target.value })}
+                    >
+                      <option value="">All Categories</option>
+                      <option value="STEM">STEM</option>
+                      <option value="Business">Business</option>
+                      <option value="Healthcare">Healthcare</option>
+                      <option value="Arts">Arts</option>
+                      <option value="Education">Education</option>
+                    </NativeSelect.Field>
+                  </NativeSelect.Root>
                 </Box>
 
                 {/* Education Level */}
                 <Box flex="1" minW="200px">
                   <Text fontWeight="semibold" mb={2}>Education Level</Text>
-                  <Select
-                    value={searchParams.educationLevel}
-                    onChange={(e) => setSearchParams({ ...searchParams, educationLevel: e.target.value })}
-                  >
-                    <option value="">All Levels</option>
-                    <option value="High School">High School</option>
-                    <option value="Undergraduate">Undergraduate</option>
-                    <option value="Graduate">Graduate</option>
-                    <option value="Doctorate">Doctorate</option>
-                  </Select>
+                  <NativeSelect.Root>
+                    <NativeSelect.Field
+                      value={searchParams.educationLevel}
+                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSearchParams({ ...searchParams, educationLevel: e.target.value })}
+                    >
+                      <option value="">All Levels</option>
+                      <option value="High School">High School</option>
+                      <option value="Undergraduate">Undergraduate</option>
+                      <option value="Graduate">Graduate</option>
+                      <option value="Doctorate">Doctorate</option>
+                    </NativeSelect.Field>
+                  </NativeSelect.Root>
                 </Box>
               </HStack>
 
-              {/* Amount Range */}
+              {/* Max Amount */}
               <Box>
                 <Text fontWeight="semibold" mb={2}>
-                  Amount: ${amountRange[0].toLocaleString()} - ${amountRange[1].toLocaleString()}
+                  Maximum Amount: ${maxAmount.toLocaleString()}
                 </Text>
-                <RangeSlider
+                <Slider.Root
                   min={0}
                   max={50000}
                   step={1000}
-                  value={amountRange}
-                  onChange={setAmountRange}
+                  value={[maxAmount]}
+                  onValueChange={(details) => setMaxAmount(details.value[0])}
                 >
-                  <RangeSliderTrack>
-                    <RangeSliderFilledTrack />
-                  </RangeSliderTrack>
-                  <RangeSliderThumb index={0} />
-                  <RangeSliderThumb index={1} />
-                </RangeSlider>
+                  <Slider.Control>
+                    <Slider.Track>
+                      <Slider.Range />
+                    </Slider.Track>
+                    <Slider.Thumb index={0} />
+                  </Slider.Control>
+                </Slider.Root>
               </Box>
             </VStack>
-          </CardBody>
-        </Card>
+          </Card.Body>
+        </Card.Root>
 
         {/* Results */}
         {loading ? (
@@ -205,8 +206,8 @@ function ScholarshipSearch() {
             </Text>
 
             {scholarships.map((scholarship) => (
-              <Card key={scholarship.id} _hover={{ shadow: 'md' }} cursor="pointer">
-                <CardBody>
+              <Card.Root key={scholarship.id} _hover={{ shadow: 'md' }} cursor="pointer">
+                <Card.Body>
                   <Stack gap={3}>
                     {/* Header */}
                     <Flex justify="space-between" align="start">
@@ -261,8 +262,8 @@ function ScholarshipSearch() {
                       </Button>
                     </HStack>
                   </Stack>
-                </CardBody>
-              </Card>
+                </Card.Body>
+              </Card.Root>
             ))}
 
             {scholarships.length === 0 && !loading && (

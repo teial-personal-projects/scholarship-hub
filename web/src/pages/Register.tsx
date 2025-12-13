@@ -11,7 +11,6 @@ import {
   Text,
   Link as ChakraLink,
   Card,
-  CardBody,
   SimpleGrid,
 } from '@chakra-ui/react';
 import { Link as RouterLink } from 'react-router-dom';
@@ -51,8 +50,8 @@ function Register() {
           <Text color="gray.600" fontSize={{ base: 'sm', md: 'md' }}>Create your account</Text>
         </Stack>
 
-        <Card>
-          <CardBody>
+        <Card.Root>
+          <Card.Body>
             <form onSubmit={handleSubmit}>
               <Stack gap="6">
                 <SimpleGrid columns={{ base: 1, md: 2 }} gap="6">
@@ -111,15 +110,17 @@ function Register() {
                 </Button>
               </Stack>
             </form>
-          </CardBody>
-        </Card>
+          </Card.Body>
+        </Card.Root>
 
         <Box textAlign="center">
           <Text>
             Already have an account?{' '}
-            <ChakraLink as={RouterLink} to="/login" color="blue.500">
-              Sign in
-            </ChakraLink>
+            <RouterLink to="/login">
+              <ChakraLink color="blue.500">
+                Sign in
+              </ChakraLink>
+            </RouterLink>
           </Text>
         </Box>
       </Stack>

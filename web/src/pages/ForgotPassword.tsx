@@ -3,7 +3,6 @@ import {
   Box,
   Button,
   Card,
-  CardBody,
   Container,
   Field,
   Heading,
@@ -46,8 +45,8 @@ function ForgotPassword() {
           </Text>
         </Stack>
 
-        <Card>
-          <CardBody>
+        <Card.Root>
+          <Card.Body>
             <form onSubmit={handleSubmit}>
               <Stack gap="6">
                 <Field.Root required>
@@ -71,13 +70,15 @@ function ForgotPassword() {
                 </Button>
               </Stack>
             </form>
-          </CardBody>
-        </Card>
+          </Card.Body>
+        </Card.Root>
 
         <Box textAlign="center">
-          <ChakraLink as={RouterLink} to="/login" color="blue.500">
-            Back to login
-          </ChakraLink>
+          <RouterLink to="/login">
+            <ChakraLink color="blue.500">
+              Back to login
+            </ChakraLink>
+          </RouterLink>
         </Box>
       </Stack>
     </Container>

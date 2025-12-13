@@ -11,7 +11,6 @@ import {
   Text,
   Link as ChakraLink,
   Card,
-  CardBody,
 } from '@chakra-ui/react';
 import { Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -48,8 +47,8 @@ function Login() {
           <Text color="gray.600" fontSize={{ base: 'sm', md: 'md' }}>Sign in to your account</Text>
         </Stack>
 
-        <Card>
-          <CardBody>
+        <Card.Root>
+          <Card.Body>
             <form onSubmit={handleSubmit}>
               <Stack gap="6">
                 <Field.Root required>
@@ -73,9 +72,11 @@ function Login() {
                 </Field.Root>
 
                 <Box textAlign="right">
-                  <ChakraLink as={RouterLink} to="/forgot-password" color="blue.500" fontSize="sm">
-                    Forgot password?
-                  </ChakraLink>
+                  <RouterLink to="/forgot-password">
+                    <ChakraLink color="blue.500" fontSize="sm">
+                      Forgot password?
+                    </ChakraLink>
+                  </RouterLink>
                 </Box>
 
                 <Button
@@ -89,15 +90,17 @@ function Login() {
                 </Button>
               </Stack>
             </form>
-          </CardBody>
-        </Card>
+          </Card.Body>
+        </Card.Root>
 
         <Box textAlign="center">
           <Text>
             Don't have an account?{' '}
-            <ChakraLink as={RouterLink} to="/register" color="blue.500">
-              Sign up
-            </ChakraLink>
+            <RouterLink to="/register">
+              <ChakraLink color="blue.500">
+                Sign up
+              </ChakraLink>
+            </RouterLink>
           </Text>
         </Box>
       </Stack>
