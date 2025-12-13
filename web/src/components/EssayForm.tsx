@@ -124,19 +124,19 @@ function EssayForm({ isOpen, onClose, applicationId, essay, onSuccess }: EssayFo
                 <Button
                   type="submit"
                   form="essay-form"
-                  colorScheme="accent"
+                  colorPalette="accent"
                   size="sm"
-                  isLoading={submitting}
+                  loading={submitting}
                   loadingText={isEditMode ? 'Updating...' : 'Creating...'}
                 >
                   {isEditMode ? 'Update' : 'Save'}
                 </Button>
                 <Button
                   variant="outline"
-                  colorScheme="brand"
+                  colorPalette="brand"
                   size="sm"
                   onClick={handleClose}
-                  isDisabled={submitting}
+                  disabled={submitting}
                 >
                   Cancel
                 </Button>

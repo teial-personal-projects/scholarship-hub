@@ -182,7 +182,7 @@ function Dashboard() {
           {/* Actions */}
           <HStack gap="4" flexWrap="wrap">
             <Button
-              colorScheme="green"
+              colorPalette="green"
               size={{ base: 'md', md: 'lg' }}
               onClick={() => navigate('/applications/new')}
               boxShadow="sm"
@@ -191,7 +191,7 @@ function Dashboard() {
             </Button>
             <Button
               variant="outline"
-              colorScheme="brand"
+              colorPalette="brand"
               size={{ base: 'md', md: 'lg' }}
               onClick={() => navigate('/search')}
             >
@@ -245,7 +245,7 @@ function Dashboard() {
                             )}
                           </Box>
                           {scholarship.amount && (
-                            <Badge colorScheme="green" ml={2}>
+                            <Badge colorPalette="green" ml={2}>
                               ${scholarship.amount.toLocaleString()}
                             </Badge>
                           )}
@@ -303,7 +303,7 @@ function Dashboard() {
                   <TabsTrigger value="inProgress">
                     In Progress
                     {inProgressCount > 0 && (
-                      <Badge ml="2" colorScheme="accent" borderRadius="full" px="2" py="0.5">
+                      <Badge ml="2" colorPalette="accent" borderRadius="full" px="2" py="0.5">
                         {inProgressCount}
                       </Badge>
                     )}
@@ -311,7 +311,7 @@ function Dashboard() {
                   <TabsTrigger value="submitted">
                     Submitted
                     {submittedCount > 0 && (
-                      <Badge ml="2" colorScheme="accent" borderRadius="full" px="2" py="0.5">
+                      <Badge ml="2" colorPalette="accent" borderRadius="full" px="2" py="0.5">
                         {submittedCount}
                       </Badge>
                     )}
@@ -355,7 +355,7 @@ function Dashboard() {
                                   <TableCell color="gray.600">{app.organization || '-'}</TableCell>
                                   <TableCell>
                                     <Badge
-                                      colorScheme="accent"
+                                      colorPalette="accent"
                                       borderRadius="full"
                                       px="3"
                                       py="1"
@@ -418,7 +418,7 @@ function Dashboard() {
                                       )}
                                     </Box>
                                     <Badge
-                                      colorScheme="accent"
+                                      colorPalette="accent"
                                       borderRadius="full"
                                       px="3"
                                       py="1"
@@ -482,7 +482,7 @@ function Dashboard() {
                                       <Button
                                         size="sm"
                                         onClick={() => handlePageChange(page)}
-                                        colorScheme={currentPage === page ? 'accent' : 'gray'}
+                                        colorPalette={currentPage === page ? 'accent' : 'gray'}
                                         variant={currentPage === page ? 'solid' : 'outline'}
                                         borderRadius="md"
                                       >
@@ -544,7 +544,7 @@ function Dashboard() {
                                   <TableCell color="gray.600">{app.organization || '-'}</TableCell>
                                   <TableCell>
                                     <Badge
-                                      colorScheme={
+                                      colorPalette={
                                         app.status === 'Awarded'
                                           ? 'success'
                                           : app.status === 'Submitted'
@@ -613,7 +613,7 @@ function Dashboard() {
                                       )}
                                     </Box>
                                     <Badge
-                                      colorScheme={
+                                      colorPalette={
                                         app.status === 'Awarded'
                                           ? 'success'
                                           : app.status === 'Submitted'
@@ -683,7 +683,7 @@ function Dashboard() {
                                       <Button
                                         size="sm"
                                         onClick={() => handlePageChange(page)}
-                                        colorScheme={currentPage === page ? 'accent' : 'gray'}
+                                        colorPalette={currentPage === page ? 'accent' : 'gray'}
                                         variant={currentPage === page ? 'solid' : 'outline'}
                                         borderRadius="md"
                                       >

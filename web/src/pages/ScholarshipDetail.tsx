@@ -112,7 +112,7 @@ function ScholarshipDetail() {
               {scholarship.amount && (
                 <HStack>
                   <Text fontWeight="bold">💰 Amount:</Text>
-                  <Badge colorScheme="green" fontSize="lg" px={3} py={1}>
+                  <Badge colorPalette="green" fontSize="lg" px={3} py={1}>
                     ${scholarship.amount.toLocaleString()}
                   </Badge>
                 </HStack>
@@ -142,7 +142,7 @@ function ScholarshipDetail() {
               {scholarship.category && (
                 <HStack>
                   <Text fontWeight="bold">🏷️ Category:</Text>
-                  <Badge colorScheme="blue">{scholarship.category}</Badge>
+                  <Badge colorPalette="blue">{scholarship.category}</Badge>
                 </HStack>
               )}
             </Stack>

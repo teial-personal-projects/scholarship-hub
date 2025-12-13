@@ -524,7 +524,7 @@ import { Separator } from '@chakra-ui/react';
 </Table.ScrollArea>
 ```
 
-### [ ] Step 5.8: Avoid global find/replace for boolean props
+### [✅] Step 5.8: Avoid global find/replace for boolean props
 **Do NOT** do a blind repo-wide `isOpen → open` replacement. Chakra v3 changes are component-specific and not always 1:1.
 
 Recommended approach:
@@ -532,7 +532,7 @@ Recommended approach:
 - Run `npm run type-check` after each family and address errors locally
 - Let TypeScript guide you to correct prop names
 
-### [ ] Step 5.9: Update Style Props
+### [✅] Step 5.9: Update Style Props
 - `colorScheme` → `colorPalette`
 - `noOfLines` → `lineClamp`
 - `truncated` → `truncate`

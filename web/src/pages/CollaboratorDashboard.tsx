@@ -172,7 +172,7 @@ function CollaboratorDashboard() {
                         {/* essayReview collaborations no longer link to a specific essay */}
                   </TableCell>
                   <TableCell>
-                    <Badge colorScheme={getStatusColor(collab.status)}>
+                    <Badge colorPalette={getStatusColor(collab.status)}>
                       {getStatusLabel(collab.status)}
                     </Badge>
                   </TableCell>
@@ -232,7 +232,7 @@ function CollaboratorDashboard() {
                         {/* essayReview collaborations no longer link to a specific essay */}
                       </Text>
                     </Box>
-                    <Badge colorScheme={getStatusColor(collab.status)}>
+                    <Badge colorPalette={getStatusColor(collab.status)}>
                       {getStatusLabel(collab.status)}
                     </Badge>
                   </Flex>

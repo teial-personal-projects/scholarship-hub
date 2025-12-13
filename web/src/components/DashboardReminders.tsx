@@ -128,12 +128,12 @@ function DashboardReminders() {
         <CardBody>
           <HStack gap="4" flexWrap="wrap">
             {hasOverdueItems && (
-              <Badge key="overdue" colorScheme="red" fontSize="md" px="3" py="1" borderRadius="full">
+              <Badge key="overdue" colorPalette="red" fontSize="md" px="3" py="1" borderRadius="full">
                 {reminders.stats.totalOverdue} Overdue
               </Badge>
             )}
             {hasUpcomingItems && (
-              <Badge key="upcoming" colorScheme="blue" fontSize="md" px="3" py="1" borderRadius="full">
+              <Badge key="upcoming" colorPalette="blue" fontSize="md" px="3" py="1" borderRadius="full">
                 {reminders.stats.totalUpcoming} Due Soon
               </Badge>
             )}
@@ -177,7 +177,7 @@ function DashboardReminders() {
                           <Text fontSize="sm" color="gray.600">
                             {app.organization || 'Organization not specified'}
                           </Text>
-                          <Badge colorScheme={getUrgencyColor(daysUntilDue)} mt="1">
+                          <Badge colorPalette={getUrgencyColor(daysUntilDue)} mt="1">
                             {formatDaysText(daysUntilDue)}
                           </Badge>
                         </Box>
@@ -235,7 +235,7 @@ function DashboardReminders() {
                           <Text fontSize="sm" color="gray.600">
                             {app.organization || 'Organization not specified'}
                           </Text>
-                          <Badge colorScheme={getUrgencyColor(daysUntilDue)} mt="1">
+                          <Badge colorPalette={getUrgencyColor(daysUntilDue)} mt="1">
                             {formatDaysText(daysUntilDue)}
                           </Badge>
                         </Box>
@@ -295,7 +295,7 @@ function DashboardReminders() {
                             {collab.collaborationType === 'guidance' && 'Guidance Session'}
                           </Text>
                           {daysUntilDue !== null && (
-                            <Badge colorScheme="red" mt="1">
+                            <Badge colorPalette="red" mt="1">
                               {formatDaysText(daysUntilDue)}
                             </Badge>
                           )}
@@ -356,7 +356,7 @@ function DashboardReminders() {
                             {collab.collaborationType === 'guidance' && 'Guidance Session'}
                           </Text>
                           {daysUntilDue !== null && (
-                            <Badge colorScheme={getUrgencyColor(daysUntilDue)} mt="1">
+                            <Badge colorPalette={getUrgencyColor(daysUntilDue)} mt="1">
                               {formatDaysText(daysUntilDue)}
                             </Badge>
                           )}

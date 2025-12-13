@@ -138,20 +138,20 @@ const AssignCollaboratorModal: React.FC<AssignCollaboratorModalProps> = ({
                 <Button
                   type="submit"
                   form="assign-collaborator-form"
-                  colorScheme="accent"
+                  colorPalette="accent"
                   size="sm"
-                  isLoading={isLoading}
+                  loading={isLoading}
                   loadingText="Assigning..."
-                  isDisabled={collaborators.length === 0}
+                  disabled={collaborators.length === 0}
                 >
                   Assign
                 </Button>
                 <Button
                   variant="outline"
-                  colorScheme="brand"
+                  colorPalette="brand"
                   size="sm"
                   onClick={onClose}
-                  isDisabled={isLoading}
+                  disabled={isLoading}
                 >
                   Cancel
                 </Button>

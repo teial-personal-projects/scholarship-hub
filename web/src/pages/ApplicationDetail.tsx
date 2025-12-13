@@ -557,13 +557,13 @@ function ApplicationDetail() {
   const getEssayStatus = (essay: EssayResponse) => {
     // Prefer explicit status if present (some environments may add it),
     // otherwise derive from existing fields.
-    if (essay.status === 'completed') return { label: 'Completed', colorScheme: 'green' as const };
-    if (essay.status === 'in_progress') return { label: 'In progress', colorScheme: 'blue' as const };
-    if (essay.status === 'not_started') return { label: 'Not started', colorScheme: 'gray' as const };
+    if (essay.status === 'completed') return { label: 'Completed', colorPalette: 'green' as const };
+    if (essay.status === 'in_progress') return { label: 'In progress', colorPalette: 'blue' as const };
+    if (essay.status === 'not_started') return { label: 'Not started', colorPalette: 'gray' as const };
 
-    if (essay.essayLink) return { label: 'Linked', colorScheme: 'green' as const };
-    if (essay.wordCount && essay.wordCount > 0) return { label: 'Draft', colorScheme: 'yellow' as const };
-    return { label: 'Needs link', colorScheme: 'gray' as const };
+    if (essay.essayLink) return { label: 'Linked', colorPalette: 'green' as const };
+    if (essay.wordCount && essay.wordCount > 0) return { label: 'Draft', colorPalette: 'yellow' as const };
+    return { label: 'Needs link', colorPalette: 'gray' as const };
   };
 
   // Progress counts
@@ -653,7 +653,7 @@ function ApplicationDetail() {
 
                   <HStack gap="2" flexWrap="wrap" mt="2">
                     <Badge
-                      colorScheme={getStatusColor(application.status)}
+                      colorPalette={getStatusColor(application.status)}
                       fontSize={{ base: 'sm', md: 'md' }}
                       px="2.5"
                       py="1"
@@ -664,7 +664,7 @@ function ApplicationDetail() {
                     </Badge>
                     {application.targetType && (
                       <Badge
-                        colorScheme="purple"
+                        colorPalette="purple"
                         fontSize={{ base: 'sm', md: 'md' }}
                         px="2.5"
                         py="1"
@@ -677,7 +677,7 @@ function ApplicationDetail() {
                     {application.platform && (
                       <Badge
                         variant="subtle"
-                        colorScheme="gray"
+                        colorPalette="gray"
                         fontSize={{ base: 'sm', md: 'md' }}
                         px="2.5"
                         py="1"
@@ -864,7 +864,7 @@ function ApplicationDetail() {
                               </Text>
                             </HStack>
                             <Badge
-                              colorScheme={recommendationsUncompletedCount === 0 ? 'green' : 'orange'}
+                              colorPalette={recommendationsUncompletedCount === 0 ? 'green' : 'orange'}
                               borderRadius="full"
                               px="2.5"
                               py="1"
@@ -918,7 +918,7 @@ function ApplicationDetail() {
                               </Text>
                             </HStack>
                             <Badge
-                              colorScheme={essayReviewsUncompletedCount === 0 ? 'green' : 'blue'}
+                              colorPalette={essayReviewsUncompletedCount === 0 ? 'green' : 'blue'}
                               borderRadius="full"
                               px="2.5"
                               py="1"
@@ -974,7 +974,7 @@ function ApplicationDetail() {
                             </Text>
                           </HStack>
                           <Badge
-                            colorScheme={essaysUncompletedCount === 0 ? 'green' : 'purple'}
+                            colorPalette={essaysUncompletedCount === 0 ? 'green' : 'purple'}
                             borderRadius="full"
                             px="2.5"
                             py="1"
@@ -1167,7 +1167,7 @@ function ApplicationDetail() {
                           <TableCell>
                             {(() => {
                               const status = getEssayStatus(essay);
-                              return <Badge colorScheme={status.colorScheme}>{status.label}</Badge>;
+                              return <Badge colorPalette={status.colorPalette}>{status.label}</Badge>;
                             })()}
                           </TableCell>
                           <TableCell>{essay.wordCount || '-'}</TableCell>
@@ -1217,7 +1217,7 @@ function ApplicationDetail() {
                             <HStack gap="2" mb="1">
                               {(() => {
                                 const status = getEssayStatus(essay);
-                                return <Badge colorScheme={status.colorScheme}>{status.label}</Badge>;
+                                return <Badge colorPalette={status.colorPalette}>{status.label}</Badge>;
                               })()}
                               {essay.wordCount && (
                                 <Text fontSize="sm" color="gray.600">
@@ -1330,7 +1330,7 @@ function ApplicationDetail() {
                                       : 'Loading...'}
                                   </TableCell>
                                   <TableCell>
-                                    <Badge colorScheme={getCollaborationStatusColor(collab.status)}>
+                                    <Badge colorPalette={getCollaborationStatusColor(collab.status)}>
                                       {collab.status}
                                     </Badge>
                                   </TableCell>
@@ -1408,7 +1408,7 @@ function ApplicationDetail() {
                                         : 'Loading...'}
                                     </Text>
                                     <HStack gap="2" mb="2">
-                                      <Badge colorScheme={getCollaborationStatusColor(collab.status)}>
+                                      <Badge colorPalette={getCollaborationStatusColor(collab.status)}>
                                         {collab.status}
                                       </Badge>
                                     </HStack>
@@ -1491,7 +1491,7 @@ function ApplicationDetail() {
                                       : 'Loading...'}
                                   </TableCell>
                                   <TableCell>
-                                    <Badge colorScheme={getCollaborationStatusColor(collab.status)}>
+                                    <Badge colorPalette={getCollaborationStatusColor(collab.status)}>
                                       {collab.status}
                                     </Badge>
                                   </TableCell>
@@ -1569,7 +1569,7 @@ function ApplicationDetail() {
                                         : 'Loading...'}
                                     </Text>
                                     <HStack gap="2" mb="2">
-                                      <Badge colorScheme={getCollaborationStatusColor(collab.status)}>
+                                      <Badge colorPalette={getCollaborationStatusColor(collab.status)}>
                                         {collab.status}
                                       </Badge>
                                     </HStack>
@@ -1652,7 +1652,7 @@ function ApplicationDetail() {
                                       : 'Loading...'}
                                   </TableCell>
                                   <TableCell>
-                                    <Badge colorScheme={getCollaborationStatusColor(collab.status)}>
+                                    <Badge colorPalette={getCollaborationStatusColor(collab.status)}>
                                       {collab.status}
                                     </Badge>
                                   </TableCell>
@@ -1730,7 +1730,7 @@ function ApplicationDetail() {
                                         : 'Loading...'}
                                     </Text>
                                     <HStack gap="2" mb="2">
-                                      <Badge colorScheme={getCollaborationStatusColor(collab.status)}>
+                                      <Badge colorPalette={getCollaborationStatusColor(collab.status)}>
                                         {collab.status}
                                       </Badge>
                                     </HStack>

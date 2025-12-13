@@ -80,9 +80,9 @@ function Login() {
 
                 <Button
                   type="submit"
-                  colorScheme="blue"
+                  colorPalette="blue"
                   size="lg"
-                  isLoading={isLoading}
+                  loading={isLoading}
                   loadingText="Signing in..."
                 >
                   Sign in

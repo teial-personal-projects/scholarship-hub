@@ -62,9 +62,9 @@ function ForgotPassword() {
 
                 <Button
                   type="submit"
-                  colorScheme="blue"
+                  colorPalette="blue"
                   size="lg"
-                  isLoading={isSubmitting}
+                  loading={isSubmitting}
                   loadingText="Sending link..."
                 >
                   Send reset link

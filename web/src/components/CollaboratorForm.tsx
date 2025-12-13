@@ -144,19 +144,19 @@ const CollaboratorForm: React.FC<CollaboratorFormProps> = ({
                 <Button
                   type="submit"
                   form="collaborator-form"
-                  colorScheme="accent"
+                  colorPalette="accent"
                   size="sm"
-                  isLoading={isLoading}
+                  loading={isLoading}
                   loadingText={isEditMode ? 'Updating...' : 'Creating...'}
                 >
                   {isEditMode ? 'Update' : 'Save'}
                 </Button>
                 <Button
                   variant="outline"
-                  colorScheme="brand"
+                  colorPalette="brand"
                   size="sm"
                   onClick={onClose}
-                  isDisabled={isLoading}
+                  disabled={isLoading}
                 >
                   Cancel
                 </Button>

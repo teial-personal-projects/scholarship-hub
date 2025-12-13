@@ -2,7 +2,7 @@ import { useState } from 'react';
 import {
   Box,
   Button,
-  Card,
+  CardRoot,
   CardBody,
   Container,
   Field,
@@ -60,7 +60,7 @@ function ResetPassword() {
         {loading ? (
           <Text textAlign="center">Preparing your reset session...</Text>
         ) : hasRecoverySession ? (
-          <Card>
+          <CardRoot>
             <CardBody>
               <form onSubmit={handleSubmit}>
                 <Stack gap="6">
@@ -86,9 +86,9 @@ function ResetPassword() {
 
                   <Button
                     type="submit"
-                    colorScheme="blue"
+                    colorPalette="blue"
                     size="lg"
-                    isLoading={isSubmitting}
+                    loading={isSubmitting}
                     loadingText="Updating..."
                   >
                     Update password
@@ -96,26 +96,26 @@ function ResetPassword() {
                 </Stack>
               </form>
             </CardBody>
-          </Card>
+          </CardRoot>
         ) : (
-          <Card>
+          <CardRoot>
             <CardBody>
               <Stack gap="4">
                 <Text color="gray.700">
                   The recovery session was not detected. Please request a new reset link and open it
                   again from your email.
                 </Text>
-                <Button as={RouterLink} to="/forgot-password" colorScheme="blue">
-                  Request new link
+                <Button asChild colorPalette="blue">
+                  <RouterLink to="/forgot-password">Request new link</RouterLink>
                 </Button>
               </Stack>
             </CardBody>
-          </Card>
+          </CardRoot>
         )}
 
         <Box textAlign="center">
-          <ChakraLink as={RouterLink} to="/login" color="blue.500">
-            Back to login
+          <ChakraLink asChild color="blue.500">
+            <RouterLink to="/login">Back to login</RouterLink>
           </ChakraLink>
         </Box>
       </Stack>

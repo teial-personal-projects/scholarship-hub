@@ -210,7 +210,7 @@ function CollaboratorInvite() {
               <Text fontSize="sm" color="gray.600" mb={1}>
                 Help Needed
               </Text>
-              <Badge colorScheme="blue" fontSize="md" py={1} px={2}>
+              <Badge colorPalette="blue" fontSize="md" py={1} px={2}>
                 {getCollaborationTypeLabel(inviteDetails.collaboration.collaborationType)}
               </Badge>
             </Box>

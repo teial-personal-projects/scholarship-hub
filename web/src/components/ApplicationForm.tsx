@@ -206,7 +206,7 @@ function ApplicationForm() {
               <Button
                 type="submit"
                 form="application-form"
-                colorScheme="accent"
+                colorPalette="accent"
                 loading={submitting}
                 loadingText={isEditMode ? 'Updating...' : 'Creating...'}
               >
@@ -214,7 +214,7 @@ function ApplicationForm() {
               </Button>
               <Button
                 variant="outline"
-                colorScheme="brand"
+                colorPalette="brand"
                 onClick={() => navigate(isEditMode ? `/applications/${id}` : '/applications')}
                 disabled={submitting}
               >

@@ -261,7 +261,7 @@ function Applications() {
                 {filteredApplications.length} Application{filteredApplications.length !== 1 ? 's' : ''}
               </Heading>
               {filteredApplications.length > 0 && (
-                <Badge colorScheme="accent" fontSize="sm" px="3" py="1" borderRadius="full">
+                <Badge colorPalette="accent" fontSize="sm" px="3" py="1" borderRadius="full">
                   Showing {((currentPage - 1) * itemsPerPage) + 1}-{Math.min(currentPage * itemsPerPage, filteredApplications.length)} of {filteredApplications.length}
                 </Badge>
               )}
@@ -321,7 +321,7 @@ function Applications() {
                           <TableCell color="gray.600">{app.organization || '-'}</TableCell>
                           <TableCell>
                             <Badge
-                              colorScheme={getStatusColor(app.status)}
+                              colorPalette={getStatusColor(app.status)}
                               borderRadius="full"
                               px="3"
                               py="1"
@@ -402,7 +402,7 @@ function Applications() {
                               )}
                             </Box>
                             <Badge
-                              colorScheme={getStatusColor(app.status)}
+                              colorPalette={getStatusColor(app.status)}
                               borderRadius="full"
                               px="3"
                               py="1"

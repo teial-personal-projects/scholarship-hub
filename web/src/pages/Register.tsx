@@ -102,9 +102,9 @@ function Register() {
 
                 <Button
                   type="submit"
-                  colorScheme="blue"
+                  colorPalette="blue"
                   size="lg"
-                  isLoading={isLoading}
+                  loading={isLoading}
                   loadingText="Creating account..."
                 >
                   Sign up

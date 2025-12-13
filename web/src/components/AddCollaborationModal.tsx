@@ -191,12 +191,12 @@ function AddCollaborationModal({
             <span>Add Collaborator</span>
             <HStack gap="3">
               <Button
-                colorScheme="accent"
+                colorPalette="accent"
                 size="sm"
                 onClick={handleSubmit}
-                isLoading={saving}
+                loading={saving}
                 loadingText="Adding..."
-                isDisabled={
+                disabled={
                   !collaboratorId ||
                   (collaborationType === 'recommendation' && !nextActionDueDate)
                 }
@@ -205,10 +205,10 @@ function AddCollaborationModal({
               </Button>
               <Button
                 variant="outline"
-                colorScheme="brand"
+                colorPalette="brand"
                 size="sm"
                 onClick={onClose}
-                isDisabled={saving}
+                disabled={saving}
               >
                 Cancel
               </Button>

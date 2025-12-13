@@ -130,7 +130,7 @@ function ScholarshipSearch() {
                     value={searchParams.query}
                     onChange={(e) => setSearchParams({ ...searchParams, query: e.target.value })}
                   />
-                  <Button colorScheme="blue" onClick={handleSearch} minW="100px">
+                  <Button colorPalette="blue" onClick={handleSearch} minW="100px">
                     Search
                   </Button>
                 </HStack>
@@ -217,7 +217,7 @@ function ScholarshipSearch() {
                         )}
                       </Box>
                       {scholarship.amount && (
-                        <Badge colorScheme="green" fontSize="md" px={3} py={1}>
+                        <Badge colorPalette="green" fontSize="md" px={3} py={1}>
                           ${scholarship.amount.toLocaleString()}
                         </Badge>
                       )}
@@ -225,7 +225,7 @@ function ScholarshipSearch() {
 
                     {/* Description */}
                     {scholarship.description && (
-                      <Text color="gray.700" noOfLines={2}>
+                      <Text color="gray.700" lineClamp={2}>
                         {scholarship.description}
                       </Text>
                     )}
@@ -247,7 +247,7 @@ function ScholarshipSearch() {
                     <HStack gap={2}>
                       <Button
                         size="sm"
-                        colorScheme="blue"
+                        colorPalette="blue"
                         onClick={() => navigate(`/scholarships/${scholarship.id}`)}
                       >
                         View Details

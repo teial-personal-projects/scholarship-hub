@@ -124,7 +124,7 @@ function Collaborators() {
                   <TableCell>{collab.emailAddress}</TableCell>
                   <TableCell>
                     {collab.relationship ? (
-                      <Badge colorScheme="blue">{collab.relationship}</Badge>
+                      <Badge colorPalette="blue">{collab.relationship}</Badge>
                     ) : (
                       <Text color="gray.400">-</Text>
                     )}
@@ -170,7 +170,7 @@ function Collaborators() {
                     </Text>
                     <HStack gap="2" mb="2" flexWrap="wrap">
                       {collab.relationship && (
-                        <Badge colorScheme="blue" fontSize="xs">
+                        <Badge colorPalette="blue" fontSize="xs">
                           {collab.relationship}
                         </Badge>
                       )}

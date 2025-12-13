@@ -179,7 +179,7 @@ const CollaborationHistory: React.FC<CollaborationHistoryProps> = ({ collaborati
             {/* Content */}
             <Box flex="1">
               <HStack justify="space-between" align="flex-start" mb={1}>
-                <Badge colorScheme={getActionColor(entry.action)} fontSize="xs">
+                <Badge colorPalette={getActionColor(entry.action)} fontSize="xs">
                   {getActionLabel(entry.action)}
                 </Badge>
                 <Text fontSize="xs" color="gray.500">

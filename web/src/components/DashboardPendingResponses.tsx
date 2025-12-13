@@ -205,7 +205,7 @@ function DashboardPendingResponses() {
         <TableCell color="gray.600">{collaboratorName}</TableCell>
         <TableCell>
           <Badge
-            colorScheme={getStatusColor(collab.status)}
+            colorPalette={getStatusColor(collab.status)}
             borderRadius="full"
             px="3"
             py="1"
@@ -276,7 +276,7 @@ function DashboardPendingResponses() {
                 </Text>
               </Box>
               <Badge
-                colorScheme={getStatusColor(collab.status)}
+                colorPalette={getStatusColor(collab.status)}
                 borderRadius="full"
                 px="3"
                 py="1"
@@ -319,7 +319,7 @@ function DashboardPendingResponses() {
             <TabsTrigger value="recommendations">
               Recommendations
               {recommendations.length > 0 && (
-                <Badge ml="2" colorScheme="accent" borderRadius="full" px="2" py="0.5">
+                <Badge ml="2" colorPalette="accent" borderRadius="full" px="2" py="0.5">
                   {recommendations.length}
                 </Badge>
               )}
@@ -327,7 +327,7 @@ function DashboardPendingResponses() {
             <TabsTrigger value="essays">
               Essays
               {essays.length > 0 && (
-                <Badge ml="2" colorScheme="accent" borderRadius="full" px="2" py="0.5">
+                <Badge ml="2" colorPalette="accent" borderRadius="full" px="2" py="0.5">
                   {essays.length}
                 </Badge>
               )}

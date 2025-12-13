@@ -154,12 +154,12 @@ function EditCollaborationModal({
             <span>Edit Collaboration</span>
             <HStack gap="3">
               <Button
-                colorScheme="accent"
+                colorPalette="accent"
                 size="sm"
                 onClick={handleSubmit}
-                isLoading={updateCollaboration.isPending}
+                loading={updateCollaboration.isPending}
                 loadingText="Saving..."
-                isDisabled={
+                disabled={
                   collaboration.collaborationType === 'recommendation' && !nextActionDueDate
                 }
               >
@@ -167,10 +167,10 @@ function EditCollaborationModal({
               </Button>
               <Button
                 variant="outline"
-                colorScheme="brand"
+                colorPalette="brand"
                 size="sm"
                 onClick={onClose}
-                isDisabled={updateCollaboration.isPending}
+                disabled={updateCollaboration.isPending}
               >
                 Cancel
               </Button>

@@ -252,7 +252,7 @@ function DashboardCollaborations() {
         <TableCell color="gray.600">{collaboratorName}</TableCell>
         <TableCell>
           <Badge
-            colorScheme={getStatusColor(collab.status)}
+            colorPalette={getStatusColor(collab.status)}
             borderRadius="full"
             px="3"
             py="1"
@@ -325,7 +325,7 @@ function DashboardCollaborations() {
                 </Text>
               </Box>
               <Badge
-                colorScheme={getStatusColor(collab.status)}
+                colorPalette={getStatusColor(collab.status)}
                 borderRadius="full"
                 px="3"
                 py="1"
@@ -367,7 +367,7 @@ function DashboardCollaborations() {
         <TableCell color="gray.600">{essay.theme || 'Untitled Essay'}</TableCell>
         <TableCell>
           <Badge
-            colorScheme={getStatusColor(essay.status || 'pending')}
+            colorPalette={getStatusColor(essay.status || 'pending')}
             borderRadius="full"
             px="3"
             py="1"
@@ -426,7 +426,7 @@ function DashboardCollaborations() {
                 </Text>
               </Box>
               <Badge
-                colorScheme={getStatusColor(essay.status || 'pending')}
+                colorPalette={getStatusColor(essay.status || 'pending')}
                 borderRadius="full"
                 px="3"
                 py="1"
@@ -469,7 +469,7 @@ function DashboardCollaborations() {
             <TabsTrigger value="recommendations">
               Recommendations
               {recommendations.length > 0 && (
-                <Badge ml="2" colorScheme="accent" borderRadius="full" px="2" py="0.5">
+                <Badge ml="2" colorPalette="accent" borderRadius="full" px="2" py="0.5">
                   {recommendations.length}
                 </Badge>
               )}
@@ -477,7 +477,7 @@ function DashboardCollaborations() {
             <TabsTrigger value="essayReviews">
               Essay Reviews
               {essayCollaborations.length > 0 && (
-                <Badge ml="2" colorScheme="accent" borderRadius="full" px="2" py="0.5">
+                <Badge ml="2" colorPalette="accent" borderRadius="full" px="2" py="0.5">
                   {essayCollaborations.length}
                 </Badge>
               )}
@@ -485,7 +485,7 @@ function DashboardCollaborations() {
             <TabsTrigger value="essays">
               Essays
               {activeEssays.length > 0 && (
-                <Badge ml="2" colorScheme="accent" borderRadius="full" px="2" py="0.5">
+                <Badge ml="2" colorPalette="accent" borderRadius="full" px="2" py="0.5">
                   {activeEssays.length}
                 </Badge>
               )}
