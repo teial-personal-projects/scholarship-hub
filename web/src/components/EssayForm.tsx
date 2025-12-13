@@ -11,11 +11,10 @@ import {
   Field,
   Input,
   NumberInput,
-  NumberInputField,
   Stack,
   HStack,
   Flex,
-  Select,
+  NativeSelect,
 } from '@chakra-ui/react';
 import { apiPost, apiPatch } from '../services/api';
 import type { EssayResponse } from '@scholarship-hub/shared';
@@ -158,13 +157,15 @@ function EssayForm({ isOpen, onClose, applicationId, essay, onSuccess }: EssayFo
 
               <Field.Root>
                 <Field.Label>Word Count</Field.Label>
-                <NumberInput
-                  value={wordCount}
-                  onChange={(_, value) => setWordCount(isNaN(value) ? undefined : value)}
+                <NumberInput.Root
+                  value={wordCount?.toString() || ''}
+                  onValueChange={(details: { valueAsNumber: number }) =>
+                    setWordCount(isNaN(details.valueAsNumber) ? undefined : details.valueAsNumber)
+                  }
                   min={0}
                 >
-                  <NumberInputField placeholder="e.g., 500" />
-                </NumberInput>
+                  <NumberInput.Input placeholder="e.g., 500" />
+                </NumberInput.Root>
                 <Field.HelperText>Target or maximum word count</Field.HelperText>
               </Field.Root>
 
@@ -183,11 +184,16 @@ function EssayForm({ isOpen, onClose, applicationId, essay, onSuccess }: EssayFo
 
               <Field.Root>
                 <Field.Label>Status</Field.Label>
-                <Select value={status} onChange={(e) => setStatus(e.target.value)}>
-                  <option value="not_started">Not Started</option>
-                  <option value="in_progress">In Progress</option>
-                  <option value="completed">Completed</option>
-                </Select>
+                <NativeSelect.Root>
+                  <NativeSelect.Field
+                    value={status}
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setStatus(e.target.value)}
+                  >
+                    <option value="not_started">Not Started</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="completed">Completed</option>
+                  </NativeSelect.Field>
+                </NativeSelect.Root>
                 <Field.HelperText>Current status of this essay</Field.HelperText>
               </Field.Root>
             </Stack>

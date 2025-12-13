@@ -14,7 +14,7 @@ import {
   Stack,
   HStack,
   Flex,
-  Select,
+  NativeSelect,
 } from '@chakra-ui/react';
 import type { CollaborationResponse } from '@scholarship-hub/shared';
 import { useToastHelpers } from '../utils/toast';
@@ -184,21 +184,26 @@ function EditCollaborationModal({
               <Field.Label>Collaboration Type</Field.Label>
               <Input
                 value={collaboration.collaborationType}
-                isDisabled
-                variant="filled"
+                disabled
+                readOnly
               />
             </Field.Root>
 
             <Field.Root>
               <Field.Label>Status</Field.Label>
-              <Select value={status} onChange={(e) => setStatus(e.target.value)}>
-                <option value="pending">Pending</option>
-                <option value="invited">Invited</option>
-                <option value="in_progress">In Progress</option>
-                <option value="submitted">Submitted</option>
-                <option value="completed">Completed</option>
-                <option value="declined">Declined</option>
-              </Select>
+              <NativeSelect.Root>
+                <NativeSelect.Field
+                  value={status}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setStatus(e.target.value)}
+                >
+                  <option value="pending">Pending</option>
+                  <option value="invited">Invited</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="submitted">Submitted</option>
+                  <option value="completed">Completed</option>
+                  <option value="declined">Declined</option>
+                </NativeSelect.Field>
+              </NativeSelect.Root>
             </Field.Root>
 
             {collaboration.collaborationType === 'recommendation' && (

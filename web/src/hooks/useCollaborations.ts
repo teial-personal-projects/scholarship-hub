@@ -69,9 +69,9 @@ export function useCreateCollaboration() {
       queryClient.invalidateQueries({ queryKey: collaborationKeys.all });
 
       // If we know the application ID, invalidate that specific query
-      if (newCollaboration.application_id) {
+      if (newCollaboration.applicationId) {
         queryClient.invalidateQueries({
-          queryKey: collaborationKeys.byApplication(newCollaboration.application_id)
+          queryKey: collaborationKeys.byApplication(newCollaboration.applicationId)
         });
       }
     },
@@ -100,9 +100,9 @@ export function useUpdateCollaboration() {
       queryClient.invalidateQueries({ queryKey: collaborationKeys.lists() });
 
       // Invalidate the application-specific list
-      if (updatedCollaboration.application_id) {
+      if (updatedCollaboration.applicationId) {
         queryClient.invalidateQueries({
-          queryKey: collaborationKeys.byApplication(updatedCollaboration.application_id)
+          queryKey: collaborationKeys.byApplication(updatedCollaboration.applicationId)
         });
       }
     },

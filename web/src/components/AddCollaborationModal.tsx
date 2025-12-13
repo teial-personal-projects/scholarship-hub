@@ -9,13 +9,12 @@ import {
   DialogCloseTrigger,
   Button,
   Field,
-  Select,
+  NativeSelect,
   Textarea,
   Stack,
   Input,
   Text,
   Alert,
-  AlertIcon,
   HStack,
   Flex,
 } from '@chakra-ui/react';
@@ -219,40 +218,45 @@ function AddCollaborationModal({
         <DialogBody>
           <Stack gap="4">
             {collaborators.length === 0 && !loading && (
-              <Alert status="info">
-                <AlertIcon />
-                <Text>
-                  You don't have any saved collaborators yet. Add collaborators from the Collaborators page first.
-                </Text>
-              </Alert>
+              <Alert.Root status="info">
+                <Alert.Indicator />
+                <Alert.Description>
+                  <Text>
+                    You don't have any saved collaborators yet. Add collaborators from the Collaborators page first.
+                  </Text>
+                </Alert.Description>
+              </Alert.Root>
             )}
 
             <Field.Root required>
               <Field.Label>Collaborator</Field.Label>
-              <Select
-                placeholder="Select collaborator"
-                value={collaboratorId || ''}
-                onChange={(e) => setCollaboratorId(parseInt(e.target.value, 10))}
-                isDisabled={loading}
-              >
-                {collaborators.map((collab) => (
-                  <option key={collab.id} value={collab.id}>
-                    {collab.firstName} {collab.lastName} ({collab.emailAddress}) - {collab.relationship || 'No relationship'}
-                  </option>
-                ))}
-              </Select>
+              <NativeSelect.Root>
+                <NativeSelect.Field
+                  placeholder="Select collaborator"
+                  value={collaboratorId || ''}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setCollaboratorId(parseInt(e.target.value, 10))}
+                >
+                  {collaborators.map((collab) => (
+                    <option key={collab.id} value={collab.id}>
+                      {collab.firstName} {collab.lastName} ({collab.emailAddress}) - {collab.relationship || 'No relationship'}
+                    </option>
+                  ))}
+                </NativeSelect.Field>
+              </NativeSelect.Root>
             </Field.Root>
 
             <Field.Root required>
               <Field.Label>Collaboration Type</Field.Label>
-              <Select
-                value={collaborationType}
-                onChange={(e) => setCollaborationType(e.target.value as 'recommendation' | 'essayReview' | 'guidance')}
-              >
-                <option value="recommendation">Recommendation Letter</option>
-                <option value="essayReview">Essay Review</option>
-                <option value="guidance">Guidance/Counseling</option>
-              </Select>
+              <NativeSelect.Root>
+                <NativeSelect.Field
+                  value={collaborationType}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setCollaborationType(e.target.value as 'recommendation' | 'essayReview' | 'guidance')}
+                >
+                  <option value="recommendation">Recommendation Letter</option>
+                  <option value="essayReview">Essay Review</option>
+                  <option value="guidance">Guidance/Counseling</option>
+                </NativeSelect.Field>
+              </NativeSelect.Root>
             </Field.Root>
 
             {/* Essay review collaborations no longer link to a specific essay */}
@@ -272,15 +276,17 @@ function AddCollaborationModal({
               <>
                 <Field.Root>
                   <Field.Label>Session Type</Field.Label>
-                  <Select
-                    placeholder="Select session type"
-                    value={sessionType}
-                    onChange={(e) => setSessionType(e.target.value as 'one-on-one' | 'group' | 'workshop' | '')}
-                  >
-                    <option value="one-on-one">One-on-One</option>
-                    <option value="group">Group</option>
-                    <option value="workshop">Workshop</option>
-                  </Select>
+                  <NativeSelect.Root>
+                    <NativeSelect.Field
+                      placeholder="Select session type"
+                      value={sessionType}
+                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSessionType(e.target.value as 'one-on-one' | 'group' | 'workshop' | '')}
+                    >
+                      <option value="one-on-one">One-on-One</option>
+                      <option value="group">Group</option>
+                      <option value="workshop">Workshop</option>
+                    </NativeSelect.Field>
+                  </NativeSelect.Root>
                 </Field.Root>
 
                 <Field.Root>

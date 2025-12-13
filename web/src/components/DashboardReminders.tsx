@@ -2,19 +2,14 @@ import { useEffect, useState } from 'react';
 import {
   Box,
   Card,
-  CardBody,
-  CardHeader,
   Heading,
   Text,
   Stack,
   Badge,
   Alert,
-  AlertIcon,
-  AlertTitle,
-  AlertDescription,
   Spinner,
   Link,
-  Collapse,
+  Collapsible,
   Button,
   useDisclosure,
   HStack,
@@ -30,8 +25,8 @@ function DashboardReminders() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { isOpen: showApplications, onToggle: toggleApplications } = useDisclosure({ defaultIsOpen: true });
-  const { isOpen: showCollaborations, onToggle: toggleCollaborations } = useDisclosure({ defaultIsOpen: true });
+  const { open: showApplications, onToggle: toggleApplications } = useDisclosure({ defaultOpen: true });
+  const { open: showCollaborations, onToggle: toggleCollaborations } = useDisclosure({ defaultOpen: true });
 
   useEffect(() => {
     async function fetchReminders() {
@@ -83,23 +78,23 @@ function DashboardReminders() {
 
   if (loading) {
     return (
-      <Card>
-        <CardBody>
+      <Card.Root>
+        <Card.Body>
           <Stack align="center" py="4">
             <Spinner size="lg" />
             <Text>Loading reminders...</Text>
           </Stack>
-        </CardBody>
-      </Card>
+        </Card.Body>
+      </Card.Root>
     );
   }
 
   if (error) {
     return (
-      <Alert status="error">
-        <AlertIcon />
-        <AlertDescription>{error}</AlertDescription>
-      </Alert>
+      <Alert.Root status="error">
+        <Alert.Indicator />
+        <Alert.Description>{error}</Alert.Description>
+      </Alert.Root>
     );
   }
 
@@ -113,19 +108,19 @@ function DashboardReminders() {
   // If no reminders, show positive message
   if (!hasOverdueItems && !hasUpcomingItems) {
     return (
-      <Alert status="success">
-        <AlertIcon />
-        <AlertTitle>All caught up!</AlertTitle>
-        <AlertDescription>No urgent items at this time.</AlertDescription>
-      </Alert>
+      <Alert.Root status="success">
+        <Alert.Indicator />
+        <Alert.Title>All caught up!</Alert.Title>
+        <Alert.Description>No urgent items at this time.</Alert.Description>
+      </Alert.Root>
     );
   }
 
   return (
     <Stack gap="4">
       {/* Summary Badge */}
-      <Card bg={hasOverdueItems ? 'red.50' : 'blue.50'} borderColor={hasOverdueItems ? 'red.200' : 'blue.200'} borderWidth="1px">
-        <CardBody>
+      <Card.Root bg={hasOverdueItems ? 'red.50' : 'blue.50'} borderColor={hasOverdueItems ? 'red.200' : 'blue.200'} borderWidth="1px">
+        <Card.Body>
           <HStack gap="4" flexWrap="wrap">
             {hasOverdueItems && (
               <Badge key="overdue" colorPalette="red" fontSize="md" px="3" py="1" borderRadius="full">
@@ -138,27 +133,28 @@ function DashboardReminders() {
               </Badge>
             )}
           </HStack>
-        </CardBody>
-      </Card>
+        </Card.Body>
+      </Card.Root>
 
       {/* Overdue Applications */}
       {reminders.applications.overdue.length > 0 && (
-        <Card borderColor="red.200" borderWidth="2px">
-          <CardHeader pb="2">
+        <Card.Root borderColor="red.200" borderWidth="2px">
+          <Card.Header pb="2">
             <Button
               variant="ghost"
               onClick={toggleApplications}
               width="100%"
               justifyContent="space-between"
-              rightIcon={<Text>{showApplications ? '▼' : '▶'}</Text>}
             >
               <Heading size="sm" color="red.600">
                 Overdue Applications ({reminders.applications.overdue.length})
               </Heading>
+              <Text>{showApplications ? '▼' : '▶'}</Text>
             </Button>
-          </CardHeader>
-          <Collapse in={showApplications}>
-            <CardBody pt="0">
+          </Card.Header>
+          <Collapsible.Root open={showApplications}>
+            <Collapsible.Content>
+            <Card.Body pt="0">
               <Stack gap="3">
                 {reminders.applications.overdue.map((app) => {
                   const daysUntilDue = getDaysUntilDue(app.dueDate);
@@ -194,29 +190,31 @@ function DashboardReminders() {
                   );
                 })}
               </Stack>
-            </CardBody>
-          </Collapse>
-        </Card>
+            </Card.Body>
+            </Collapsible.Content>
+          </Collapsible.Root>
+        </Card.Root>
       )}
 
       {/* Applications Due Soon */}
       {reminders.applications.dueSoon.length > 0 && (
-        <Card borderColor="blue.200" borderWidth="1px">
-          <CardHeader pb="2">
+        <Card.Root borderColor="blue.200" borderWidth="1px">
+          <Card.Header pb="2">
             <Button
               variant="ghost"
               onClick={toggleApplications}
               width="100%"
               justifyContent="space-between"
-              rightIcon={<Text>{showApplications ? '▼' : '▶'}</Text>}
             >
               <Heading size="sm" color="blue.600">
                 Applications Due Soon ({reminders.applications.dueSoon.length})
               </Heading>
+              <Text>{showApplications ? '▼' : '▶'}</Text>
             </Button>
-          </CardHeader>
-          <Collapse in={showApplications}>
-            <CardBody pt="0">
+          </Card.Header>
+          <Collapsible.Root open={showApplications}>
+            <Collapsible.Content>
+            <Card.Body pt="0">
               <Stack gap="3">
                 {reminders.applications.dueSoon.map((app) => {
                   const daysUntilDue = getDaysUntilDue(app.dueDate);
@@ -252,29 +250,31 @@ function DashboardReminders() {
                   );
                 })}
               </Stack>
-            </CardBody>
-          </Collapse>
-        </Card>
+            </Card.Body>
+            </Collapsible.Content>
+          </Collapsible.Root>
+        </Card.Root>
       )}
 
       {/* Overdue Collaborations */}
       {reminders.collaborations.overdue.length > 0 && (
-        <Card borderColor="red.200" borderWidth="2px">
-          <CardHeader pb="2">
+        <Card.Root borderColor="red.200" borderWidth="2px">
+          <Card.Header pb="2">
             <Button
               variant="ghost"
               onClick={toggleCollaborations}
               width="100%"
               justifyContent="space-between"
-              rightIcon={<Text>{showCollaborations ? '▼' : '▶'}</Text>}
             >
               <Heading size="sm" color="red.600">
                 Overdue Collaborations ({reminders.collaborations.overdue.length})
               </Heading>
+              <Text>{showCollaborations ? '▼' : '▶'}</Text>
             </Button>
-          </CardHeader>
-          <Collapse in={showCollaborations}>
-            <CardBody pt="0">
+          </Card.Header>
+          <Collapsible.Root open={showCollaborations}>
+            <Collapsible.Content>
+            <Card.Body pt="0">
               <Stack gap="3">
                 {reminders.collaborations.overdue.map((collab) => {
                   const daysUntilDue = collab.nextActionDueDate ? getDaysUntilDue(collab.nextActionDueDate) : null;
@@ -313,29 +313,31 @@ function DashboardReminders() {
                   );
                 })}
               </Stack>
-            </CardBody>
-          </Collapse>
-        </Card>
+            </Card.Body>
+            </Collapsible.Content>
+          </Collapsible.Root>
+        </Card.Root>
       )}
 
       {/* Collaborations Due Soon */}
       {reminders.collaborations.dueSoon.length > 0 && (
-        <Card borderColor="blue.200" borderWidth="1px">
-          <CardHeader pb="2">
+        <Card.Root borderColor="blue.200" borderWidth="1px">
+          <Card.Header pb="2">
             <Button
               variant="ghost"
               onClick={toggleCollaborations}
               width="100%"
               justifyContent="space-between"
-              rightIcon={<Text>{showCollaborations ? '▼' : '▶'}</Text>}
             >
               <Heading size="sm" color="blue.600">
                 Collaborations Due Soon ({reminders.collaborations.dueSoon.length})
               </Heading>
+              <Text>{showCollaborations ? '▼' : '▶'}</Text>
             </Button>
-          </CardHeader>
-          <Collapse in={showCollaborations}>
-            <CardBody pt="0">
+          </Card.Header>
+          <Collapsible.Root open={showCollaborations}>
+            <Collapsible.Content>
+            <Card.Body pt="0">
               <Stack gap="3">
                 {reminders.collaborations.dueSoon.map((collab) => {
                   const daysUntilDue = collab.nextActionDueDate ? getDaysUntilDue(collab.nextActionDueDate) : null;
@@ -374,9 +376,10 @@ function DashboardReminders() {
                   );
                 })}
               </Stack>
-            </CardBody>
-          </Collapse>
-        </Card>
+            </Card.Body>
+            </Collapsible.Content>
+          </Collapsible.Root>
+        </Card.Root>
       )}
     </Stack>
   );

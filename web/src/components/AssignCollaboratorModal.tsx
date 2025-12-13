@@ -14,7 +14,7 @@ import {
   DialogCloseTrigger,
   Button,
   Field,
-  Select,
+  NativeSelect,
   Textarea,
   Input,
   VStack,
@@ -164,18 +164,19 @@ const AssignCollaboratorModal: React.FC<AssignCollaboratorModalProps> = ({
             <VStack gap={4}>
               <Field.Root required>
                 <Field.Label>Select Collaborator</Field.Label>
-                <Select
-                  placeholder="Choose a collaborator"
-                  value={collaboratorId}
-                  onChange={(e) => setCollaboratorId(e.target.value)}
-                  isDisabled={loadingCollaborators}
-                >
-                  {collaborators.map((collab) => (
-                    <option key={collab.id} value={collab.id}>
-                      {collab.firstName} {collab.lastName} ({collab.emailAddress})
-                    </option>
-                  ))}
-                </Select>
+                <NativeSelect.Root>
+                  <NativeSelect.Field
+                    placeholder="Choose a collaborator"
+                    value={collaboratorId}
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setCollaboratorId(e.target.value)}
+                  >
+                    {collaborators.map((collab) => (
+                      <option key={collab.id} value={collab.id}>
+                        {collab.firstName} {collab.lastName} ({collab.emailAddress})
+                      </option>
+                    ))}
+                  </NativeSelect.Field>
+                </NativeSelect.Root>
                 {collaborators.length === 0 && !loadingCollaborators && (
                   <Text fontSize="sm" color="gray.500" mt={2}>
                     No collaborators found. Please add a collaborator first.
@@ -185,14 +186,16 @@ const AssignCollaboratorModal: React.FC<AssignCollaboratorModalProps> = ({
 
               <Field.Root required>
                 <Field.Label>Collaboration Type</Field.Label>
-                <Select
-                  value={collaborationType}
-                  onChange={(e) => setCollaborationType(e.target.value as any)}
-                >
-                  <option value="recommendation">Recommendation Letter</option>
-                  <option value="essayReview">Essay Review</option>
-                  <option value="guidance">Guidance/Counseling</option>
-                </Select>
+                <NativeSelect.Root>
+                  <NativeSelect.Field
+                    value={collaborationType}
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setCollaborationType(e.target.value as any)}
+                  >
+                    <option value="recommendation">Recommendation Letter</option>
+                    <option value="essayReview">Essay Review</option>
+                    <option value="guidance">Guidance/Counseling</option>
+                  </NativeSelect.Field>
+                </NativeSelect.Root>
               </Field.Root>
 
               <Field.Root>
