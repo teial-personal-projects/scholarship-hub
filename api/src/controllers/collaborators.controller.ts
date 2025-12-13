@@ -7,8 +7,8 @@ import { Request, Response } from 'express';
 import { z } from 'zod';
 import * as collaboratorsService from '../services/collaborators.service.js';
 import { asyncHandler } from '../middleware/error-handler.js';
-import { toCamelCase } from '@scholarship-hub/shared/utils/case-conversion';
-import { emailSchema, nameSchema } from '@scholarship-hub/shared/utils/validation';
+import { toCamelCase } from '@scholarship-hub/shared';
+import { emailSchema, nameSchema } from '@scholarship-hub/shared';
 
 /**
  * GET /api/collaborators

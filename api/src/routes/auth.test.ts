@@ -31,9 +31,15 @@ vi.mock('../utils/supabase.js', () => ({
 }));
 
 // Mock shared package
-vi.mock('@scholarship-hub/shared/utils/case-conversion', () => ({
+vi.mock('@scholarship-hub/shared', async () => {
+    const { z } = await import('zod');
+    return {
   toCamelCase: vi.fn((obj: any) => obj),
-}));
+  nameSchema: z.string(),
+  phoneSchema: () => z.string(),
+  emailSchema: z.string().email(),
+  };
+});
 
 // Mock auth service
 vi.mock('../services/auth.service.js', () => ({

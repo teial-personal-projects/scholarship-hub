@@ -5,7 +5,7 @@ import {
   isDbErrorCode,
 } from '../constants/db-errors.js';
 import type { DashboardReminders } from '@scholarship-hub/shared';
-import { sanitizePhoneNumber } from '@scholarship-hub/shared/utils/validation';
+import { sanitizePhoneNumber } from '@scholarship-hub/shared';
 import { AppError } from '../middleware/error-handler.js';
 
 /**

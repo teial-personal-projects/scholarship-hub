@@ -86,7 +86,8 @@ describe('collaborators.service', () => {
       const { createCollaborator } = await import('./collaborators.service.js');
 
       const newCollab = {
-        name: 'New Teacher',
+        firstName: 'New',
+        lastName: 'Teacher',
         emailAddress: 'newteacher@school.edu',
         relationship: 'Teacher',
       };

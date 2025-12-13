@@ -84,14 +84,14 @@ describe('users.service', () => {
       const updates = {
         firstName: 'Updated',
         lastName: 'Name',
-        phoneNumber: '+9999999999',
+        phoneNumber: '+12025551234',
       };
 
       const updatedUser = {
         ...mockUsers.student1,
         first_name: 'Updated',
         last_name: 'Name',
-        phone_number: '+9999999999',
+        phone_number: '+12025551234',
       };
 
       const mockUpdate = vi.fn().mockReturnValue({
@@ -116,7 +116,7 @@ describe('users.service', () => {
       expect(mockUpdate).toHaveBeenCalledWith({
         first_name: 'Updated',
         last_name: 'Name',
-        phone_number: '+9999999999',
+        phone_number: '+12025551234',
       });
       expect(result).toEqual(updatedUser);
     });

@@ -2,8 +2,8 @@ import { Request, Response } from 'express';
 import { z } from 'zod';
 import * as usersService from '../services/users.service.js';
 import { asyncHandler } from '../middleware/error-handler.js';
-import { toCamelCase } from '@scholarship-hub/shared/utils/case-conversion';
-import { nameSchema, phoneSchema } from '@scholarship-hub/shared/utils/validation';
+import { toCamelCase } from '@scholarship-hub/shared';
+import { nameSchema, phoneSchema } from '@scholarship-hub/shared';
 
 // Validation schemas
 const updateUserProfileSchema = z.object({

@@ -35,9 +35,15 @@ vi.mock('../utils/supabase.js', () => ({
 }));
 
 // Mock shared package
-vi.mock('@scholarship-hub/shared/utils/case-conversion', () => ({
+vi.mock('@scholarship-hub/shared', async () => {
+    const { z } = await import('zod');
+    return {
   toCamelCase: vi.fn((obj: any) => obj),
-}));
+  nameSchema: z.string(),
+  phoneSchema: () => z.string(),
+  emailSchema: z.string().email(),
+  };
+});
 
 // Mock collaborations service
 vi.mock('../services/collaborations.service.js', () => ({
@@ -100,6 +106,7 @@ describe('Collaborations Routes', () => {
         collaboratorId: 1,
         applicationId: 1,
         collaborationType: 'recommendation',
+        nextActionDueDate: '2024-12-31',
         notes: 'Need recommendation letter',
       };
 

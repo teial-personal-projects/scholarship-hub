@@ -6,7 +6,7 @@
 import { Request, Response } from 'express';
 import * as collaborationsService from '../services/collaborations.service.js';
 import { asyncHandler } from '../middleware/error-handler.js';
-import { toCamelCase } from '@scholarship-hub/shared/utils/case-conversion';
+import { toCamelCase } from '@scholarship-hub/shared';
 
 /**
  * GET /api/applications/:applicationId/collaborations
