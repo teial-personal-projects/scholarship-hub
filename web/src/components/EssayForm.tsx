@@ -16,6 +16,7 @@ import {
   FormHelperText,
   HStack,
   Flex,
+  Select,
 } from '@chakra-ui/react';
 import { apiPost, apiPatch } from '../services/api';
 import type { EssayResponse } from '@scholarship-hub/shared';
@@ -37,17 +38,20 @@ function EssayForm({ isOpen, onClose, applicationId, essay, onSuccess }: EssayFo
   const [theme, setTheme] = useState('');
   const [wordCount, setWordCount] = useState<number | undefined>();
   const [essayLink, setEssayLink] = useState('');
+  const [status, setStatus] = useState('not_started');
 
   useEffect(() => {
     if (essay) {
       setTheme(essay.theme || '');
       setWordCount(essay.wordCount || undefined);
       setEssayLink(essay.essayLink || '');
+      setStatus(essay.status || 'not_started');
     } else {
       // Reset form when opening for new essay
       setTheme('');
       setWordCount(undefined);
       setEssayLink('');
+      setStatus('not_started');
     }
   }, [essay, isOpen]);
 
@@ -61,6 +65,7 @@ function EssayForm({ isOpen, onClose, applicationId, essay, onSuccess }: EssayFo
         theme: theme.trim() || null,
         wordCount: wordCount || null,
         essayLink: essayLink.trim() || null,
+        status,
       };
 
       if (isEditMode && essay) {
@@ -162,6 +167,16 @@ function EssayForm({ isOpen, onClose, applicationId, essay, onSuccess }: EssayFo
                 <FormHelperText>
                   Link to Google Docs or other online document
                 </FormHelperText>
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>Status</FormLabel>
+                <Select value={status} onChange={(e) => setStatus(e.target.value)}>
+                  <option value="not_started">Not Started</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="completed">Completed</option>
+                </Select>
+                <FormHelperText>Current status of this essay</FormHelperText>
               </FormControl>
             </Stack>
           </ModalBody>

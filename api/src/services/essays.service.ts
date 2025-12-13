@@ -71,6 +71,7 @@ export const createEssay = async (applicationId: number, userId: number, essayDa
   units?: string;
   essayLink?: string;
   wordCount?: number;
+  status?: string;
 }) => {
   // First verify the application belongs to the user
   const { data: application, error: appError } = await supabase
@@ -93,6 +94,7 @@ export const createEssay = async (applicationId: number, userId: number, essayDa
   if (essayData.units !== undefined) dbData.units = essayData.units;
   if (essayData.essayLink !== undefined) dbData.essay_link = essayData.essayLink;
   if (essayData.wordCount !== undefined) dbData.word_count = essayData.wordCount;
+  if (essayData.status !== undefined) dbData.status = essayData.status;
 
   const { data, error } = await supabase
     .from('essays')
@@ -113,6 +115,7 @@ export const updateEssay = async (essayId: number, userId: number, essayData: {
   units?: string;
   essayLink?: string;
   wordCount?: number;
+  status?: string;
 }) => {
   // First verify the essay belongs to the user's application
   await getEssayById(essayId, userId);
@@ -124,6 +127,7 @@ export const updateEssay = async (essayId: number, userId: number, essayData: {
   if (essayData.units !== undefined) dbData.units = essayData.units;
   if (essayData.essayLink !== undefined) dbData.essay_link = essayData.essayLink;
   if (essayData.wordCount !== undefined) dbData.word_count = essayData.wordCount;
+  if (essayData.status !== undefined) dbData.status = essayData.status;
 
   const { data, error } = await supabase
     .from('essays')

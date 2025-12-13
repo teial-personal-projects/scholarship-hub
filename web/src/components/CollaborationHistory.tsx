@@ -3,7 +3,7 @@
  * Displays timeline of collaboration history actions
  */
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import {
   Box,
   VStack,
@@ -14,8 +14,7 @@ import {
   Divider,
   Icon,
 } from '@chakra-ui/react';
-import { apiGet } from '../services/api';
-import { useToastHelpers } from '../utils/toast';
+import { useCollaborationHistory } from '../hooks/useCollaborations';
 
 interface HistoryEntry {
   id: number;
@@ -35,27 +34,11 @@ interface CollaborationHistoryProps {
 }
 
 const CollaborationHistory: React.FC<CollaborationHistoryProps> = ({ collaborationId, isOpen }) => {
-  const { showError } = useToastHelpers();
-  const [history, setHistory] = useState<HistoryEntry[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (isOpen === false) return;
-    fetchHistory();
-  }, [collaborationId, isOpen]);
-
-  const fetchHistory = async () => {
-    try {
-      setLoading(true);
-      const data = await apiGet<HistoryEntry[]>(`/collaborations/${collaborationId}/history`);
-      setHistory(data || []);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load history';
-      showError('Error', errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Use React Query - it automatically refetches when collaborationId changes
+  // and when the query is invalidated (e.g., after updating the collaboration)
+  const { data: history = [], isLoading: loading } = useCollaborationHistory(
+    isOpen === false ? null : collaborationId
+  );
 
   const getActionLabel = (action: string) => {
     switch (action) {

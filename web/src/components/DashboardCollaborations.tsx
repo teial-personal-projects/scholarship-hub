@@ -26,7 +26,7 @@ import {
 } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
 import { apiGet } from '../services/api';
-import type { ApplicationResponse, CollaborationResponse, CollaborationResponseWithSnakeCase, CollaboratorResponse } from '@scholarship-hub/shared';
+import type { ApplicationResponse, CollaborationResponse, CollaborationResponseWithSnakeCase, CollaboratorResponse, EssayResponse } from '@scholarship-hub/shared';
 
 // Helper function to format dates without timezone conversion
 const formatDate = (dateString: string | null | undefined): string => {
@@ -42,6 +42,7 @@ function DashboardCollaborations() {
   const [applications, setApplications] = useState<ApplicationResponse[]>([]);
   const [collaborations, setCollaborations] = useState<CollaborationResponse[]>([]);
   const [collaborators, setCollaborators] = useState<Map<number, CollaboratorResponse>>(new Map());
+  const [allEssays, setAllEssays] = useState<EssayResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState(0);
@@ -56,10 +57,11 @@ function DashboardCollaborations() {
         const applicationsData = await apiGet<ApplicationResponse[]>('/applications');
         setApplications(applicationsData || []);
 
-        // Fetch collaborations for each application
+        // Fetch collaborations and essays for each application
         const allCollaborations: CollaborationResponse[] = [];
+        const allEssaysData: EssayResponse[] = [];
         const collaboratorIds = new Set<number>();
-        
+
         for (const app of applicationsData || []) {
           try {
             const collabs = await apiGet<CollaborationResponse[]>(`/applications/${app.id}/collaborations`);
@@ -79,8 +81,20 @@ function DashboardCollaborations() {
             // Continue if one application's collaborations fail to load
             console.error(`Failed to load collaborations for application ${app.id}:`, err);
           }
+
+          // Fetch essays for this application
+          try {
+            const essays = await apiGet<EssayResponse[]>(`/applications/${app.id}/essays`);
+            if (essays) {
+              allEssaysData.push(...essays);
+            }
+          } catch (err) {
+            // Continue if one application's essays fail to load
+            console.error(`Failed to load essays for application ${app.id}:`, err);
+          }
         }
         setCollaborations(allCollaborations);
+        setAllEssays(allEssaysData);
         
         // Debug: Check what collaboration types we have
         if (allCollaborations.length > 0) {
@@ -153,7 +167,7 @@ function DashboardCollaborations() {
     return filtered;
   }, [collaborations]);
 
-  const essays = useMemo(() => {
+  const essayCollaborations = useMemo(() => {
     return collaborations.filter(c => {
       // Check both camelCase and snake_case field names (defensive)
       const typedCollab = c as CollaborationResponseWithSnakeCase;
@@ -161,6 +175,11 @@ function DashboardCollaborations() {
       return type === 'essayReview';
     });
   }, [collaborations]);
+
+  // Filter essays to only show those that are not completed or in progress
+  const activeEssays = useMemo(() => {
+    return allEssays.filter(e => e.status !== 'completed');
+  }, [allEssays]);
 
   // Create a map of application IDs to application names
   const applicationMap = useMemo(() => {
@@ -330,6 +349,107 @@ function DashboardCollaborations() {
     );
   };
 
+  const renderEssayRow = (essay: EssayResponse) => {
+    const applicationName = applicationMap.get(essay.applicationId) || 'Unknown Application';
+    const statusLabel = essay.status === 'not_started' ? 'Not Started' : essay.status === 'in_progress' ? 'In Progress' : 'Completed';
+
+    return (
+      <Tr
+        key={essay.id}
+        _hover={{
+          bg: 'highlight.50',
+          cursor: 'pointer',
+        }}
+        onClick={() => navigate(`/applications/${essay.applicationId}`)}
+      >
+        <Td fontWeight="medium" color="brand.700">
+          {applicationName}
+        </Td>
+        <Td color="gray.600">{essay.theme || 'Untitled Essay'}</Td>
+        <Td>
+          <Badge
+            colorScheme={getStatusColor(essay.status || 'pending')}
+            borderRadius="full"
+            px="3"
+            py="1"
+            fontWeight="semibold"
+          >
+            {statusLabel}
+          </Badge>
+        </Td>
+        <Td color="gray.700">
+          {essay.wordCount ? `${essay.wordCount} words` : '-'}
+        </Td>
+        <Td>
+          <Link
+            color="accent.400"
+            fontWeight="semibold"
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/applications/${essay.applicationId}`);
+            }}
+            cursor="pointer"
+            _hover={{ color: 'accent.500', textDecoration: 'underline' }}
+          >
+            View →
+          </Link>
+        </Td>
+      </Tr>
+    );
+  };
+
+  const renderEssayCard = (essay: EssayResponse) => {
+    const applicationName = applicationMap.get(essay.applicationId) || 'Unknown Application';
+    const statusLabel = essay.status === 'not_started' ? 'Not Started' : essay.status === 'in_progress' ? 'In Progress' : 'Completed';
+
+    return (
+      <Card
+        key={essay.id}
+        cursor="pointer"
+        onClick={() => navigate(`/applications/${essay.applicationId}`)}
+        variant="academic"
+        bg="highlight.50"
+        _hover={{
+          transform: 'translateY(-2px)',
+          boxShadow: 'lg',
+        }}
+        transition="all 0.3s"
+      >
+        <CardBody>
+          <Stack spacing="3">
+            <Flex justify="space-between" align="start">
+              <Box flex="1">
+                <Text fontWeight="bold" fontSize="md" mb="1" color="brand.700">
+                  {applicationName}
+                </Text>
+                <Text fontSize="sm" color="gray.600" mb="2">
+                  {essay.theme || 'Untitled Essay'}
+                </Text>
+              </Box>
+              <Badge
+                colorScheme={getStatusColor(essay.status || 'pending')}
+                borderRadius="full"
+                px="3"
+                py="1"
+                fontWeight="semibold"
+              >
+                {statusLabel}
+              </Badge>
+            </Flex>
+            <HStack spacing="4" fontSize="sm" color="gray.600">
+              {essay.wordCount && (
+                <Text>
+                  <Text as="span" fontWeight="semibold">Words:</Text>{' '}
+                  {essay.wordCount}
+                </Text>
+              )}
+            </HStack>
+          </Stack>
+        </CardBody>
+      </Card>
+    );
+  };
+
   return (
     <Card variant="elevated" bg="white">
       <CardHeader
@@ -356,10 +476,18 @@ function DashboardCollaborations() {
               )}
             </Tab>
             <Tab>
-              Essays
-              {essays.length > 0 && (
+              Essay Reviews
+              {essayCollaborations.length > 0 && (
                 <Badge ml="2" colorScheme="accent" borderRadius="full" px="2" py="0.5">
-                  {essays.length}
+                  {essayCollaborations.length}
+                </Badge>
+              )}
+            </Tab>
+            <Tab>
+              Essays
+              {activeEssays.length > 0 && (
+                <Badge ml="2" colorScheme="accent" borderRadius="full" px="2" py="0.5">
+                  {activeEssays.length}
                 </Badge>
               )}
             </Tab>
@@ -396,8 +524,8 @@ function DashboardCollaborations() {
               )}
             </TabPanel>
             <TabPanel px="0" pt="6">
-              {essays.length === 0 ? (
-                renderEmptyState('No essay reviews yet.', '✏️')
+              {essayCollaborations.length === 0 ? (
+                renderEmptyState('No essay review collaborations yet.', '✏️')
               ) : (
                 <>
                   {/* Desktop Table View */}
@@ -413,13 +541,42 @@ function DashboardCollaborations() {
                         </Tr>
                       </Thead>
                       <Tbody>
-                        {essays.map(renderCollaborationRow)}
+                        {essayCollaborations.map(renderCollaborationRow)}
                       </Tbody>
                     </Table>
                   </Box>
                   {/* Mobile Card View */}
                   <Stack spacing="4" display={{ base: 'flex', md: 'none' }}>
-                    {essays.map(renderCollaborationCard)}
+                    {essayCollaborations.map(renderCollaborationCard)}
+                  </Stack>
+                </>
+              )}
+            </TabPanel>
+            <TabPanel px="0" pt="6">
+              {activeEssays.length === 0 ? (
+                renderEmptyState('No essays in progress.', '📝')
+              ) : (
+                <>
+                  {/* Desktop Table View */}
+                  <Box overflowX="auto" display={{ base: 'none', md: 'block' }}>
+                    <Table variant="simple" size="md">
+                      <Thead>
+                        <Tr>
+                          <Th>Application</Th>
+                          <Th>Theme</Th>
+                          <Th>Status</Th>
+                          <Th>Word Count</Th>
+                          <Th>Actions</Th>
+                        </Tr>
+                      </Thead>
+                      <Tbody>
+                        {activeEssays.map(renderEssayRow)}
+                      </Tbody>
+                    </Table>
+                  </Box>
+                  {/* Mobile Card View */}
+                  <Stack spacing="4" display={{ base: 'flex', md: 'none' }}>
+                    {activeEssays.map(renderEssayCard)}
                   </Stack>
                 </>
               )}

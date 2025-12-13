@@ -155,6 +155,7 @@ export interface EssayResponse {
   theme?: string | null;
   wordCount?: number | null;
   essayLink?: string | null;
+  status?: 'not_started' | 'in_progress' | 'completed';
   createdAt: string;
   updatedAt?: string;
 }

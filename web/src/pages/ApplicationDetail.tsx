@@ -1,10 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  Alert,
-  AlertDescription,
-  AlertIcon,
-  AlertTitle,
   Box,
   Button,
   Container,
@@ -20,6 +16,7 @@ import {
   Flex,
   Divider,
   SimpleGrid,
+  Progress,
   Table,
   Thead,
   Tbody,
@@ -58,7 +55,6 @@ import SendInviteDialog from '../components/SendInviteDialog';
 import CollaborationHistory from '../components/CollaborationHistory';
 import AddCollaborationModal from '../components/AddCollaborationModal';
 import EditCollaborationModal from '../components/EditCollaborationModal';
-import { useRef } from 'react';
 import { formatDateNoTimezone } from '../utils/date';
 import { useToastHelpers } from '../utils/toast';
 
@@ -100,6 +96,7 @@ function ApplicationDetail() {
   // Edit collaboration modal
   const { isOpen: isEditCollabOpen, onOpen: onEditCollabOpen, onClose: onEditCollabClose } = useDisclosure();
   const [selectedCollaborationForEdit, setSelectedCollaborationForEdit] = useState<CollaborationResponse | null>(null);
+  const prevIsEditCollabOpenRef = useRef(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -341,6 +338,20 @@ function ApplicationDetail() {
   // Handle updating collaboration status
   const handleUpdateCollaborationStatus = async (collaborationId: number, status: string) => {
     try {
+      // Optimistically update UI so summary counts refresh immediately
+      setCollaborations((prev) =>
+        prev.map((c) => {
+          const idMatch = c.id === collaborationId || c.collaborationId === collaborationId;
+          if (!idMatch) return c;
+          return {
+            ...c,
+            status: status as CollaborationResponse['status'],
+            awaitingActionFrom: status === 'completed' ? null : c.awaitingActionFrom,
+            updatedAt: new Date().toISOString(),
+          };
+        })
+      );
+
       await apiPatch(`/collaborations/${collaborationId}`, {
         status,
         ...(status === 'completed' && { awaitingActionFrom: null })
@@ -360,7 +371,7 @@ function ApplicationDetail() {
   };
 
   // Handle adding collaboration success
-  const handleCollaborationSuccess = async () => {
+  const handleCollaborationSuccess = useCallback(async () => {
     if (!id) {
       console.warn('handleCollaborationSuccess: No application ID');
       return;
@@ -410,7 +421,17 @@ function ApplicationDetail() {
         setCollaborations([]);
       }
     }
-  };
+  }, [id, showError]);
+
+  // Keep collaboration-derived summary tiles current after closing the edit modal
+  useEffect(() => {
+    const wasOpen = prevIsEditCollabOpenRef.current;
+    prevIsEditCollabOpenRef.current = isEditCollabOpen;
+
+    if (wasOpen && !isEditCollabOpen) {
+      void handleCollaborationSuccess();
+    }
+  }, [isEditCollabOpen, handleCollaborationSuccess]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -500,6 +521,39 @@ function ApplicationDetail() {
     if (min == null || max == null) return 'Not specified';
     return `$${min.toLocaleString()} - $${max.toLocaleString()}`;
   })();
+
+  const getEssayStatus = (essay: EssayResponse) => {
+    // Prefer explicit status if present (some environments may add it),
+    // otherwise derive from existing fields.
+    if (essay.status === 'completed') return { label: 'Completed', colorScheme: 'green' as const };
+    if (essay.status === 'in_progress') return { label: 'In progress', colorScheme: 'blue' as const };
+    if (essay.status === 'not_started') return { label: 'Not started', colorScheme: 'gray' as const };
+
+    if (essay.essayLink) return { label: 'Linked', colorScheme: 'green' as const };
+    if (essay.wordCount && essay.wordCount > 0) return { label: 'Draft', colorScheme: 'yellow' as const };
+    return { label: 'Needs link', colorScheme: 'gray' as const };
+  };
+
+  // Progress counts
+  // Essays: treat "complete" as status === completed when present, otherwise having a document link
+  const essaysCompleteCount = essays.filter((e) => e.status === 'completed' || Boolean(e.essayLink)).length;
+  const essaysTotalCount = essays.length;
+  // const hasIncompleteEssays = essaysTotalCount > 0 && essaysCompleteCount < essaysTotalCount;
+  const essaysUncompletedCount = Math.max(essaysTotalCount - essaysCompleteCount, 0);
+
+  // Recommendations: treat "complete" as collaboration status === 'completed'
+  const recommendationCollabs = collaborations.filter((c) => c.collaborationType === 'recommendation');
+  const recommendationsCompleteCount = recommendationCollabs.filter((c) => c.status === 'completed').length;
+  const recommendationsTotalCount = recommendationCollabs.length;
+  // const hasIncompleteRecommendations =
+  //   recommendationsTotalCount > 0 && recommendationsCompleteCount < recommendationsTotalCount;
+  const recommendationsUncompletedCount = Math.max(recommendationsTotalCount - recommendationsCompleteCount, 0);
+
+  // Essay Reviews: collaborations of type essayReview
+  const essayReviewCollabs = collaborations.filter((c) => c.collaborationType === 'essayReview');
+  const essayReviewsCompleteCount = essayReviewCollabs.filter((c) => c.status === 'completed').length;
+  const essayReviewsTotalCount = essayReviewCollabs.length;
+  const essayReviewsUncompletedCount = Math.max(essayReviewsTotalCount - essayReviewsCompleteCount, 0);
 
   return (
     <Box
@@ -724,21 +778,196 @@ function ApplicationDetail() {
                 </Box>
               </SimpleGrid>
 
-              {application.currentAction && (
-                <Alert
-                  status="info"
-                  variant="subtle"
-                  borderRadius="xl"
-                  bg="brand.50"
+              {(recommendationsTotalCount > 0 || essayReviewsTotalCount > 0 || essaysTotalCount > 0) && (
+                <Box
+                  borderRadius="2xl"
                   borderWidth="1px"
-                  borderColor="brand.100"
+                  borderColor="blackAlpha.100"
+                  bgGradient="linear(to-br, brand.50, white)"
+                  boxShadow="0 8px 20px rgba(15, 23, 42, 0.06)"
+                  p={{ base: 4, md: 5 }}
                 >
-                  <AlertIcon />
-                  <Box>
-                    <AlertTitle>Current action</AlertTitle>
-                    <AlertDescription color="gray.800">{application.currentAction}</AlertDescription>
-                  </Box>
-                </Alert>
+                  <HStack spacing="3" align="start" mb="4">
+                    <Box
+                      w="10"
+                      h="10"
+                      borderRadius="xl"
+                      bg="brand.100"
+                      display="flex"
+                      alignItems="center"
+                      justifyContent="center"
+                      flexShrink={0}
+                    >
+                      <Text fontSize="lg" aria-hidden>
+                        ✨
+                      </Text>
+                    </Box>
+                    <Box>
+                      <Text fontSize="sm" color="gray.700" fontWeight="semibold" letterSpacing="0.2px">
+                        Next steps
+                      </Text>
+                      <Heading size="sm" color="brand.800" mt="0.5">
+                        Current action
+                      </Heading>
+                      <Text fontSize="sm" color="gray.600" mt="1">
+                        Quick view of what’s left across recommendations, reviews, and essays.
+                      </Text>
+                    </Box>
+                  </HStack>
+
+                  <Stack spacing="4">
+                    {/* Recommendations + Essay Reviews side-by-side */}
+                    <SimpleGrid columns={{ base: 1, md: 2 }} spacing="4">
+                      {recommendationsTotalCount > 0 && (
+                        <Box
+                          bg="white"
+                          borderWidth="1px"
+                          borderColor="blackAlpha.100"
+                          borderRadius="xl"
+                          p="4"
+                        >
+                          <HStack justify="space-between" align="start" mb="3">
+                            <HStack spacing="2">
+                              <Text aria-hidden>📨</Text>
+                              <Text fontSize="sm" color="gray.700" fontWeight="semibold">
+                                Recommendations
+                              </Text>
+                            </HStack>
+                            <Badge
+                              colorScheme={recommendationsUncompletedCount === 0 ? 'green' : 'orange'}
+                              borderRadius="full"
+                              px="2.5"
+                              py="1"
+                              textTransform="none"
+                            >
+                              {recommendationsUncompletedCount === 0 ? 'All done' : `${recommendationsUncompletedCount} left`}
+                            </Badge>
+                          </HStack>
+
+                          <HStack spacing="2" align="baseline">
+                            <Text fontSize="2xl" fontWeight="bold" color="gray.900">
+                              {recommendationsUncompletedCount}
+                            </Text>
+                            <Text fontSize="sm" color="gray.600">
+                              / {recommendationsTotalCount} uncompleted
+                            </Text>
+                          </HStack>
+
+                          <Progress
+                            mt="3"
+                            borderRadius="full"
+                            size="sm"
+                            colorScheme={recommendationsUncompletedCount === 0 ? 'green' : 'orange'}
+                            value={
+                              recommendationsTotalCount === 0
+                                ? 0
+                                : ((recommendationsTotalCount - recommendationsUncompletedCount) / recommendationsTotalCount) * 100
+                            }
+                          />
+                        </Box>
+                      )}
+
+                      {essayReviewsTotalCount > 0 && (
+                        <Box
+                          bg="white"
+                          borderWidth="1px"
+                          borderColor="blackAlpha.100"
+                          borderRadius="xl"
+                          p="4"
+                        >
+                          <HStack justify="space-between" align="start" mb="3">
+                            <HStack spacing="2">
+                              <Text aria-hidden>🧑‍🏫</Text>
+                              <Text fontSize="sm" color="gray.700" fontWeight="semibold">
+                                Essay Reviews
+                              </Text>
+                            </HStack>
+                            <Badge
+                              colorScheme={essayReviewsUncompletedCount === 0 ? 'green' : 'blue'}
+                              borderRadius="full"
+                              px="2.5"
+                              py="1"
+                              textTransform="none"
+                            >
+                              {essayReviewsUncompletedCount === 0 ? 'All done' : `${essayReviewsUncompletedCount} left`}
+                            </Badge>
+                          </HStack>
+
+                          <HStack spacing="2" align="baseline">
+                            <Text fontSize="2xl" fontWeight="bold" color="gray.900">
+                              {essayReviewsUncompletedCount}
+                            </Text>
+                            <Text fontSize="sm" color="gray.600">
+                              / {essayReviewsTotalCount} uncompleted
+                            </Text>
+                          </HStack>
+
+                          <Progress
+                            mt="3"
+                            borderRadius="full"
+                            size="sm"
+                            colorScheme={essayReviewsUncompletedCount === 0 ? 'green' : 'blue'}
+                            value={
+                              essayReviewsTotalCount === 0
+                                ? 0
+                                : ((essayReviewsTotalCount - essayReviewsUncompletedCount) / essayReviewsTotalCount) * 100
+                            }
+                          />
+                        </Box>
+                      )}
+                    </SimpleGrid>
+
+                    {/* Extra separation before essays */}
+                    {essaysTotalCount > 0 && (
+                      <Box
+                        bg="white"
+                        borderWidth="1px"
+                        borderColor="blackAlpha.100"
+                        borderRadius="xl"
+                        p="4"
+                      >
+                        <HStack justify="space-between" align="start" mb="3">
+                          <HStack spacing="2">
+                            <Text aria-hidden>📝</Text>
+                            <Text fontSize="sm" color="gray.700" fontWeight="semibold">
+                              Essays
+                            </Text>
+                          </HStack>
+                          <Badge
+                            colorScheme={essaysUncompletedCount === 0 ? 'green' : 'purple'}
+                            borderRadius="full"
+                            px="2.5"
+                            py="1"
+                            textTransform="none"
+                          >
+                            {essaysUncompletedCount === 0 ? 'All done' : `${essaysUncompletedCount} left`}
+                          </Badge>
+                        </HStack>
+
+                        <HStack spacing="2" align="baseline">
+                          <Text fontSize="2xl" fontWeight="bold" color="gray.900">
+                            {essaysUncompletedCount}
+                          </Text>
+                          <Text fontSize="sm" color="gray.600">
+                            / {essaysTotalCount} uncompleted
+                          </Text>
+                        </HStack>
+
+                        <Progress
+                          mt="3"
+                          borderRadius="full"
+                          size="sm"
+                          colorScheme={essaysUncompletedCount === 0 ? 'green' : 'purple'}
+                          value={
+                            essaysTotalCount === 0
+                              ? 0
+                              : ((essaysTotalCount - essaysUncompletedCount) / essaysTotalCount) * 100
+                          }
+                        />
+                      </Box>
+                    )}
+                  </Stack>
+                </Box>
               )}
             </Stack>
           </Box>
@@ -856,6 +1085,7 @@ function ApplicationDetail() {
                     <Thead>
                       <Tr>
                         <Th>Theme</Th>
+                        <Th>Status</Th>
                         <Th>Word Count</Th>
                         <Th>Actions</Th>
                       </Tr>
@@ -864,6 +1094,12 @@ function ApplicationDetail() {
                       {essays.map((essay) => (
                         <Tr key={essay.id}>
                           <Td>{essay.theme || 'Untitled'}</Td>
+                          <Td>
+                            {(() => {
+                              const status = getEssayStatus(essay);
+                              return <Badge colorScheme={status.colorScheme}>{status.label}</Badge>;
+                            })()}
+                          </Td>
                           <Td>{essay.wordCount || '-'}</Td>
                           <Td>
                             <Menu>
@@ -905,11 +1141,18 @@ function ApplicationDetail() {
                             <Text fontWeight="bold" fontSize="md" mb="1">
                               {essay.theme || 'Untitled'}
                             </Text>
-                            {essay.wordCount && (
-                              <Text fontSize="sm" color="gray.600">
-                                {essay.wordCount} words
-                              </Text>
-                            )}
+                            <HStack spacing="2" mb="1">
+                              {(() => {
+                                const status = getEssayStatus(essay);
+                                return <Badge colorScheme={status.colorScheme}>{status.label}</Badge>;
+                              })()}
+                              {essay.wordCount && (
+                                <Text fontSize="sm" color="gray.600">
+                                  {essay.wordCount} words
+                                </Text>
+                              )}
+                            </HStack>
+                            {/* word count shown in the row above */}
                           </Box>
                           <Menu>
                             <MenuButton

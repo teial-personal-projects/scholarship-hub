@@ -16,15 +16,15 @@ import {
   Flex,
   Select,
 } from '@chakra-ui/react';
-import { apiPatch } from '../services/api';
 import type { CollaborationResponse } from '@scholarship-hub/shared';
 import { useToastHelpers } from '../utils/toast';
+import { useUpdateCollaboration } from '../hooks/useCollaborations';
 
 interface EditCollaborationModalProps {
   isOpen: boolean;
   onClose: () => void;
   collaboration: CollaborationResponse | null;
-  onSuccess: () => void;
+  onSuccess?: () => void; // Now optional since React Query handles refetching
 }
 
 function EditCollaborationModal({
@@ -34,13 +34,13 @@ function EditCollaborationModal({
   onSuccess,
 }: EditCollaborationModalProps) {
   const { showSuccess, showError } = useToastHelpers();
+  const updateCollaboration = useUpdateCollaboration();
 
   // Form state
   const [status, setStatus] = useState('');
   const [nextActionDueDate, setNextActionDueDate] = useState('');
   const [notes, setNotes] = useState('');
   const [portalUrl, setPortalUrl] = useState('');
-  const [saving, setSaving] = useState(false);
 
   // Initialize form with collaboration data
   useEffect(() => {
@@ -75,51 +75,51 @@ function EditCollaborationModal({
       return;
     }
 
-    try {
-      setSaving(true);
+    const payload: Record<string, unknown> = {};
 
-      const payload: Record<string, unknown> = {};
-
-      // Add status if changed
-      if (status !== collaboration.status) {
-        payload.status = status;
-        // Clear awaitingActionFrom if marking as completed
-        if (status === 'completed') {
-          payload.awaitingActionFrom = null;
-        }
+    // Add status if changed
+    if (status !== collaboration.status) {
+      payload.status = status;
+      // Clear awaitingActionFrom if marking as completed
+      if (status === 'completed') {
+        payload.awaitingActionFrom = null;
       }
-
-      // Always include due date for recommendations, optional for others
-      if (collaboration.collaborationType === 'recommendation') {
-        payload.nextActionDueDate = nextActionDueDate;
-      } else if (nextActionDueDate) {
-        payload.nextActionDueDate = nextActionDueDate;
-      }
-
-      // Add notes if changed
-      if (notes !== (collaboration.notes || '')) {
-        // Use null when cleared so backend persists the change (and logs history)
-        payload.notes = notes.trim() ? notes : null;
-      }
-
-      // Add type-specific fields
-      if (collaboration.collaborationType === 'recommendation') {
-        if (portalUrl !== (collaboration.portalUrl || '')) {
-          payload.portalUrl = portalUrl || undefined;
-        }
-      }
-
-      await apiPatch(`/collaborations/${collaboration.id}`, payload);
-
-      showSuccess('Success', 'Collaboration updated successfully', 3000);
-      onSuccess();
-      onClose();
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to update collaboration';
-      showError('Error', errorMessage);
-    } finally {
-      setSaving(false);
     }
+
+    // Always include due date for recommendations, optional for others
+    if (collaboration.collaborationType === 'recommendation') {
+      payload.nextActionDueDate = nextActionDueDate;
+    } else if (nextActionDueDate) {
+      payload.nextActionDueDate = nextActionDueDate;
+    }
+
+    // Add notes if changed
+    if (notes !== (collaboration.notes || '')) {
+      // Use null when cleared so backend persists the change (and logs history)
+      payload.notes = notes.trim() ? notes : null;
+    }
+
+    // Add type-specific fields
+    if (collaboration.collaborationType === 'recommendation') {
+      if (portalUrl !== (collaboration.portalUrl || '')) {
+        payload.portalUrl = portalUrl || undefined;
+      }
+    }
+
+    updateCollaboration.mutate(
+      { id: collaboration.id, data: payload },
+      {
+        onSuccess: () => {
+          showSuccess('Success', 'Collaboration updated successfully', 3000);
+          onSuccess?.(); // Call onSuccess if provided
+          onClose();
+        },
+        onError: (err) => {
+          const errorMessage = err instanceof Error ? err.message : 'Failed to update collaboration';
+          showError('Error', errorMessage);
+        },
+      }
+    );
   };
 
   if (!collaboration) return null;
@@ -144,7 +144,7 @@ function EditCollaborationModal({
                 colorScheme="accent"
                 size="sm"
                 onClick={handleSubmit}
-                isLoading={saving}
+                isLoading={updateCollaboration.isPending}
                 loadingText="Saving..."
                 isDisabled={
                   collaboration.collaborationType === 'recommendation' && !nextActionDueDate
@@ -157,14 +157,14 @@ function EditCollaborationModal({
                 colorScheme="brand"
                 size="sm"
                 onClick={onClose}
-                isDisabled={saving}
+                isDisabled={updateCollaboration.isPending}
               >
                 Cancel
               </Button>
             </HStack>
           </Flex>
         </ModalHeader>
-        <ModalCloseButton isDisabled={saving} />
+        <ModalCloseButton isDisabled={updateCollaboration.isPending} />
         <ModalBody>
           <Stack spacing="4">
             <FormControl>
