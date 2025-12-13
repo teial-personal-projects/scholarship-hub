@@ -173,7 +173,7 @@ function Dashboard() {
           {/* Actions */}
           <HStack gap="4" flexWrap="wrap">
             <Button
-              colorPalette="green"
+              colorPalette="blue"
               size={{ base: 'md', md: 'lg' }}
               onClick={() => navigate('/applications/new')}
               boxShadow="sm"

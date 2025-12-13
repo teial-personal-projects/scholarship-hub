@@ -194,16 +194,13 @@ function Applications() {
                 </Text>
               </Box>
               <Button
-                bg="white"
-                color="brand.800"
-                borderWidth="1px"
-                borderColor="whiteAlpha.700"
+                colorPalette="blue"
+                variant="solid"
                 onClick={() => navigate('/applications/new')}
                 size={{ base: 'sm', md: 'md' }}
                 boxShadow="sm"
-                _hover={{ bg: 'whiteAlpha.900', transform: 'translateY(-1px)', boxShadow: 'md' }}
-                _active={{ bg: 'whiteAlpha.800', transform: 'translateY(0px)', boxShadow: 'sm' }}
-                _focusVisible={{ outline: '3px solid', outlineColor: 'whiteAlpha.800', outlineOffset: '2px' }}
+                _hover={{ transform: 'translateY(-1px)', boxShadow: 'md' }}
+                _active={{ transform: 'translateY(0px)', boxShadow: 'sm' }}
               >
                 New Application
               </Button>
