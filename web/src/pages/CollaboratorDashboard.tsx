@@ -34,18 +34,18 @@ import {
   Card,
   CardBody,
   Flex,
-  HStack,
-  useToast
+  HStack
 } from '@chakra-ui/react';
 import { useCollaborations } from '../hooks/useCollaborations';
 import type { CollaborationResponse } from '@scholarship-hub/shared';
 import CollaborationHistory from '../components/CollaborationHistory';
 import { apiPatch } from '../services/api';
 import { formatDateNoTimezone } from '../utils/date';
+import { useToastHelpers } from '../utils/toast';
 
 function CollaboratorDashboard() {
   const { collaborations, loading, fetchCollaborations } = useCollaborations();
-  const toast = useToast();
+  const { showSuccess, showError } = useToastHelpers();
 
   // History modal state
   const { isOpen: isHistoryOpen, onOpen: onHistoryOpen, onClose: onHistoryClose } = useDisclosure();
@@ -66,24 +66,12 @@ function CollaboratorDashboard() {
         nextActionDescription: 'Review submitted work'
       });
 
-      toast({
-        title: 'Success',
-        description: 'Marked as submitted. The student will be notified.',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      });
+      showSuccess('Success', 'Marked as submitted. The student will be notified.', 3000, true);
 
       // Refresh collaborations
       await fetchCollaborations();
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to update collaboration status',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
+      showError('Error', 'Failed to update collaboration status', 5000, true);
       console.error(error);
     } finally {
       setSubmitting(null);

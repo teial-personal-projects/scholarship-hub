@@ -6,6 +6,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { AuthProvider } from './contexts/AuthContext';
 import App from './App.tsx';
 import { system } from './theme';
+import { Toaster } from './components/ui/toaster';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -22,6 +23,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <ChakraProvider value={system}>
+        <Toaster />
         <AuthProvider>
           <App />
         </AuthProvider>

@@ -242,7 +242,7 @@ For **this project** (Phase 0.1 = NO): omit it.
 
 ## Phase 5: Component Migration (Critical Components First)
 
-### [ ] Step 5.1: Migrate Toast System
+### [✅] Step 5.1: Migrate Toast System
 **Files affected**:
 - `web/src/utils/toast.ts`
 - All files using `useToastHelpers` (10+ files)
@@ -279,6 +279,11 @@ toaster.create({
   type: 'success',
 });
 ```
+
+**Status (this repo)**:
+- `useToastHelpers` now calls `toaster.create(...)` (v3) instead of `useToast()`
+- Mounted `<Toaster />` in `web/src/main.tsx` so notifications render globally
+- Removed the last direct `useToast()` usage (`CollaboratorDashboard`)
 
 ### [ ] Step 5.2: Migrate Modal → Dialog
 **Files affected** (13 files):

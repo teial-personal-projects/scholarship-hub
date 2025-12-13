@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { useToast } from '@chakra-ui/react';
+import { toaster } from '../components/ui/toaster';
 
 // TODO: Maybe combine into a single routine and pass status in.
 // I left it this way just in case we do something different for each.
@@ -9,8 +9,6 @@ import { useToast } from '@chakra-ui/react';
  * @returns Object with showSuccess and showError functions
  */
 export function useToastHelpers() {
-  const toast = useToast();
-
   /**
    * Show a success toast notification
    * @param title - Toast title
@@ -24,14 +22,14 @@ export function useToastHelpers() {
     duration: number = 5000,
     isClosable: boolean = true
   ) => {
-    toast({
+    toaster.create({
       title,
       description,
-      status: 'success',
       duration,
-      isClosable,
+      type: 'success',
+      closable: isClosable,
     });
-  }, [toast]);
+  }, []);
 
   /**
    * Show an error toast notification
@@ -46,14 +44,14 @@ export function useToastHelpers() {
     duration: number = 5000,
     isClosable: boolean = true
   ) => {
-    toast({
+    toaster.create({
       title,
       description,
-      status: 'error',
       duration,
-      isClosable,
+      type: 'error',
+      closable: isClosable,
     });
-  }, [toast]);
+  }, []);
 
   return { showSuccess, showError };
 }
