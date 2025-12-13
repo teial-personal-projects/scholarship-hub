@@ -549,13 +549,15 @@ Recommended approach:
 - Added required `value` props on `MenuItem` where needed
 - Completed in the files listed above
 
-### [ ] Step 5.11: Migrate Accordion
+### [✅] Step 5.11: Migrate Accordion
 **Files affected**:
 - `web/src/pages/ApplicationDetail.tsx`
 - `web/src/components/ApplicationForm.tsx`
 - `web/src/pages/Profile.tsx`
 
-Treat this similarly to Tabs migration.
+**Status (this repo)**:
+- No remaining v2 accordion APIs found in `web/src` (`AccordionButton` / `AccordionPanel` / `AccordionIcon`, `defaultIndex`, `allowMultiple`)
+- Pages/components use v3 accordion primitives (`AccordionRoot`, `AccordionItemTrigger`, `AccordionItemContent`, `AccordionItemBody`, `AccordionItemIndicator`) with required `value`s
 
 ### [ ] Step 5.12: Migrate AlertDialog usages
 This repo uses `AlertDialog` for confirmations. Chakra v3 may consolidate on Dialog primitives/snippets for alertdialog behavior.
