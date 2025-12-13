@@ -113,11 +113,15 @@ npm install react-icons
 
 **Recommendation**: Use `lucide-react` for consistency with modern React patterns.
 
-### [ ] Step 2.5: Verify Package Installation
+### [✅] Step 2.5: Verify Package Installation
 ```bash
 npm ls @chakra-ui/react
 npm ls @emotion/react
 ```
+
+**Verified (web workspace)**:
+- `@chakra-ui/react@3.30.0`
+- `@emotion/react@11.14.0`
 
 ---
 
