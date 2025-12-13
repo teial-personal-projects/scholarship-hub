@@ -13,8 +13,7 @@ import {
   DialogBody,
   DialogCloseTrigger,
   Button,
-  FormControl,
-  FormLabel,
+  Field,
   Input,
   VStack,
   HStack,
@@ -168,52 +167,52 @@ const CollaboratorForm: React.FC<CollaboratorFormProps> = ({
 
           <DialogBody>
             <VStack spacing={4}>
-              <FormControl isRequired>
-                <FormLabel>First Name</FormLabel>
+              <Field.Root required>
+                <Field.Label>First Name</Field.Label>
                 <Input
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   placeholder="Enter first name"
                 />
-              </FormControl>
+              </Field.Root>
 
-              <FormControl isRequired>
-                <FormLabel>Last Name</FormLabel>
+              <Field.Root required>
+                <Field.Label>Last Name</Field.Label>
                 <Input
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   placeholder="Enter last name"
                 />
-              </FormControl>
+              </Field.Root>
 
-              <FormControl isRequired>
-                <FormLabel>Email Address</FormLabel>
+              <Field.Root required>
+                <Field.Label>Email Address</Field.Label>
                 <Input
                   type="email"
                   value={emailAddress}
                   onChange={(e) => setEmailAddress(e.target.value)}
                   placeholder="collaborator@example.com"
                 />
-              </FormControl>
+              </Field.Root>
 
-              <FormControl>
-                <FormLabel>Relationship</FormLabel>
+              <Field.Root>
+                <Field.Label>Relationship</Field.Label>
                 <Input
                   value={relationship}
                   onChange={(e) => setRelationship(e.target.value)}
                   placeholder="e.g., Teacher, Professor, Counselor, Mentor"
                 />
-              </FormControl>
+              </Field.Root>
 
-              <FormControl>
-                <FormLabel>Phone Number</FormLabel>
+              <Field.Root>
+                <Field.Label>Phone Number</Field.Label>
                 <Input
                   type="tel"
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
                   placeholder="+1 (555) 123-4567"
                 />
-              </FormControl>
+              </Field.Root>
             </VStack>
           </DialogBody>
         </form>

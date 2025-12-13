@@ -8,8 +8,7 @@ import {
   DialogBody,
   DialogCloseTrigger,
   Button,
-  FormControl,
-  FormLabel,
+  Field,
   Select,
   Textarea,
   Stack,
@@ -228,8 +227,8 @@ function AddCollaborationModal({
               </Alert>
             )}
 
-            <FormControl isRequired>
-              <FormLabel>Collaborator</FormLabel>
+            <Field.Root required>
+              <Field.Label>Collaborator</Field.Label>
               <Select
                 placeholder="Select collaborator"
                 value={collaboratorId || ''}
@@ -242,10 +241,10 @@ function AddCollaborationModal({
                   </option>
                 ))}
               </Select>
-            </FormControl>
+            </Field.Root>
 
-            <FormControl isRequired>
-              <FormLabel>Collaboration Type</FormLabel>
+            <Field.Root required>
+              <Field.Label>Collaboration Type</Field.Label>
               <Select
                 value={collaborationType}
                 onChange={(e) => setCollaborationType(e.target.value as 'recommendation' | 'essayReview' | 'guidance')}
@@ -254,25 +253,25 @@ function AddCollaborationModal({
                 <option value="essayReview">Essay Review</option>
                 <option value="guidance">Guidance/Counseling</option>
               </Select>
-            </FormControl>
+            </Field.Root>
 
             {/* Essay review collaborations no longer link to a specific essay */}
 
             {collaborationType === 'recommendation' && (
-              <FormControl>
-                <FormLabel>Recommendation Portal URL</FormLabel>
+              <Field.Root>
+                <Field.Label>Recommendation Portal URL</Field.Label>
                 <Input
                   placeholder="https://..."
                   value={portalUrl}
                   onChange={(e) => setPortalUrl(e.target.value)}
                 />
-              </FormControl>
+              </Field.Root>
             )}
 
             {collaborationType === 'guidance' && (
               <>
-                <FormControl>
-                  <FormLabel>Session Type</FormLabel>
+                <Field.Root>
+                  <Field.Label>Session Type</Field.Label>
                   <Select
                     placeholder="Select session type"
                     value={sessionType}
@@ -282,46 +281,46 @@ function AddCollaborationModal({
                     <option value="group">Group</option>
                     <option value="workshop">Workshop</option>
                   </Select>
-                </FormControl>
+                </Field.Root>
 
-                <FormControl>
-                  <FormLabel>Meeting URL</FormLabel>
+                <Field.Root>
+                  <Field.Label>Meeting URL</Field.Label>
                   <Input
                     placeholder="https://..."
                     value={meetingUrl}
                     onChange={(e) => setMeetingUrl(e.target.value)}
                   />
-                </FormControl>
+                </Field.Root>
 
-                <FormControl>
-                  <FormLabel>Scheduled For</FormLabel>
+                <Field.Root>
+                  <Field.Label>Scheduled For</Field.Label>
                   <Input
                     type="datetime-local"
                     value={scheduledFor}
                     onChange={(e) => setScheduledFor(e.target.value)}
                   />
-                </FormControl>
+                </Field.Root>
               </>
             )}
 
-            <FormControl isRequired={collaborationType === 'recommendation'}>
-              <FormLabel>Due Date{collaborationType === 'recommendation' ? '' : ' (Optional)'}</FormLabel>
+            <Field.Root required={collaborationType === 'recommendation'}>
+              <Field.Label>Due Date{collaborationType === 'recommendation' ? '' : ' (Optional)'}</Field.Label>
               <Input
                 type="date"
                 value={nextActionDueDate}
                 onChange={(e) => setNextActionDueDate(e.target.value)}
               />
-            </FormControl>
+            </Field.Root>
 
-            <FormControl>
-              <FormLabel>Notes (Optional)</FormLabel>
+            <Field.Root>
+              <Field.Label>Notes (Optional)</Field.Label>
               <Textarea
                 placeholder="Add any additional notes or instructions for the collaborator..."
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={3}
               />
-            </FormControl>
+            </Field.Root>
           </Stack>
         </DialogBody>
       </DialogContent>

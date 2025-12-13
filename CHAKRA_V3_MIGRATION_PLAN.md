@@ -335,7 +335,7 @@ toaster.create({
 **Status (this repo)**:
 - No remaining `<Modal ...>` usage in `web/src`
 
-### [ ] Step 5.3: Migrate FormControl → Field
+### [✅] Step 5.3: Migrate FormControl → Field
 **Files affected** (15+ files with forms)
 
 **Changes**:
@@ -343,6 +343,10 @@ toaster.create({
 - `FormLabel` → `Field.Label`
 - `FormHelperText` → `Field.HelperText`
 - `FormErrorMessage` → `Field.ErrorText`
+
+**Status (this repo)**:
+- Removed `FormControl` / `FormLabel` / `FormHelperText` usage across `web/src`
+- Migrated key forms and auth screens to `Field.*` (e.g. `ApplicationForm`, `Add/Assign/Edit Collaboration`, `EssayForm`, `CollaboratorForm`, `Login/Register`, `Forgot/Reset password`, `Profile`)
 - `isInvalid` → `invalid`
 - `isRequired` → `required`
 

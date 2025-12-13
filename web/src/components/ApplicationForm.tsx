@@ -3,8 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import {
   Button,
   Container,
-  FormControl,
-  FormLabel,
+  Field,
   Input,
   Select,
   Textarea,
@@ -19,7 +18,7 @@ import {
   Checkbox,
   NumberInput,
   NumberInputField,
-  FormHelperText,
+  // FormHelperText → Field.HelperText (v3)
   Flex,
   Box,
   SimpleGrid,
@@ -236,41 +235,41 @@ function ApplicationForm() {
                 <AccordionPanel pb="8" px="0">
                 <Stack spacing="4">
                   {/* Scholarship Name - Required */}
-                  <FormControl isRequired>
-                    <FormLabel>Scholarship Name</FormLabel>
+                  <Field.Root required>
+                    <Field.Label>Scholarship Name</Field.Label>
                     <Input
                       value={scholarshipName}
                       onChange={(e) => setScholarshipName(e.target.value)}
                       placeholder="Enter scholarship name"
                     />
-                  </FormControl>
+                  </Field.Root>
 
                   <SimpleGrid columns={{ base: 1, md: 2 }} spacing="4">
                     {/* Organization */}
-                    <FormControl>
-                      <FormLabel>Organization</FormLabel>
+                    <Field.Root>
+                      <Field.Label>Organization</Field.Label>
                       <Input
                         value={organization}
                         onChange={(e) => setOrganization(e.target.value)}
                         placeholder="e.g., Gates Foundation"
                       />
-                    </FormControl>
+                    </Field.Root>
 
                     {/* Platform */}
-                    <FormControl>
-                      <FormLabel>Platform</FormLabel>
+                    <Field.Root>
+                      <Field.Label>Platform</Field.Label>
                       <Input
                         value={platform}
                         onChange={(e) => setPlatform(e.target.value)}
                         placeholder="e.g., Common App, ScholarshipOwl"
                       />
-                    </FormControl>
+                    </Field.Root>
                   </SimpleGrid>
 
                   <SimpleGrid columns={{ base: 1, md: 2 }} spacing="4">
                     {/* Target Type */}
-                    <FormControl>
-                      <FormLabel>Scholarship Type</FormLabel>
+                    <Field.Root>
+                      <Field.Label>Scholarship Type</Field.Label>
                       <Select
                         value={targetType}
                         onChange={(e) => setTargetType(e.target.value)}
@@ -282,17 +281,17 @@ function ApplicationForm() {
                           </option>
                         ))}
                       </Select>
-                    </FormControl>
+                    </Field.Root>
 
                     {/* Theme/Focus */}
-                    <FormControl>
-                      <FormLabel>Theme/Focus Area</FormLabel>
+                    <Field.Root>
+                      <Field.Label>Theme/Focus Area</Field.Label>
                       <Input
                         value={theme}
                         onChange={(e) => setTheme(e.target.value)}
                         placeholder="e.g., STEM, Community Service"
                       />
-                    </FormControl>
+                    </Field.Root>
                   </SimpleGrid>
                 </Stack>
                 </AccordionPanel>
@@ -310,8 +309,8 @@ function ApplicationForm() {
                 <Stack spacing="4">
                   <SimpleGrid columns={{ base: 1, md: 2 }} spacing="4">
                     {/* Status - Required */}
-                    <FormControl isRequired>
-                      <FormLabel>Status</FormLabel>
+                    <Field.Root required>
+                      <Field.Label>Status</Field.Label>
                       <Select
                         value={status}
                         onChange={(e) => setStatus(e.target.value)}
@@ -322,17 +321,17 @@ function ApplicationForm() {
                           </option>
                         ))}
                       </Select>
-                    </FormControl>
+                    </Field.Root>
 
                     {/* Current Action */}
-                    <FormControl>
-                      <FormLabel>Current Action Needed</FormLabel>
+                    <Field.Root>
+                      <Field.Label>Current Action Needed</Field.Label>
                       <Input
                         value={currentAction}
                         onChange={(e) => setCurrentAction(e.target.value)}
                         placeholder="e.g., Writing essay"
                       />
-                    </FormControl>
+                    </Field.Root>
                   </SimpleGrid>
                 </Stack>
                 </AccordionPanel>
@@ -350,8 +349,8 @@ function ApplicationForm() {
                 <Stack spacing="4">
                   {/* Award Amounts */}
                   <SimpleGrid columns={{ base: 1, md: 2 }} spacing="4">
-                    <FormControl>
-                      <FormLabel>Min Award ($)</FormLabel>
+                    <Field.Root>
+                      <Field.Label>Min Award ($)</Field.Label>
                       <NumberInput
                         value={minAward}
                         onChange={(_, value) => setMinAward(isNaN(value) ? undefined : value)}
@@ -359,9 +358,9 @@ function ApplicationForm() {
                       >
                         <NumberInputField placeholder="0" />
                       </NumberInput>
-                    </FormControl>
-                    <FormControl>
-                      <FormLabel>Max Award ($)</FormLabel>
+                    </Field.Root>
+                    <Field.Root>
+                      <Field.Label>Max Award ($)</Field.Label>
                       <NumberInput
                         value={maxAward}
                         onChange={(_, value) => setMaxAward(isNaN(value) ? undefined : value)}
@@ -369,35 +368,35 @@ function ApplicationForm() {
                       >
                         <NumberInputField placeholder="0" />
                       </NumberInput>
-                    </FormControl>
+                    </Field.Root>
                   </SimpleGrid>
 
                   {/* Dates */}
                   <SimpleGrid columns={{ base: 1, md: 3 }} spacing="4">
-                    <FormControl>
-                      <FormLabel>Open Date</FormLabel>
+                    <Field.Root>
+                      <Field.Label>Open Date</Field.Label>
                       <Input
                         type="date"
                         value={openDate}
                         onChange={(e) => setOpenDate(e.target.value)}
                       />
-                    </FormControl>
-                    <FormControl isRequired>
-                      <FormLabel>Due Date</FormLabel>
+                    </Field.Root>
+                    <Field.Root required>
+                      <Field.Label>Due Date</Field.Label>
                       <Input
                         type="date"
                         value={dueDate}
                         onChange={(e) => setDueDate(e.target.value)}
                       />
-                    </FormControl>
-                    <FormControl>
-                      <FormLabel>Submission Date (Optional)</FormLabel>
+                    </Field.Root>
+                    <Field.Root>
+                      <Field.Label>Submission Date (Optional)</Field.Label>
                       <Input
                         type="date"
                         value={submissionDate}
                         onChange={(e) => setSubmissionDate(e.target.value)}
                       />
-                    </FormControl>
+                    </Field.Root>
                   </SimpleGrid>
                 </Stack>
                 </AccordionPanel>
@@ -414,15 +413,15 @@ function ApplicationForm() {
                 <AccordionPanel pb="8" px="0">
                 <Stack spacing="4">
                   {/* Requirements */}
-                  <FormControl>
-                    <FormLabel>Requirements</FormLabel>
+                  <Field.Root>
+                    <Field.Label>Requirements</Field.Label>
                     <Textarea
                       value={requirements}
                       onChange={(e) => setRequirements(e.target.value)}
                       placeholder="List any specific requirements (GPA, major, citizenship, etc.)"
                       rows={2}
                     />
-                  </FormControl>
+                  </Field.Root>
 
                   {/* Renewable Information */}
                   <Box
@@ -433,7 +432,7 @@ function ApplicationForm() {
                     borderColor="brand.200"
                   >
                     <Stack spacing="3">
-                      <FormControl>
+                      <Field.Root>
                         <Checkbox
                           isChecked={renewable}
                           onChange={(e) => setRenewable(e.target.checked)}
@@ -441,18 +440,18 @@ function ApplicationForm() {
                         >
                           Renewable Scholarship
                         </Checkbox>
-                      </FormControl>
+                      </Field.Root>
 
                       {renewable && (
-                        <FormControl>
-                          <FormLabel>Renewal Terms</FormLabel>
+                        <Field.Root>
+                          <Field.Label>Renewal Terms</Field.Label>
                           <Input
                             value={renewableTerms}
                             onChange={(e) => setRenewableTerms(e.target.value)}
                             placeholder="Describe renewal requirements (GPA maintenance, continued enrollment, etc.)"
                             bg="white"
                           />
-                        </FormControl>
+                        </Field.Root>
                       )}
                     </Stack>
                   </Box>
@@ -470,26 +469,26 @@ function ApplicationForm() {
                 </AccordionButton>
                 <AccordionPanel pb="8" px="0">
                 <Stack spacing="4">
-                  <FormControl>
-                    <FormLabel>Organization Website</FormLabel>
+                  <Field.Root>
+                    <Field.Label>Organization Website</Field.Label>
                     <Input
                       type="url"
                       value={orgWebsite}
                       onChange={(e) => setOrgWebsite(e.target.value)}
                       placeholder="https://example.com"
                     />
-                  </FormControl>
+                  </Field.Root>
 
-                  <FormControl>
-                    <FormLabel>Application Portal Link</FormLabel>
+                  <Field.Root>
+                    <Field.Label>Application Portal Link</Field.Label>
                     <Input
                       type="url"
                       value={applicationLink}
                       onChange={(e) => setApplicationLink(e.target.value)}
                       placeholder="https://apply.example.com"
                     />
-                    <FormHelperText>Direct link to the application portal or form</FormHelperText>
-                  </FormControl>
+                    <Field.HelperText>Direct link to the application portal or form</Field.HelperText>
+                  </Field.Root>
                 </Stack>
                 </AccordionPanel>
               </AccordionItem>

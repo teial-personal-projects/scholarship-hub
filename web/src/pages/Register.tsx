@@ -4,8 +4,7 @@ import {
   Box,
   Button,
   Container,
-  FormControl,
-  FormLabel,
+  Field,
   Heading,
   Input,
   Stack,
@@ -57,39 +56,39 @@ function Register() {
             <form onSubmit={handleSubmit}>
               <Stack spacing="6">
                 <SimpleGrid columns={{ base: 1, md: 2 }} spacing="6">
-                  <FormControl isRequired>
-                    <FormLabel>First Name</FormLabel>
+                  <Field.Root required>
+                    <Field.Label>First Name</Field.Label>
                     <Input
                       type="text"
                       value={firstName}
                       onChange={(e) => setFirstName(e.target.value)}
                       placeholder="John"
                     />
-                  </FormControl>
+                  </Field.Root>
 
-                  <FormControl isRequired>
-                    <FormLabel>Last Name</FormLabel>
+                  <Field.Root required>
+                    <Field.Label>Last Name</Field.Label>
                     <Input
                       type="text"
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
                       placeholder="Doe"
                     />
-                  </FormControl>
+                  </Field.Root>
                 </SimpleGrid>
 
-                <FormControl isRequired>
-                  <FormLabel>Email</FormLabel>
+                <Field.Root required>
+                  <Field.Label>Email</Field.Label>
                   <Input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@example.com"
                   />
-                </FormControl>
+                </Field.Root>
 
-                <FormControl isRequired>
-                  <FormLabel>Password</FormLabel>
+                <Field.Root required>
+                  <Field.Label>Password</Field.Label>
                   <Input
                     type="password"
                     value={password}
@@ -99,7 +98,7 @@ function Register() {
                   <Text fontSize="sm" color="gray.500" mt="2">
                     Password must be at least 6 characters
                   </Text>
-                </FormControl>
+                </Field.Root>
 
                 <Button
                   type="submit"

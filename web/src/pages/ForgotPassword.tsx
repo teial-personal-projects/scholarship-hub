@@ -5,8 +5,7 @@ import {
   Card,
   CardBody,
   Container,
-  FormControl,
-  FormLabel,
+  Field,
   Heading,
   Input,
   Stack,
@@ -51,15 +50,15 @@ function ForgotPassword() {
           <CardBody>
             <form onSubmit={handleSubmit}>
               <Stack spacing="6">
-                <FormControl isRequired>
-                  <FormLabel>Email</FormLabel>
+                <Field.Root required>
+                  <Field.Label>Email</Field.Label>
                   <Input
                     type="email"
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
                     placeholder="you@example.com"
                   />
-                </FormControl>
+                </Field.Root>
 
                 <Button
                   type="submit"

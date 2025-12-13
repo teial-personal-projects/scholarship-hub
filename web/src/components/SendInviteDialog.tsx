@@ -17,8 +17,7 @@ import {
   VStack,
   HStack,
   Box,
-  FormControl,
-  FormLabel,
+  Field,
   Input,
   Divider,
   Flex,
@@ -278,15 +277,15 @@ const SendInviteDialog: React.FC<SendInviteDialogProps> = ({
             {showSchedule && (
               <>
                 <Divider />
-                <FormControl isRequired>
-                  <FormLabel>Schedule For</FormLabel>
+                <Field.Root required>
+                  <Field.Label>Schedule For</Field.Label>
                   <Input
                     type="datetime-local"
                     value={scheduledFor}
                     onChange={(e) => setScheduledFor(e.target.value)}
                     min={new Date().toISOString().slice(0, 16)}
                   />
-                </FormControl>
+                </Field.Root>
               </>
             )}
           </VStack>

@@ -8,13 +8,11 @@ import {
   DialogBody,
   DialogCloseTrigger,
   Button,
-  FormControl,
-  FormLabel,
+  Field,
   Input,
   NumberInput,
   NumberInputField,
   Stack,
-  FormHelperText,
   HStack,
   Flex,
   Select,
@@ -148,18 +146,18 @@ function EssayForm({ isOpen, onClose, applicationId, essay, onSuccess }: EssayFo
           <DialogCloseTrigger disabled={submitting} />
           <DialogBody>
             <Stack spacing="4">
-              <FormControl>
-                <FormLabel>Theme/Topic</FormLabel>
+              <Field.Root>
+                <Field.Label>Theme/Topic</Field.Label>
                 <Input
                   value={theme}
                   onChange={(e) => setTheme(e.target.value)}
                   placeholder="e.g., Leadership Experience, Community Service"
                 />
-                <FormHelperText>What is this essay about?</FormHelperText>
-              </FormControl>
+                <Field.HelperText>What is this essay about?</Field.HelperText>
+              </Field.Root>
 
-              <FormControl>
-                <FormLabel>Word Count</FormLabel>
+              <Field.Root>
+                <Field.Label>Word Count</Field.Label>
                 <NumberInput
                   value={wordCount}
                   onChange={(_, value) => setWordCount(isNaN(value) ? undefined : value)}
@@ -167,31 +165,31 @@ function EssayForm({ isOpen, onClose, applicationId, essay, onSuccess }: EssayFo
                 >
                   <NumberInputField placeholder="e.g., 500" />
                 </NumberInput>
-                <FormHelperText>Target or maximum word count</FormHelperText>
-              </FormControl>
+                <Field.HelperText>Target or maximum word count</Field.HelperText>
+              </Field.Root>
 
-              <FormControl>
-                <FormLabel>Essay Link</FormLabel>
+              <Field.Root>
+                <Field.Label>Essay Link</Field.Label>
                 <Input
                   type="url"
                   value={essayLink}
                   onChange={(e) => setEssayLink(e.target.value)}
                   placeholder="https://docs.google.com/document/..."
                 />
-                <FormHelperText>
+                <Field.HelperText>
                   Link to Google Docs or other online document
-                </FormHelperText>
-              </FormControl>
+                </Field.HelperText>
+              </Field.Root>
 
-              <FormControl>
-                <FormLabel>Status</FormLabel>
+              <Field.Root>
+                <Field.Label>Status</Field.Label>
                 <Select value={status} onChange={(e) => setStatus(e.target.value)}>
                   <option value="not_started">Not Started</option>
                   <option value="in_progress">In Progress</option>
                   <option value="completed">Completed</option>
                 </Select>
-                <FormHelperText>Current status of this essay</FormHelperText>
-              </FormControl>
+                <Field.HelperText>Current status of this essay</Field.HelperText>
+              </Field.Root>
             </Stack>
           </DialogBody>
         </form>

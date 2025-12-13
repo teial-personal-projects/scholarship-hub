@@ -4,8 +4,7 @@ import {
   Box,
   Button,
   Container,
-  FormControl,
-  FormLabel,
+  Field,
   Heading,
   Input,
   Stack,
@@ -53,25 +52,25 @@ function Login() {
           <CardBody>
             <form onSubmit={handleSubmit}>
               <Stack spacing="6">
-                <FormControl isRequired>
-                  <FormLabel>Email</FormLabel>
+                <Field.Root required>
+                  <Field.Label>Email</Field.Label>
                   <Input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@example.com"
                   />
-                </FormControl>
+                </Field.Root>
 
-                <FormControl isRequired>
-                  <FormLabel>Password</FormLabel>
+                <Field.Root required>
+                  <Field.Label>Password</Field.Label>
                   <Input
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your password"
                   />
-                </FormControl>
+                </Field.Root>
 
                 <Box textAlign="right">
                   <ChakraLink as={RouterLink} to="/forgot-password" color="blue.500" fontSize="sm">

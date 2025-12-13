@@ -5,8 +5,7 @@ import {
   Card,
   CardBody,
   Container,
-  FormControl,
-  FormLabel,
+  Field,
   Heading,
   Input,
   Stack,
@@ -65,25 +64,25 @@ function ResetPassword() {
             <CardBody>
               <form onSubmit={handleSubmit}>
                 <Stack spacing="6">
-                  <FormControl isRequired>
-                    <FormLabel>New password</FormLabel>
+                  <Field.Root required>
+                    <Field.Label>New password</Field.Label>
                     <Input
                       type="password"
                       value={password}
                       onChange={(event) => setPassword(event.target.value)}
                       placeholder="Enter a new password"
                     />
-                  </FormControl>
+                  </Field.Root>
 
-                  <FormControl isRequired>
-                    <FormLabel>Confirm password</FormLabel>
+                  <Field.Root required>
+                    <Field.Label>Confirm password</Field.Label>
                     <Input
                       type="password"
                       value={confirmPassword}
                       onChange={(event) => setConfirmPassword(event.target.value)}
                       placeholder="Re-enter your new password"
                     />
-                  </FormControl>
+                  </Field.Root>
 
                   <Button
                     type="submit"

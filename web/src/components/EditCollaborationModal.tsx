@@ -8,8 +8,7 @@ import {
   DialogBody,
   DialogCloseTrigger,
   Button,
-  FormControl,
-  FormLabel,
+  Field,
   Input,
   Textarea,
   Stack,
@@ -181,17 +180,17 @@ function EditCollaborationModal({
         <DialogCloseTrigger disabled={updateCollaboration.isPending} />
         <DialogBody>
           <Stack spacing="4">
-            <FormControl>
-              <FormLabel>Collaboration Type</FormLabel>
+            <Field.Root>
+              <Field.Label>Collaboration Type</Field.Label>
               <Input
                 value={collaboration.collaborationType}
                 isDisabled
                 variant="filled"
               />
-            </FormControl>
+            </Field.Root>
 
-            <FormControl>
-              <FormLabel>Status</FormLabel>
+            <Field.Root>
+              <Field.Label>Status</Field.Label>
               <Select value={status} onChange={(e) => setStatus(e.target.value)}>
                 <option value="pending">Pending</option>
                 <option value="invited">Invited</option>
@@ -200,39 +199,39 @@ function EditCollaborationModal({
                 <option value="completed">Completed</option>
                 <option value="declined">Declined</option>
               </Select>
-            </FormControl>
+            </Field.Root>
 
             {collaboration.collaborationType === 'recommendation' && (
-              <FormControl>
-                <FormLabel>Recommendation Portal URL</FormLabel>
+              <Field.Root>
+                <Field.Label>Recommendation Portal URL</Field.Label>
                 <Input
                   placeholder="https://..."
                   value={portalUrl}
                   onChange={(e) => setPortalUrl(e.target.value)}
                 />
-              </FormControl>
+              </Field.Root>
             )}
 
-            <FormControl isRequired={collaboration.collaborationType === 'recommendation'}>
-              <FormLabel>
+            <Field.Root required={collaboration.collaborationType === 'recommendation'}>
+              <Field.Label>
                 Due Date{collaboration.collaborationType === 'recommendation' ? '' : ' (Optional)'}
-              </FormLabel>
+              </Field.Label>
               <Input
                 type="date"
                 value={nextActionDueDate}
                 onChange={(e) => setNextActionDueDate(e.target.value)}
               />
-            </FormControl>
+            </Field.Root>
 
-            <FormControl>
-              <FormLabel>Notes (Optional)</FormLabel>
+            <Field.Root>
+              <Field.Label>Notes (Optional)</Field.Label>
               <Textarea
                 placeholder="Add any additional notes or instructions for the collaborator..."
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={3}
               />
-            </FormControl>
+            </Field.Root>
           </Stack>
         </DialogBody>
       </DialogContent>

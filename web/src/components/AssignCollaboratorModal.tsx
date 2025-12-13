@@ -13,8 +13,7 @@ import {
   DialogBody,
   DialogCloseTrigger,
   Button,
-  FormControl,
-  FormLabel,
+  Field,
   Select,
   Textarea,
   Input,
@@ -163,8 +162,8 @@ const AssignCollaboratorModal: React.FC<AssignCollaboratorModalProps> = ({
 
           <DialogBody>
             <VStack spacing={4}>
-              <FormControl isRequired>
-                <FormLabel>Select Collaborator</FormLabel>
+              <Field.Root required>
+                <Field.Label>Select Collaborator</Field.Label>
                 <Select
                   placeholder="Choose a collaborator"
                   value={collaboratorId}
@@ -182,10 +181,10 @@ const AssignCollaboratorModal: React.FC<AssignCollaboratorModalProps> = ({
                     No collaborators found. Please add a collaborator first.
                   </Text>
                 )}
-              </FormControl>
+              </Field.Root>
 
-              <FormControl isRequired>
-                <FormLabel>Collaboration Type</FormLabel>
+              <Field.Root required>
+                <Field.Label>Collaboration Type</Field.Label>
                 <Select
                   value={collaborationType}
                   onChange={(e) => setCollaborationType(e.target.value as any)}
@@ -194,27 +193,27 @@ const AssignCollaboratorModal: React.FC<AssignCollaboratorModalProps> = ({
                   <option value="essayReview">Essay Review</option>
                   <option value="guidance">Guidance/Counseling</option>
                 </Select>
-              </FormControl>
+              </Field.Root>
 
-              <FormControl>
-                <FormLabel>Due Date</FormLabel>
+              <Field.Root>
+                <Field.Label>Due Date</Field.Label>
                 <Input
                   type="date"
                   value={nextActionDueDate}
                   onChange={(e) => setNextActionDueDate(e.target.value)}
                   min={new Date().toISOString().split('T')[0]}
                 />
-              </FormControl>
+              </Field.Root>
 
-              <FormControl>
-                <FormLabel>Notes</FormLabel>
+              <Field.Root>
+                <Field.Label>Notes</Field.Label>
                 <Textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Add any notes or instructions for the collaborator..."
                   rows={4}
                 />
-              </FormControl>
+              </Field.Root>
 
               <Text fontSize="sm" color="gray.600">
                 After assigning, you can send an invitation email to the collaborator from the application details page.

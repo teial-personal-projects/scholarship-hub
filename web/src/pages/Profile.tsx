@@ -3,8 +3,7 @@ import {
   Box,
   Button,
   Container,
-  FormControl,
-  FormLabel,
+  Field,
   Heading,
   Input,
   Stack,
@@ -252,8 +251,8 @@ function Profile() {
                 <CardBody>
             <Stack spacing="6">
               <SimpleGrid columns={{ base: 1, md: 2 }} spacing="6">
-                <FormControl>
-                  <FormLabel fontSize={{ base: 'md', md: 'sm' }}>First Name</FormLabel>
+                <Field.Root>
+                  <Field.Label fontSize={{ base: 'md', md: 'sm' }}>First Name</Field.Label>
                   <Input
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
@@ -261,10 +260,10 @@ function Profile() {
                     size={{ base: 'lg', md: 'md' }}
                     fontSize={{ base: 'md', md: 'sm' }}
                   />
-                </FormControl>
+                </Field.Root>
 
-                <FormControl>
-                  <FormLabel fontSize={{ base: 'md', md: 'sm' }}>Last Name</FormLabel>
+                <Field.Root>
+                  <Field.Label fontSize={{ base: 'md', md: 'sm' }}>Last Name</Field.Label>
                   <Input
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
@@ -272,11 +271,11 @@ function Profile() {
                     size={{ base: 'lg', md: 'md' }}
                     fontSize={{ base: 'md', md: 'sm' }}
                   />
-                </FormControl>
+                </Field.Root>
               </SimpleGrid>
 
-              <FormControl>
-                <FormLabel fontSize={{ base: 'md', md: 'sm' }}>Email</FormLabel>
+              <Field.Root>
+                <Field.Label fontSize={{ base: 'md', md: 'sm' }}>Email</Field.Label>
                 <Input 
                   value={emailAddress} 
                   isReadOnly 
@@ -287,10 +286,10 @@ function Profile() {
                 <Text fontSize={{ base: 'sm', md: 'sm' }} color="gray.500" mt="1">
                   Email cannot be changed
                 </Text>
-              </FormControl>
+              </Field.Root>
 
-              <FormControl>
-                <FormLabel fontSize={{ base: 'md', md: 'sm' }}>Phone Number</FormLabel>
+              <Field.Root>
+                <Field.Label fontSize={{ base: 'md', md: 'sm' }}>Phone Number</Field.Label>
                 <Input
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
@@ -299,7 +298,7 @@ function Profile() {
                   size={{ base: 'lg', md: 'md' }}
                   fontSize={{ base: 'md', md: 'sm' }}
                 />
-              </FormControl>
+              </Field.Root>
             </Stack>
                 </CardBody>
               </AccordionPanel>
@@ -322,8 +321,8 @@ function Profile() {
                 <CardBody>
             <Stack spacing="6">
               <SimpleGrid columns={{ base: 1, md: 2 }} spacing="6">
-                <FormControl>
-                  <FormLabel fontSize={{ base: 'lg', md: 'sm' }} fontWeight={{ base: 'semibold', md: 'normal' }}>Target Type</FormLabel>
+                <Field.Root>
+                  <Field.Label fontSize={{ base: 'lg', md: 'sm' }} fontWeight={{ base: 'semibold', md: 'normal' }}>Target Type</Field.Label>
                   <Select
                     value={targetType}
                     onChange={(e) => setTargetType(e.target.value)}
@@ -338,10 +337,10 @@ function Profile() {
                       </option>
                     ))}
                   </Select>
-                </FormControl>
+                </Field.Root>
 
-                <FormControl>
-                  <FormLabel fontSize={{ base: 'lg', md: 'sm' }} fontWeight={{ base: 'semibold', md: 'normal' }}>Academic Level</FormLabel>
+                <Field.Root>
+                  <Field.Label fontSize={{ base: 'lg', md: 'sm' }} fontWeight={{ base: 'semibold', md: 'normal' }}>Academic Level</Field.Label>
                   <Select
                     value={academicLevel}
                     onChange={(e) => setAcademicLevel(e.target.value)}
@@ -356,12 +355,12 @@ function Profile() {
                       </option>
                     ))}
                   </Select>
-                </FormControl>
+                </Field.Root>
               </SimpleGrid>
 
               <SimpleGrid columns={{ base: 1, md: 2 }} spacing="6">
-                <FormControl>
-                  <FormLabel fontSize={{ base: 'lg', md: 'sm' }} fontWeight={{ base: 'semibold', md: 'normal' }}>Gender</FormLabel>
+                <Field.Root>
+                  <Field.Label fontSize={{ base: 'lg', md: 'sm' }} fontWeight={{ base: 'semibold', md: 'normal' }}>Gender</Field.Label>
                   <Select
                     value={gender}
                     onChange={(e) => setGender(e.target.value)}
@@ -376,10 +375,10 @@ function Profile() {
                       </option>
                     ))}
                   </Select>
-                </FormControl>
+                </Field.Root>
 
-                <FormControl>
-                  <FormLabel fontSize={{ base: 'lg', md: 'sm' }} fontWeight={{ base: 'semibold', md: 'normal' }}>Ethnicity</FormLabel>
+                <Field.Root>
+                  <Field.Label fontSize={{ base: 'lg', md: 'sm' }} fontWeight={{ base: 'semibold', md: 'normal' }}>Ethnicity</Field.Label>
                   <Select
                     value={ethnicity}
                     onChange={(e) => setEthnicity(e.target.value)}
@@ -394,11 +393,11 @@ function Profile() {
                       </option>
                     ))}
                   </Select>
-                </FormControl>
+                </Field.Root>
               </SimpleGrid>
 
-              <FormControl>
-                <FormLabel fontSize={{ base: 'md', md: 'sm' }}>Minimum Award Amount ($)</FormLabel>
+              <Field.Root>
+                <Field.Label fontSize={{ base: 'md', md: 'sm' }}>Minimum Award Amount ($)</Field.Label>
                 <NumberInput
                   value={minAward}
                   onChange={(_, value) => setMinAward(value)}
@@ -414,10 +413,10 @@ function Profile() {
                     <NumberDecrementStepper />
                   </NumberInputStepper>
                 </NumberInput>
-              </FormControl>
+              </Field.Root>
 
-              <FormControl>
-                <FormLabel fontSize={{ base: 'md', md: 'sm' }}>Subject Areas</FormLabel>
+              <Field.Root>
+                <Field.Label fontSize={{ base: 'md', md: 'sm' }}>Subject Areas</Field.Label>
                 <Wrap spacing="2" mb="3">
                   {subjectAreas.map((area) => (
                     <Tag key={area} size={{ base: 'lg', md: 'md' }} colorScheme="blue" fontSize={{ base: 'sm', md: 'xs' }}>
@@ -454,10 +453,10 @@ function Profile() {
                     Add
                   </Button>
                 </Box>
-              </FormControl>
+              </Field.Root>
 
-              <FormControl>
-                <FormLabel fontSize={{ base: 'md', md: 'sm' }}>Geographic Restrictions</FormLabel>
+              <Field.Root>
+                <Field.Label fontSize={{ base: 'md', md: 'sm' }}>Geographic Restrictions</Field.Label>
                 <Input
                   value={geographicRestrictions}
                   onChange={(e) => setGeographicRestrictions(e.target.value)}
@@ -465,7 +464,7 @@ function Profile() {
                   size={{ base: 'lg', md: 'md' }}
                   fontSize={{ base: 'md', md: 'sm' }}
                 />
-              </FormControl>
+              </Field.Root>
 
               <Stack>
                 <Checkbox
@@ -504,9 +503,9 @@ function Profile() {
               <AccordionPanel as={CardBody} p="0">
                 <CardBody>
             <Stack spacing="4">
-              <FormControl display="flex" alignItems="center" flexDirection={{ base: 'column', md: 'row' }}>
+              <Field.Root display="flex" alignItems="center" flexDirection={{ base: 'column', md: 'row' }}>
                 <Box flex="1" mb={{ base: 2, md: 0 }}>
-                  <FormLabel mb="0" fontSize={{ base: 'md', md: 'sm' }}>Application Reminders</FormLabel>
+                  <Field.Label mb="0" fontSize={{ base: 'md', md: 'sm' }}>Application Reminders</Field.Label>
                   <Text fontSize={{ base: 'sm', md: 'sm' }} color="gray.500">
                     Receive email reminders for upcoming scholarship application deadlines
                   </Text>
@@ -516,11 +515,11 @@ function Profile() {
                   onChange={(e) => setApplicationRemindersEnabled(e.target.checked)}
                   size={{ base: 'lg', md: 'lg' }}
                 />
-              </FormControl>
+              </Field.Root>
 
-              <FormControl display="flex" alignItems="center" flexDirection={{ base: 'column', md: 'row' }}>
+              <Field.Root display="flex" alignItems="center" flexDirection={{ base: 'column', md: 'row' }}>
                 <Box flex="1" mb={{ base: 2, md: 0 }}>
-                  <FormLabel mb="0" fontSize={{ base: 'md', md: 'sm' }}>Collaboration Reminders</FormLabel>
+                  <Field.Label mb="0" fontSize={{ base: 'md', md: 'sm' }}>Collaboration Reminders</Field.Label>
                   <Text fontSize={{ base: 'sm', md: 'sm' }} color="gray.500">
                     Receive email reminders for collaboration tasks and deadlines
                   </Text>
@@ -530,7 +529,7 @@ function Profile() {
                   onChange={(e) => setCollaborationRemindersEnabled(e.target.checked)}
                   size={{ base: 'lg', md: 'lg' }}
                 />
-              </FormControl>
+              </Field.Root>
             </Stack>
                 </CardBody>
               </AccordionPanel>
