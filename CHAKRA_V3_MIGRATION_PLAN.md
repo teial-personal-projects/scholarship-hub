@@ -93,7 +93,7 @@ npx @chakra-ui/cli snippet add
 
 **What this does**: Downloads pre-built component compositions (like Toaster) that replace built-in v2 components.
 
-### [ ] Step 2.3b: (Optional) Configure `@/*` path alias for snippet imports
+### [✅] Step 2.3b: (Optional) Configure `@/*` path alias for snippet imports
 Only needed if you plan to import snippets with `@/…` paths.
 
 - **TypeScript** (`web/tsconfig.json`): add `paths` mapping
