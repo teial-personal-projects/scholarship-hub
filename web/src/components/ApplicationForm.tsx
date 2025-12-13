@@ -5,28 +5,30 @@ import {
   Container,
   Field,
   Input,
-  Select,
   Textarea,
   Stack,
   Heading,
-  Card,
+  CardRoot,
   CardBody,
   CardHeader,
   Spinner,
   Text,
   HStack,
-  Checkbox,
-  NumberInput,
-  NumberInputField,
-  // FormHelperText → Field.HelperText (v3)
   Flex,
   Box,
   SimpleGrid,
-  Accordion,
+  AccordionRoot,
   AccordionItem,
-  AccordionButton,
-  AccordionPanel,
-  AccordionIcon,
+  AccordionItemTrigger,
+  AccordionItemContent,
+  AccordionItemBody,
+  AccordionItemIndicator,
+  NativeSelectRoot,
+  NativeSelectField,
+  CheckboxRoot,
+  CheckboxLabel,
+  CheckboxControl,
+  CheckboxHiddenInput,
 } from '@chakra-ui/react';
 import { apiGet, apiPost, apiPatch } from '../services/api';
 import type { ApplicationResponse } from '@scholarship-hub/shared';
@@ -160,7 +162,7 @@ function ApplicationForm() {
   if (loading) {
     return (
       <Container maxW="4xl" py={{ base: '8', md: '12' }}>
-        <Stack spacing="8" align="center">
+        <Stack gap="8" align="center">
           <Spinner size="xl" />
           <Text>Loading application...</Text>
         </Stack>
@@ -171,21 +173,21 @@ function ApplicationForm() {
   if (error && isEditMode) {
     return (
       <Container maxW="4xl" py={{ base: '8', md: '12' }}>
-        <Card>
+        <CardRoot>
           <CardBody>
             <Text color="red.500">{error}</Text>
             <Button mt="4" onClick={() => navigate('/applications')}>
               Back to Applications
             </Button>
           </CardBody>
-        </Card>
+        </CardRoot>
       </Container>
     );
   }
 
   return (
     <Container maxW="4xl" py={{ base: '8', md: '12' }}>
-      <Card>
+      <CardRoot>
         <CardHeader
           position="sticky"
           top="64px"
@@ -200,12 +202,12 @@ function ApplicationForm() {
               {isEditMode ? 'Edit Application' : 'New Application'}
             </Heading>
             {/* Action Buttons at Top */}
-            <HStack spacing="4">
+            <HStack gap="4">
               <Button
                 type="submit"
                 form="application-form"
                 colorScheme="accent"
-                isLoading={submitting}
+                loading={submitting}
                 loadingText={isEditMode ? 'Updating...' : 'Creating...'}
               >
                 {isEditMode ? 'Update' : 'Save'}
@@ -214,7 +216,7 @@ function ApplicationForm() {
                 variant="outline"
                 colorScheme="brand"
                 onClick={() => navigate(isEditMode ? `/applications/${id}` : '/applications')}
-                isDisabled={submitting}
+                disabled={submitting}
               >
                 Cancel
               </Button>
@@ -223,17 +225,21 @@ function ApplicationForm() {
         </CardHeader>
         <CardBody>
           <form id="application-form" onSubmit={handleSubmit}>
-            <Accordion defaultIndex={[0, 1, 2, 3, 4]} allowMultiple>
+            <AccordionRoot
+              multiple
+              defaultValue={['basic', 'status', 'award', 'requirements', 'links']}
+            >
               {/* Basic Information Section */}
-              <AccordionItem border="none">
-                <AccordionButton px="0" py="4" _hover={{ bg: 'transparent' }}>
+              <AccordionItem value="basic" border="none">
+                <AccordionItemTrigger px="0" py="4" _hover={{ bg: 'transparent' }}>
                   <Heading size="sm" flex="1" textAlign="left" color="brand.700">
                     Basic Information
                   </Heading>
-                  <AccordionIcon fontSize="xl" color="brand.700" />
-                </AccordionButton>
-                <AccordionPanel pb="8" px="0">
-                <Stack spacing="4">
+                  <AccordionItemIndicator fontSize="xl" color="brand.700" />
+                </AccordionItemTrigger>
+                <AccordionItemContent>
+                <AccordionItemBody pb="8" px="0">
+                <Stack gap="4">
                   {/* Scholarship Name - Required */}
                   <Field.Root required>
                     <Field.Label>Scholarship Name</Field.Label>
@@ -244,7 +250,7 @@ function ApplicationForm() {
                     />
                   </Field.Root>
 
-                  <SimpleGrid columns={{ base: 1, md: 2 }} spacing="4">
+                  <SimpleGrid columns={{ base: 1, md: 2 }} gap="4">
                     {/* Organization */}
                     <Field.Root>
                       <Field.Label>Organization</Field.Label>
@@ -266,13 +272,14 @@ function ApplicationForm() {
                     </Field.Root>
                   </SimpleGrid>
 
-                  <SimpleGrid columns={{ base: 1, md: 2 }} spacing="4">
+                  <SimpleGrid columns={{ base: 1, md: 2 }} gap="4">
                     {/* Target Type */}
                     <Field.Root>
                       <Field.Label>Scholarship Type</Field.Label>
-                      <Select
+                      <NativeSelectRoot>
+                      <NativeSelectField
                         value={targetType}
-                        onChange={(e) => setTargetType(e.target.value)}
+                        onChange={(e) => setTargetType(e.currentTarget.value)}
                         placeholder="Select type"
                       >
                         {TARGET_TYPES.map((type) => (
@@ -280,7 +287,8 @@ function ApplicationForm() {
                             {type}
                           </option>
                         ))}
-                      </Select>
+                      </NativeSelectField>
+                      </NativeSelectRoot>
                     </Field.Root>
 
                     {/* Theme/Focus */}
@@ -294,33 +302,37 @@ function ApplicationForm() {
                     </Field.Root>
                   </SimpleGrid>
                 </Stack>
-                </AccordionPanel>
+                </AccordionItemBody>
+                </AccordionItemContent>
               </AccordionItem>
 
               {/* Status & Tracking Section */}
-              <AccordionItem border="none">
-                <AccordionButton px="0" py="4" _hover={{ bg: 'transparent' }}>
+              <AccordionItem value="status" border="none">
+                <AccordionItemTrigger px="0" py="4" _hover={{ bg: 'transparent' }}>
                   <Heading size="sm" flex="1" textAlign="left" color="brand.700">
                     Status & Tracking
                   </Heading>
-                  <AccordionIcon fontSize="xl" color="brand.700" />
-                </AccordionButton>
-                <AccordionPanel pb="8" px="0">
-                <Stack spacing="4">
-                  <SimpleGrid columns={{ base: 1, md: 2 }} spacing="4">
+                  <AccordionItemIndicator fontSize="xl" color="brand.700" />
+                </AccordionItemTrigger>
+                <AccordionItemContent>
+                <AccordionItemBody pb="8" px="0">
+                <Stack gap="4">
+                  <SimpleGrid columns={{ base: 1, md: 2 }} gap="4">
                     {/* Status - Required */}
                     <Field.Root required>
                       <Field.Label>Status</Field.Label>
-                      <Select
+                      <NativeSelectRoot>
+                      <NativeSelectField
                         value={status}
-                        onChange={(e) => setStatus(e.target.value)}
+                        onChange={(e) => setStatus(e.currentTarget.value)}
                       >
                         {APPLICATION_STATUSES.map((statusOption) => (
                           <option key={statusOption} value={statusOption}>
                             {statusOption}
                           </option>
                         ))}
-                      </Select>
+                      </NativeSelectField>
+                      </NativeSelectRoot>
                     </Field.Root>
 
                     {/* Current Action */}
@@ -334,45 +346,55 @@ function ApplicationForm() {
                     </Field.Root>
                   </SimpleGrid>
                 </Stack>
-                </AccordionPanel>
+                </AccordionItemBody>
+                </AccordionItemContent>
               </AccordionItem>
 
               {/* Award & Dates Section */}
-              <AccordionItem border="none">
-                <AccordionButton px="0" py="4" _hover={{ bg: 'transparent' }}>
+              <AccordionItem value="award" border="none">
+                <AccordionItemTrigger px="0" py="4" _hover={{ bg: 'transparent' }}>
                   <Heading size="sm" flex="1" textAlign="left" color="brand.700">
                     Award & Important Dates
                   </Heading>
-                  <AccordionIcon fontSize="xl" color="brand.700" />
-                </AccordionButton>
-                <AccordionPanel pb="8" px="0">
-                <Stack spacing="4">
+                  <AccordionItemIndicator fontSize="xl" color="brand.700" />
+                </AccordionItemTrigger>
+                <AccordionItemContent>
+                <AccordionItemBody pb="8" px="0">
+                <Stack gap="4">
                   {/* Award Amounts */}
-                  <SimpleGrid columns={{ base: 1, md: 2 }} spacing="4">
+                  <SimpleGrid columns={{ base: 1, md: 2 }} gap="4">
                     <Field.Root>
                       <Field.Label>Min Award ($)</Field.Label>
-                      <NumberInput
-                        value={minAward}
-                        onChange={(_, value) => setMinAward(isNaN(value) ? undefined : value)}
+                      <Input
+                        type="number"
+                        inputMode="numeric"
                         min={0}
-                      >
-                        <NumberInputField placeholder="0" />
-                      </NumberInput>
+                        value={minAward ?? ''}
+                        onChange={(e) => {
+                          const v = e.currentTarget.value;
+                          setMinAward(v === '' ? undefined : Number(v));
+                        }}
+                        placeholder="0"
+                      />
                     </Field.Root>
                     <Field.Root>
                       <Field.Label>Max Award ($)</Field.Label>
-                      <NumberInput
-                        value={maxAward}
-                        onChange={(_, value) => setMaxAward(isNaN(value) ? undefined : value)}
+                      <Input
+                        type="number"
+                        inputMode="numeric"
                         min={0}
-                      >
-                        <NumberInputField placeholder="0" />
-                      </NumberInput>
+                        value={maxAward ?? ''}
+                        onChange={(e) => {
+                          const v = e.currentTarget.value;
+                          setMaxAward(v === '' ? undefined : Number(v));
+                        }}
+                        placeholder="0"
+                      />
                     </Field.Root>
                   </SimpleGrid>
 
                   {/* Dates */}
-                  <SimpleGrid columns={{ base: 1, md: 3 }} spacing="4">
+                  <SimpleGrid columns={{ base: 1, md: 3 }} gap="4">
                     <Field.Root>
                       <Field.Label>Open Date</Field.Label>
                       <Input
@@ -399,19 +421,21 @@ function ApplicationForm() {
                     </Field.Root>
                   </SimpleGrid>
                 </Stack>
-                </AccordionPanel>
+                </AccordionItemBody>
+                </AccordionItemContent>
               </AccordionItem>
 
               {/* Requirements & Renewable Section */}
-              <AccordionItem border="none">
-                <AccordionButton px="0" py="4" _hover={{ bg: 'transparent' }}>
+              <AccordionItem value="requirements" border="none">
+                <AccordionItemTrigger px="0" py="4" _hover={{ bg: 'transparent' }}>
                   <Heading size="sm" flex="1" textAlign="left" color="brand.700">
                     Requirements & Eligibility
                   </Heading>
-                  <AccordionIcon fontSize="xl" color="brand.700" />
-                </AccordionButton>
-                <AccordionPanel pb="8" px="0">
-                <Stack spacing="4">
+                  <AccordionItemIndicator fontSize="xl" color="brand.700" />
+                </AccordionItemTrigger>
+                <AccordionItemContent>
+                <AccordionItemBody pb="8" px="0">
+                <Stack gap="4">
                   {/* Requirements */}
                   <Field.Root>
                     <Field.Label>Requirements</Field.Label>
@@ -431,16 +455,17 @@ function ApplicationForm() {
                     border="1px solid"
                     borderColor="brand.200"
                   >
-                    <Stack spacing="3">
-                      <Field.Root>
-                        <Checkbox
-                          isChecked={renewable}
-                          onChange={(e) => setRenewable(e.target.checked)}
-                          fontWeight="semibold"
-                        >
+                    <Stack gap="3">
+                      <CheckboxRoot
+                        checked={renewable}
+                        onCheckedChange={(details) => setRenewable(Boolean(details.checked))}
+                      >
+                        <CheckboxHiddenInput />
+                        <CheckboxControl />
+                        <CheckboxLabel fontWeight="semibold">
                           Renewable Scholarship
-                        </Checkbox>
-                      </Field.Root>
+                        </CheckboxLabel>
+                      </CheckboxRoot>
 
                       {renewable && (
                         <Field.Root>
@@ -456,19 +481,21 @@ function ApplicationForm() {
                     </Stack>
                   </Box>
                 </Stack>
-                </AccordionPanel>
+                </AccordionItemBody>
+                </AccordionItemContent>
               </AccordionItem>
 
               {/* Links & Resources Section */}
-              <AccordionItem border="none">
-                <AccordionButton px="0" py="4" _hover={{ bg: 'transparent' }}>
+              <AccordionItem value="links" border="none">
+                <AccordionItemTrigger px="0" py="4" _hover={{ bg: 'transparent' }}>
                   <Heading size="sm" flex="1" textAlign="left" color="brand.700">
                     Links & Resources
                   </Heading>
-                  <AccordionIcon fontSize="xl" color="brand.700" />
-                </AccordionButton>
-                <AccordionPanel pb="8" px="0">
-                <Stack spacing="4">
+                  <AccordionItemIndicator fontSize="xl" color="brand.700" />
+                </AccordionItemTrigger>
+                <AccordionItemContent>
+                <AccordionItemBody pb="8" px="0">
+                <Stack gap="4">
                   <Field.Root>
                     <Field.Label>Organization Website</Field.Label>
                     <Input
@@ -490,12 +517,13 @@ function ApplicationForm() {
                     <Field.HelperText>Direct link to the application portal or form</Field.HelperText>
                   </Field.Root>
                 </Stack>
-                </AccordionPanel>
+                </AccordionItemBody>
+                </AccordionItemContent>
               </AccordionItem>
-            </Accordion>
+            </AccordionRoot>
           </form>
         </CardBody>
-      </Card>
+      </CardRoot>
     </Container>
   );
 }
