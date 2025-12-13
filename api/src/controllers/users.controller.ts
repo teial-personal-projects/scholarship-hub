@@ -9,7 +9,8 @@ import { nameSchema, phoneSchema } from '@scholarship-hub/shared/utils/validatio
 const updateUserProfileSchema = z.object({
   firstName: nameSchema.optional(),
   lastName: nameSchema.optional(),
-  phoneNumber: phoneSchema().optional(),
+  // Default to US so typical "555-123-4567" inputs validate/normalize.
+  phoneNumber: phoneSchema('US').optional(),
   applicationRemindersEnabled: z.boolean().optional(),
   collaborationRemindersEnabled: z.boolean().optional(),
 });
@@ -59,11 +60,19 @@ export const updateMe = asyncHandler(async (req: Request, res: Response) => {
   }
 
   const { firstName, lastName, phoneNumber, applicationRemindersEnabled, collaborationRemindersEnabled } = validationResult.data;
+  // Preserve explicit "clear" requests. `phoneSchema` transforms null/empty → undefined,
+  // but callers intentionally send null to clear an existing number.
+  const hasPhoneNumberKey = Object.prototype.hasOwnProperty.call(req.body, 'phoneNumber');
+  const rawPhoneNumber = (req.body as any).phoneNumber;
+  const phoneNumberUpdate =
+    hasPhoneNumberKey && (rawPhoneNumber === null || rawPhoneNumber === '')
+      ? null
+      : phoneNumber;
 
   const updated = await usersService.updateUserProfile(req.user.userId, {
     firstName,
     lastName,
-    phoneNumber,
+    phoneNumber: phoneNumberUpdate,
     applicationRemindersEnabled,
     collaborationRemindersEnabled,
   });

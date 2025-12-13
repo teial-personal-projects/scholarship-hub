@@ -32,3 +32,44 @@ export function formatDateNoTimezone(dateString: string | null | undefined): str
   return `${month}/${day}/${year}`;
 }
 
+/**
+ * Shared date formatter used across the web app.
+ * This is intentionally timezone-safe for DATE (YYYY-MM-DD) strings.
+ *
+ * Prefer this over `new Date(dateString).toLocaleDateString()` to avoid off-by-one issues.
+ */
+export const formatDate = (dateString: string | null | undefined): string => {
+  return formatDateNoTimezone(dateString);
+};
+
+/**
+ * Formats a timestamp into a short relative string ("Just now", "5m ago", "2h ago", "3d ago"),
+ * then falls back to a short US date for older timestamps.
+ */
+export function formatRelativeTimestamp(
+  date: Date | string | null | undefined,
+  emptyValue: string = '-'
+): string {
+  if (!date) return emptyValue;
+
+  const updatedDate = date instanceof Date ? date : new Date(date);
+  if (Number.isNaN(updatedDate.getTime())) return emptyValue;
+
+  const now = new Date();
+  const diffMs = now.getTime() - updatedDate.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+
+  return updatedDate.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: updatedDate.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
+  });
+}
+

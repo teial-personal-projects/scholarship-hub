@@ -40,7 +40,7 @@ export const updateUserProfile = async (
   updates: {
     firstName?: string;
     lastName?: string;
-    phoneNumber?: string;
+    phoneNumber?: string | null;
     applicationRemindersEnabled?: boolean;
     collaborationRemindersEnabled?: boolean;
   }
@@ -58,6 +58,7 @@ export const updateUserProfile = async (
     } else {
       try {
         dbUpdates.phone_number = sanitizePhoneNumber(updates.phoneNumber, {
+          defaultCountry: 'US',
           format: 'E164', // Store in international format
         });
       } catch (error) {

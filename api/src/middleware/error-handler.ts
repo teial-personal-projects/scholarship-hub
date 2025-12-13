@@ -25,6 +25,7 @@ export const errorHandler = (
   res: Response,
   _next: NextFunction
 ): void => {
+  const isDev = process.env.NODE_ENV !== 'production';
   // Default to 500 server error
   let statusCode = 500;
   let message = 'Internal Server Error';
@@ -41,7 +42,7 @@ export const errorHandler = (
     const pgError = err as { code: string; message: string; details?: string; hint?: string };
     
     // Log the error code for debugging (development only)
-    if (process.env.NODE_ENV === 'development') {
+    if (isDev) {
       console.error('Database error code:', pgError.code);
       console.error('Database error message:', pgError.message);
     }
@@ -64,7 +65,7 @@ export const errorHandler = (
         }
         
         // Include original message in development
-        if (process.env.NODE_ENV === 'development' && pgError.message) {
+        if (isDev && pgError.message) {
           message += ` (${pgError.message})`;
         }
         isOperational = true;
@@ -80,7 +81,7 @@ export const errorHandler = (
           message = 'Invalid reference to related resource';
         }
         // Include original message in development
-        if (process.env.NODE_ENV === 'development' && pgError.message) {
+        if (isDev && pgError.message) {
           message += `\nDetails: ${pgError.message}`;
         }
         isOperational = true;
@@ -104,7 +105,7 @@ export const errorHandler = (
           message = 'Required field is missing';
         }
         // Include original message and failing row details in development
-        if (process.env.NODE_ENV === 'development') {
+        if (isDev) {
           if (pgError.message) {
             message += `: ${pgError.message}`;
           }
@@ -132,7 +133,7 @@ export const errorHandler = (
           message += `\nFailing row: ${checkRowMatch[1]}`;
         }
         // Include original message in development
-        if (process.env.NODE_ENV === 'development' && pgError.message) {
+        if (isDev && pgError.message) {
           message += `\nFull error: ${pgError.message}`;
         }
         isOperational = true;
@@ -145,7 +146,7 @@ export const errorHandler = (
       default:
         message = pgError.message || message;
         // For any database error, include the full message in development
-        if (process.env.NODE_ENV === 'development') {
+        if (isDev) {
           message += `\nError code: ${pgError.code}`;
           // Extract failing row if present
           const rowMatch = pgError.message?.match(/Failing row contains \((.+)\)/i);
@@ -171,7 +172,7 @@ export const errorHandler = (
   // Log error for debugging
   // In production: only log unexpected (non-operational) errors with minimal info
   // In development: log all errors with full details
-  if (!isOperational || process.env.NODE_ENV === 'development') {
+  if (!isOperational || isDev) {
     const logData: Record<string, unknown> = {
       message: err.message,
       statusCode,
@@ -179,7 +180,7 @@ export const errorHandler = (
     };
     
     // Include stack trace and full details only in development
-    if (process.env.NODE_ENV === 'development') {
+    if (isDev) {
       logData.stack = err.stack;
       
       // Include database error details if available (development only)
@@ -207,7 +208,7 @@ export const errorHandler = (
   };
 
   // Include additional details in development
-  if (process.env.NODE_ENV === 'development') {
+  if (isDev) {
     response.stack = err.stack;
     // Include original error details for database errors
     if ('code' in err && 'message' in err) {

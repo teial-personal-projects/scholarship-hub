@@ -173,15 +173,32 @@ export async function getRecommendedScholarships(
   userId: number,
   limit: number = 10
 ): Promise<ScholarshipResponse[]> {
-  // Get user's profile and preferences
+  // Verify the user exists (auth middleware should ensure this, but keep it defensive)
   const { data: user, error: userError } = await supabase
     .from('user_profiles')
-    .select('search_preferences')
+    .select('id')
     .eq('id', userId)
-    .single();
+    .maybeSingle();
 
   if (userError) {
+    throw new AppError(`Failed to load user profile: ${userError.message}`, 500);
+  }
+  if (!user) {
     throw new AppError('User not found', 404);
+  }
+
+  // Load normalized search preferences (this repo uses `user_search_preferences`, not a JSON column)
+  const { data: prefsRow, error: prefsError } = await supabase
+    .from('user_search_preferences')
+    .select('*')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (prefsError && !isDbErrorCode(prefsError, DB_ERROR_CODES.NO_ROWS_FOUND)) {
+    const msg =
+      (prefsError as unknown as { message?: string } | null)?.message ??
+      String(prefsError);
+    throw new AppError(`Failed to load user search preferences: ${msg}`, 500);
   }
 
   // Build query based on preferences
@@ -191,14 +208,26 @@ export async function getRecommendedScholarships(
     .eq('status', 'active')
     .gte('deadline', new Date().toISOString());
 
-  const prefs = user?.search_preferences as UserScholarshipPreferences | null;
+  const prefs: UserScholarshipPreferences | null = prefsRow
+    ? {
+        targetType: prefsRow.target_type ?? undefined,
+        // Schema stores min_award in preferences; treat it as minAmount for filtering/scoring.
+        minAmount:
+          prefsRow.min_award === null || prefsRow.min_award === undefined
+            ? undefined
+            : Number(prefsRow.min_award),
+        educationLevel: prefsRow.academic_level ?? undefined,
+        // Map subject_areas to keywords so scoring logic can use them.
+        keywords:
+          Array.isArray(prefsRow.subject_areas) && prefsRow.subject_areas.length > 0
+            ? prefsRow.subject_areas
+            : undefined,
+      }
+    : null;
 
   if (prefs) {
     if (prefs.targetType) {
       query = query.eq('target_type', prefs.targetType);
-    }
-    if (prefs.category) {
-      query = query.eq('category', prefs.category);
     }
     if (prefs.minAmount !== undefined) {
       query = query.gte('amount', prefs.minAmount);
@@ -206,7 +235,14 @@ export async function getRecommendedScholarships(
     if (prefs.educationLevel) {
       query = query.eq('education_level', prefs.educationLevel);
     }
-    if (prefs.fieldOfStudy) {
+    // If we have subject-area keywords, filter scholarships that mention any of them.
+    if (prefs.keywords && prefs.keywords.length > 0) {
+      const orQuery = prefs.keywords
+        .filter((k) => typeof k === 'string' && k.trim().length > 0)
+        .map((k) => `field_of_study.ilike.%${k.trim()}%`)
+        .join(',');
+      if (orQuery) query = query.or(orQuery);
+    } else if (prefs.fieldOfStudy) {
       query = query.ilike('field_of_study', `%${prefs.fieldOfStudy}%`);
     }
   }

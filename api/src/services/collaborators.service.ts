@@ -57,24 +57,30 @@ export const createCollaborator = async (
     lastName: string;
     emailAddress: string;
     relationship?: string;
-    phoneNumber?: string;
+    phoneNumber?: string | null;
   }
 ) => {
   // Sanitize and validate email
   const sanitizedEmail = sanitizeEmail(collaboratorData.emailAddress);
   
   // Sanitize and validate phone number (store in E.164 format)
-  let sanitizedPhone: string | undefined;
+  let phoneToStore: string | undefined | null;
   if (collaboratorData.phoneNumber) {
     try {
-      sanitizedPhone = sanitizePhoneNumber(collaboratorData.phoneNumber, {
+      phoneToStore = sanitizePhoneNumber(collaboratorData.phoneNumber, {
+        defaultCountry: 'US',
         format: 'E164', // Store in international format
       });
     } catch (error) {
-      throw new AppError(
-        error instanceof Error ? error.message : 'Invalid phone number format',
-        400
-      );
+      // Be lenient: store the trimmed original if normalization fails.
+      // This avoids blocking saves when users enter placeholders like (555) 555-5555.
+      phoneToStore = collaboratorData.phoneNumber.trim() || null;
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn('⚠️ collaborator phone not normalized, storing raw', {
+          phoneNumber: collaboratorData.phoneNumber,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
     }
   }
 
@@ -89,8 +95,8 @@ export const createCollaborator = async (
   if (collaboratorData.relationship !== undefined) {
     dbData.relationship = collaboratorData.relationship.trim();
   }
-  if (sanitizedPhone !== undefined) {
-    dbData.phone_number = sanitizedPhone;
+  if (phoneToStore !== undefined) {
+    dbData.phone_number = phoneToStore;
   }
 
   const { data, error } = await supabase
@@ -115,7 +121,7 @@ export const updateCollaborator = async (
     lastName?: string;
     emailAddress?: string;
     relationship?: string;
-    phoneNumber?: string;
+    phoneNumber?: string | null;
   }
 ) => {
   // First verify the collaborator belongs to the user
@@ -149,13 +155,18 @@ export const updateCollaborator = async (
     } else {
       try {
         dbUpdates.phone_number = sanitizePhoneNumber(updates.phoneNumber, {
+          defaultCountry: 'US',
           format: 'E164', // Store in international format
         });
       } catch (error) {
-        throw new AppError(
-          error instanceof Error ? error.message : 'Invalid phone number format',
-          400
-        );
+        // Be lenient: store the trimmed original if normalization fails.
+        dbUpdates.phone_number = updates.phoneNumber.trim();
+        if (process.env.NODE_ENV !== 'production') {
+          console.warn('⚠️ collaborator phone not normalized, storing raw', {
+            phoneNumber: updates.phoneNumber,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
       }
     }
   }

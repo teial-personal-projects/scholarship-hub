@@ -40,7 +40,7 @@ import { useCollaboratorCollaborations } from '../hooks/useCollaborations';
 import type { CollaborationResponse } from '@scholarship-hub/shared';
 import CollaborationHistory from '../components/CollaborationHistory';
 import { apiPatch } from '../services/api';
-import { formatDateNoTimezone } from '../utils/date';
+import { formatDateNoTimezone, formatRelativeTimestamp } from '../utils/date';
 import { useToastHelpers } from '../utils/toast';
 
 function CollaboratorDashboard() {
@@ -101,26 +101,7 @@ function CollaboratorDashboard() {
     }
   };
 
-  const formatLastUpdated = (date: Date | string | undefined) => {
-    if (!date) return '-';
-    const updatedDate = new Date(date);
-    const now = new Date();
-    const diffMs = now.getTime() - updatedDate.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays < 7) return `${diffDays}d ago`;
-
-    return updatedDate.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: updatedDate.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
-    });
-  };
+  const formatLastUpdated = (date: Date | string | undefined) => formatRelativeTimestamp(date, '-');
 
   const getStatusLabel = (status: string) => {
     switch (status) {

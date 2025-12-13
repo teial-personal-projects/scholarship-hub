@@ -8,7 +8,7 @@ import { z } from 'zod';
 import * as collaboratorsService from '../services/collaborators.service.js';
 import { asyncHandler } from '../middleware/error-handler.js';
 import { toCamelCase } from '@scholarship-hub/shared/utils/case-conversion';
-import { emailSchema, phoneSchema, nameSchema } from '@scholarship-hub/shared/utils/validation';
+import { emailSchema, nameSchema } from '@scholarship-hub/shared/utils/validation';
 
 /**
  * GET /api/collaborators
@@ -57,12 +57,19 @@ export const getCollaborator = asyncHandler(async (req: Request, res: Response) 
 });
 
 // Validation schemas
+// NOTE: Collaborator phone numbers are optional and frequently entered as placeholders
+// (e.g. (555) 555-5555) during development. We accept any trimmed string here and let
+// the service normalize to E.164 when possible.
+const collaboratorPhoneSchema = z
+  .union([z.string().trim().max(50), z.null()])
+  .optional();
+
 const createCollaboratorSchema = z.object({
   firstName: nameSchema,
   lastName: nameSchema,
   emailAddress: emailSchema,
   relationship: z.string().max(100).trim().optional(),
-  phoneNumber: phoneSchema().optional(),
+  phoneNumber: collaboratorPhoneSchema,
 });
 
 const updateCollaboratorSchema = z.object({
@@ -70,7 +77,7 @@ const updateCollaboratorSchema = z.object({
   lastName: nameSchema.optional(),
   emailAddress: emailSchema.optional(),
   relationship: z.string().max(100).trim().optional(),
-  phoneNumber: phoneSchema().optional(),
+  phoneNumber: collaboratorPhoneSchema,
 });
 
 /**
@@ -87,6 +94,12 @@ export const createCollaborator = asyncHandler(async (req: Request, res: Respons
   const validationResult = createCollaboratorSchema.safeParse(req.body);
   
   if (!validationResult.success) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('⚠️ createCollaborator validation failed', {
+        body: req.body,
+        issues: validationResult.error.issues,
+      });
+    }
     res.status(400).json({
       error: 'Validation Error',
       message: validationResult.error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', '),
@@ -131,6 +144,12 @@ export const updateCollaborator = asyncHandler(async (req: Request, res: Respons
   const validationResult = updateCollaboratorSchema.safeParse(req.body);
   
   if (!validationResult.success) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('⚠️ updateCollaborator validation failed', {
+        body: req.body,
+        issues: validationResult.error.issues,
+      });
+    }
     res.status(400).json({
       error: 'Validation Error',
       message: validationResult.error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', '),
@@ -139,6 +158,14 @@ export const updateCollaborator = asyncHandler(async (req: Request, res: Respons
   }
 
   const { firstName, lastName, emailAddress, relationship, phoneNumber } = validationResult.data;
+  // Preserve explicit "clear" requests. `phoneSchema` transforms null/empty → undefined,
+  // but callers intentionally send null to clear an existing number.
+  const hasPhoneNumberKey = Object.prototype.hasOwnProperty.call(req.body, 'phoneNumber');
+  const rawPhoneNumber = (req.body as any).phoneNumber;
+  const phoneNumberUpdate =
+    hasPhoneNumberKey && (rawPhoneNumber === null || rawPhoneNumber === '')
+      ? null
+      : phoneNumber;
 
   const collaborator = await collaboratorsService.updateCollaborator(
     collaboratorId,
@@ -148,7 +175,7 @@ export const updateCollaborator = asyncHandler(async (req: Request, res: Respons
       lastName,
       emailAddress,
       relationship,
-      phoneNumber,
+      phoneNumber: phoneNumberUpdate,
     }
   );
 

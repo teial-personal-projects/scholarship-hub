@@ -25,15 +25,7 @@ import {
 import { apiPost } from '../services/api';
 import type { CollaborationResponse } from '@scholarship-hub/shared';
 import { useToastHelpers } from '../utils/toast';
-
-// Helper function to format dates without timezone conversion
-const formatDate = (dateString: string | null | undefined): string => {
-  if (!dateString) return 'N/A';
-  // Extract just the date part (YYYY-MM-DD) to avoid timezone issues
-  const datePart = dateString.split('T')[0];
-  const [year, month, day] = datePart.split('-');
-  return `${month}/${day}/${year}`;
-};
+import { formatDate } from '../utils/date';
 
 interface SendInviteDialogProps {
   isOpen: boolean;
