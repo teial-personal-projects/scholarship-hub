@@ -519,6 +519,7 @@ function ApplicationDetail() {
     const max = application.maxAward ?? application.minAward ?? application.maxAward;
 
     if (min == null || max == null) return 'Not specified';
+    if (min === max) return `$${min.toLocaleString()}`;
     return `$${min.toLocaleString()} - $${max.toLocaleString()}`;
   })();
 
