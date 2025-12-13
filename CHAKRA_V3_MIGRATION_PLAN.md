@@ -49,19 +49,25 @@ git add -A
 git commit -m "Pre-Chakra v3 migration checkpoint"
 ```
 
-### [ ] Step 1.4: Document Current Component Usage
+### [✅] Step 1.4: Document Current Component Usage
 Run analysis to understand what needs to change:
 ```bash
 cd web/src
 # Count Modal usage
-grep -r "Modal" --include="*.tsx" | wc -l
+rg -g"*.tsx" "\bModal\b" | wc -l
 # Count FormControl usage
-grep -r "FormControl" --include="*.tsx" | wc -l
+rg -g"*.tsx" "\bFormControl\b" | wc -l
 # Count useToast usage
-grep -r "useToast" --include="*.tsx" | wc -l
+rg -g"*.{ts,tsx}" "\buseToast\b" | wc -l
 # Count Tabs usage
-grep -r "Tabs" --include="*.tsx" | wc -l
+rg -g"*.tsx" "\bTabs\b" | wc -l
 ```
+
+**Results (current repo)**:
+- Modal: 35 matches (11 files)
+- FormControl: 144 matches (12 files)
+- useToast: 4 matches (2 files)
+- Tabs: 13 matches (4 files)
 
 ---
 
