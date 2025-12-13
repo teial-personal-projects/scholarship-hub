@@ -1,274 +1,290 @@
-import { extendTheme, type ThemeConfig } from '@chakra-ui/react';
+import { createSystem, defaultConfig, defineRecipe, defineSlotRecipe } from "@chakra-ui/react"
 
-// Theme configuration
-const config: ThemeConfig = {
-  initialColorMode: 'light',
-  useSystemColorMode: false,
-};
-
-// Nature-inspired green/olive color palette - Clean, organic, professional
-const colors = {
-  brand: {
-    // Sage green - Primary
-    50: '#F7FAF4',  // header bg
-    100: '#F5F7F1', // page bg
-    200: '#E6EDD9', // light pill / tab bg
-    300: '#C9D9B5',
-    400: '#A9C28F',
-    500: '#8FAE75', // primary mid
-    600: '#6B8F58',
-    700: '#4B612C', // primary dark
-    800: '#3F5424', // primary dark hover
-    900: '#2A3818',
-  },
-  accent: {
-    // Complementary olive accent
-    50: '#F9FAF7',
-    100: '#F0F3EB',
-    200: '#E1E8D4',
-    300: '#C8D6B3',
-    400: '#A8BE8A',
-    500: '#8FAE75',
-    600: '#6B8F58',
-    700: '#556F45',
-    800: '#3F5234',
-    900: '#2A3623',
-  },
-  purple: {
-    // Secondary accent for variety
-    50: '#FAF5FF',
-    100: '#E9D8FD',
-    200: '#D6BCFA',
-    300: '#B794F4',
-    400: '#9F7AEA',
-    500: '#805AD5',
-    600: '#6B46C1',
-    700: '#553C9A',
-    800: '#44337A',
-    900: '#322659',
-  },
-  orange: {
-    // Warm accent for highlights
-    50: '#FFFAF0',
-    100: '#FEEBC8',
-    200: '#FBD38D',
-    300: '#F6AD55',
-    400: '#ED8936',
-    500: '#DD6B20',
-    600: '#C05621',
-    700: '#9C4221',
-    800: '#7C2D12',
-    900: '#651A0B',
-  },
-  success: {
-    50: '#F0FFF4',
-    100: '#C6F6D5',
-    200: '#9AE6B4',
-    300: '#68D391',
-    400: '#48BB78',
-    500: '#38A169',
-    600: '#2F855A',
-    700: '#276749',
-    800: '#22543D',
-    900: '#1C4532',
-  },
-  warning: {
-    50: '#FFFBEB',
-    100: '#FEF3C7',
-    200: '#FDE68A',
-    300: '#FCD34D',
-    400: '#FBBF24',
-    500: '#F59E0B',
-    600: '#D97706',
-    700: '#B45309',
-    800: '#92400E',
-    900: '#78350F',
-  },
-  error: {
-    50: '#FEF2F2',
-    100: '#FEE2E2',
-    200: '#FECACA',
-    300: '#FCA5A5',
-    400: '#F87171',
-    500: '#EF4444',
-    600: '#DC2626',
-    700: '#B91C1C',
-    800: '#991B1B',
-    900: '#7F1D1D',
-  },
-  gray: {
-    50: '#F7F9FA', // Neutral light
-    100: '#EDF2F7',
-    200: '#E2E8F0',
-    300: '#CBD5E0',
-    400: '#A0AEC0',
-    500: '#718096',
-    600: '#4A5568',
-    700: '#2D3748',
-    800: '#1A202C',
-    900: '#0F2C3A', // Neutral dark
-  },
-  highlight: {
-    // Ultra-light green for cards/background
-    50: '#F2F4EC', // section bg
-    100: '#E8EDE0',
-    200: '#DDE5D0',
-    300: '#D1DDC0',
-    400: '#C6D5B0',
-    500: '#F2F4EC', // Main highlight color
-  },
-  text: {
-    main: '#3D3D3D',
-    muted: '#6B6B6B',
-    inverse: '#FFFFFF',
-  },
-  border: {
-    default: '#D8D8D8',
-  },
-  surfaces: {
-    card: '#FFFFFF',
-    section: '#F2F4EC',
-  },
-};
-
-// Custom components styling
-const components = {
-  Button: {
-    defaultProps: {
-      colorScheme: 'brand',
-    },
-    variants: {
-      solid: {
-        borderRadius: 'lg',
-        fontWeight: 'semibold',
-        boxShadow: 'md',
-        _hover: {
-          transform: 'translateY(-2px)',
-          boxShadow: 'lg',
-        },
-        transition: 'all 0.2s',
-      },
-      gradient: {
-        bg: 'accent.400',
-        color: 'white',
-        borderRadius: 'lg',
-        fontWeight: 'semibold',
-        boxShadow: 'sm',
-        _hover: {
-          bg: 'accent.500',
-          boxShadow: 'md',
-        },
-        transition: 'all 0.2s',
-      },
-    },
-  },
-  Card: {
-    baseStyle: {
-      container: {
-        borderRadius: 'xl',
-        boxShadow: 'lg',
-        border: '1px solid',
-        borderColor: 'gray.200',
-        _hover: {
-          boxShadow: 'xl',
-          transform: 'translateY(-2px)',
-        },
-        transition: 'all 0.3s',
-      },
-    },
-    variants: {
-      elevated: {
-        container: {
-          boxShadow: 'xl',
-          border: 'none',
-        },
-      },
-      gradient: {
-        container: {
-          bg: 'highlight.50',
-          borderColor: 'brand.200',
-        },
-      },
-      academic: {
-        container: {
-          bg: 'highlight.50',
-          border: '1px solid',
-          borderColor: 'brand.200',
-          boxShadow: 'md',
-        },
-      },
-    },
-  },
-  Badge: {
-    variants: {
-      solid: {
-        borderRadius: 'full',
-        px: 3,
-        py: 1,
-        fontWeight: 'semibold',
-      },
-    },
-  },
-  FormLabel: {
-    baseStyle: {
-      color: 'brand.700', // Dark green (#4B612C)
-      fontWeight: 'semibold',
-    },
-  },
-  Table: {
-    variants: {
-      simple: {
-        th: {
-          color: 'brand.700', // Dark green (#4B612C)
-          fontWeight: 'semibold',
-          textTransform: 'none',
-          letterSpacing: 'normal',
-          paddingY: '2',
-        },
-        td: {
-          paddingY: '2',
-        },
-      },
-    },
-  },
-  Heading: {
-    baseStyle: {
-      fontWeight: 'bold',
-      letterSpacing: '-0.02em',
-    },
-  },
-};
-
-// Custom styles
-const styles = {
-  global: {
+/**
+ * Chakra v3 theme system (light-only).
+ *
+ * NOTE: Chakra v2-style `extendTheme({ components, styles })` is replaced by
+ * v3's system config (`tokens`, `semanticTokens`, `globalCss`, recipes, etc.).
+ *
+ * For Step 3.1 we migrate tokens + semantic tokens + global body styles.
+ * Component-level styling will be migrated later via recipes/slotRecipes.
+ */
+export const system = createSystem(defaultConfig, {
+  globalCss: {
     body: {
-      bg: 'brand.100', // Neutral light background (#F5F7F1)
-      color: 'text.main', // (#3D3D3D)
+      bg: "{colors.brand.100}",
+      color: "{colors.text.main}",
     },
   },
-};
-
-const theme = extendTheme({
-  config,
-  colors,
-  components,
-  styles,
-  semanticTokens: {
-    colors: {
-      pageBg: 'brand.100',        // #F5F7F1
-      headerBg: 'brand.50',        // #F7FAF4
-      headerBorder: 'brand.700',   // #4B612C
-      primary: 'brand.500',        // #8FAE75
-      primaryDark: 'brand.700',    // #4B612C
-      primaryLight: 'brand.200',   // #E6EDD9
-      sectionBg: 'surfaces.section', // #F2F4EC
-      cardBg: 'surfaces.card',     // #FFFFFF
-      textMain: 'text.main',       // #3D3D3D
-      textMuted: 'text.muted',     // #6B6B6B
-      borderDefault: 'border.default', // #D8D8D8
+  theme: {
+    recipes: {
+      button: defineRecipe({
+        className: "chakra-button",
+        base: {
+          borderRadius: "lg",
+          fontWeight: "semibold",
+        },
+        variants: {
+          variant: {
+            solid: {
+              boxShadow: "md",
+              transition: "all 0.2s",
+              _hover: {
+                transform: "translateY(-2px)",
+                boxShadow: "lg",
+              },
+            },
+            gradient: {
+              bg: "accent.400",
+              color: "white",
+              borderRadius: "lg",
+              fontWeight: "semibold",
+              boxShadow: "sm",
+              transition: "all 0.2s",
+              _hover: {
+                bg: "accent.500",
+                boxShadow: "md",
+              },
+            },
+          },
+        },
+      }),
+      badge: defineRecipe({
+        className: "chakra-badge",
+        variants: {
+          variant: {
+            solid: {
+              borderRadius: "full",
+              px: "3",
+              py: "1",
+              fontWeight: "semibold",
+              textTransform: "none",
+            },
+          },
+        },
+      }),
+      heading: defineRecipe({
+        className: "chakra-heading",
+        base: {
+          fontWeight: "bold",
+          letterSpacing: "-0.02em",
+        },
+      }),
+    },
+    slotRecipes: {
+      card: defineSlotRecipe({
+        className: "chakra-card",
+        slots: ["root", "header", "body", "footer", "title", "description"],
+        base: {
+          root: {
+            borderRadius: "xl",
+            boxShadow: "lg",
+            borderWidth: "1px",
+            borderColor: "gray.200",
+            bg: "white",
+            transition: "all 0.3s",
+            _hover: {
+              boxShadow: "xl",
+              transform: "translateY(-2px)",
+            },
+          },
+        },
+        variants: {
+          variant: {
+            elevated: {
+              root: {
+                boxShadow: "xl",
+                borderWidth: "0px",
+              },
+            },
+            gradient: {
+              root: {
+                bg: "highlight.50",
+                borderColor: "brand.200",
+              },
+            },
+            academic: {
+              root: {
+                bg: "highlight.50",
+                borderWidth: "1px",
+                borderColor: "brand.200",
+                boxShadow: "md",
+              },
+            },
+          },
+        },
+      }),
+      field: defineSlotRecipe({
+        className: "chakra-field",
+        slots: ["root", "label", "requiredIndicator", "helperText", "errorText"],
+        base: {
+          label: {
+            color: "brand.700",
+            fontWeight: "semibold",
+          },
+        },
+      }),
+      table: defineSlotRecipe({
+        className: "chakra-table",
+        slots: ["root", "header", "body", "footer", "row", "cell", "columnHeader", "caption"],
+        variants: {
+          variant: {
+            simple: {
+              columnHeader: {
+                color: "brand.700",
+                fontWeight: "semibold",
+                textTransform: "none",
+                letterSpacing: "normal",
+                py: "2",
+              },
+              cell: {
+                py: "2",
+              },
+            },
+          },
+        },
+        defaultVariants: {
+          variant: "simple",
+        },
+      }),
+    },
+    tokens: {
+      colors: {
+        // Nature-inspired green/olive color palette - Clean, organic, professional
+        brand: {
+          50: { value: "#F7FAF4" }, // header bg
+          100: { value: "#F5F7F1" }, // page bg
+          200: { value: "#E6EDD9" }, // light pill / tab bg
+          300: { value: "#C9D9B5" },
+          400: { value: "#A9C28F" },
+          500: { value: "#8FAE75" }, // primary mid
+          600: { value: "#6B8F58" },
+          700: { value: "#4B612C" }, // primary dark
+          800: { value: "#3F5424" }, // primary dark hover
+          900: { value: "#2A3818" },
+        },
+        accent: {
+          50: { value: "#F9FAF7" },
+          100: { value: "#F0F3EB" },
+          200: { value: "#E1E8D4" },
+          300: { value: "#C8D6B3" },
+          400: { value: "#A8BE8A" },
+          500: { value: "#8FAE75" },
+          600: { value: "#6B8F58" },
+          700: { value: "#556F45" },
+          800: { value: "#3F5234" },
+          900: { value: "#2A3623" },
+        },
+        purple: {
+          50: { value: "#FAF5FF" },
+          100: { value: "#E9D8FD" },
+          200: { value: "#D6BCFA" },
+          300: { value: "#B794F4" },
+          400: { value: "#9F7AEA" },
+          500: { value: "#805AD5" },
+          600: { value: "#6B46C1" },
+          700: { value: "#553C9A" },
+          800: { value: "#44337A" },
+          900: { value: "#322659" },
+        },
+        orange: {
+          50: { value: "#FFFAF0" },
+          100: { value: "#FEEBC8" },
+          200: { value: "#FBD38D" },
+          300: { value: "#F6AD55" },
+          400: { value: "#ED8936" },
+          500: { value: "#DD6B20" },
+          600: { value: "#C05621" },
+          700: { value: "#9C4221" },
+          800: { value: "#7C2D12" },
+          900: { value: "#651A0B" },
+        },
+        success: {
+          50: { value: "#F0FFF4" },
+          100: { value: "#C6F6D5" },
+          200: { value: "#9AE6B4" },
+          300: { value: "#68D391" },
+          400: { value: "#48BB78" },
+          500: { value: "#38A169" },
+          600: { value: "#2F855A" },
+          700: { value: "#276749" },
+          800: { value: "#22543D" },
+          900: { value: "#1C4532" },
+        },
+        warning: {
+          50: { value: "#FFFBEB" },
+          100: { value: "#FEF3C7" },
+          200: { value: "#FDE68A" },
+          300: { value: "#FCD34D" },
+          400: { value: "#FBBF24" },
+          500: { value: "#F59E0B" },
+          600: { value: "#D97706" },
+          700: { value: "#B45309" },
+          800: { value: "#92400E" },
+          900: { value: "#78350F" },
+        },
+        error: {
+          50: { value: "#FEF2F2" },
+          100: { value: "#FEE2E2" },
+          200: { value: "#FECACA" },
+          300: { value: "#FCA5A5" },
+          400: { value: "#F87171" },
+          500: { value: "#EF4444" },
+          600: { value: "#DC2626" },
+          700: { value: "#B91C1C" },
+          800: { value: "#991B1B" },
+          900: { value: "#7F1D1D" },
+        },
+        gray: {
+          50: { value: "#F7F9FA" }, // Neutral light
+          100: { value: "#EDF2F7" },
+          200: { value: "#E2E8F0" },
+          300: { value: "#CBD5E0" },
+          400: { value: "#A0AEC0" },
+          500: { value: "#718096" },
+          600: { value: "#4A5568" },
+          700: { value: "#2D3748" },
+          800: { value: "#1A202C" },
+          900: { value: "#0F2C3A" }, // Neutral dark
+        },
+        highlight: {
+          50: { value: "#F2F4EC" }, // section bg
+          100: { value: "#E8EDE0" },
+          200: { value: "#DDE5D0" },
+          300: { value: "#D1DDC0" },
+          400: { value: "#C6D5B0" },
+          500: { value: "#F2F4EC" }, // Main highlight color
+        },
+        text: {
+          main: { value: "#3D3D3D" },
+          muted: { value: "#6B6B6B" },
+          inverse: { value: "#FFFFFF" },
+        },
+        border: {
+          default: { value: "#D8D8D8" },
+        },
+        surfaces: {
+          card: { value: "#FFFFFF" },
+          section: { value: "#F2F4EC" },
+        },
+      },
+    },
+    semanticTokens: {
+      colors: {
+        pageBg: { value: "{colors.brand.100}" },
+        headerBg: { value: "{colors.brand.50}" },
+        headerBorder: { value: "{colors.brand.700}" },
+        primary: { value: "{colors.brand.500}" },
+        primaryDark: { value: "{colors.brand.700}" },
+        primaryLight: { value: "{colors.brand.200}" },
+        sectionBg: { value: "{colors.surfaces.section}" },
+        cardBg: { value: "{colors.surfaces.card}" },
+        textMain: { value: "{colors.text.main}" },
+        textMuted: { value: "{colors.text.muted}" },
+        borderDefault: { value: "{colors.border.default}" },
+      },
     },
   },
-});
+})
 
-export default theme;
+export default system

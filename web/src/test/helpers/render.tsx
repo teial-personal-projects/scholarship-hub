@@ -7,6 +7,7 @@ import { ReactElement } from 'react';
 import { render, RenderOptions } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { ChakraProvider } from '@chakra-ui/react';
+import system from '../../theme';
 
 /**
  * Custom render function that wraps components with providers
@@ -17,7 +18,7 @@ export function renderWithProviders(
 ) {
   function Wrapper({ children }: { children: React.ReactNode }) {
     return (
-      <ChakraProvider>
+      <ChakraProvider value={system}>
         <BrowserRouter>{children}</BrowserRouter>
       </ChakraProvider>
     );
@@ -60,7 +61,7 @@ export function renderWithAuth(
 
   function Wrapper({ children }: { children: React.ReactNode }) {
     return (
-      <ChakraProvider>
+      <ChakraProvider value={system}>
         <BrowserRouter>{children}</BrowserRouter>
       </ChakraProvider>
     );

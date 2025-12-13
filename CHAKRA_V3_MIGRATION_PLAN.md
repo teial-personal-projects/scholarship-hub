@@ -127,8 +127,12 @@ npm ls @emotion/react
 
 ## Phase 3: Theme Migration
 
-### [ ] Step 3.1: Update Theme Configuration File
+### [✅] Step 3.1: Update Theme Configuration File
 **File**: `web/src/theme.ts`
+
+**Status (this repo)**:
+- Migrated `web/src/theme.ts` to `createSystem(defaultConfig, { theme: { tokens, semanticTokens }, globalCss })`
+- Updated Chakra provider usage to `value={system}` in `web/src/main.tsx` (+ test provider + snippet provider)
 
 **Changes Required**:
 1. Replace `extendTheme` with `createSystem`
@@ -172,18 +176,22 @@ const customConfig = createSystem(defaultConfig, {
 });
 ```
 
-### [ ] Step 3.2: Update Component Style Overrides
+### [✅] Step 3.2: Update Component Style Overrides
 Component theming now uses "recipes" instead of `baseStyle` and `variants`.
 
 **Migration needed for**:
 - Button
 - Card
 - Badge
-- FormLabel
+- FormLabel (→ `Field` label slot recipe in v3)
 - Table
 - Heading
 
 This will require rewriting each component's theme configuration using the recipe pattern.
+
+**Status (this repo)**:
+- Added `theme.recipes` overrides for `button`, `badge`, `heading`
+- Added `theme.slotRecipes` overrides for `card`, `field` (label), `table`
 
 ### [ ] Step 3.3: (Optional) Color mode support
 Chakra v3 examples often use `next-themes` to manage color mode, but in a Vite app it is optional.
