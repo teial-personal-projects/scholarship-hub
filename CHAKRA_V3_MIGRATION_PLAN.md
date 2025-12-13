@@ -101,13 +101,15 @@ Only needed if you plan to import snippets with `@/…` paths.
 
 If you don’t want aliases, keep snippet imports relative (recommended).
 
-### [ ] Step 2.4: Install Icon Library
+### [✅] Step 2.4: Install Icon Library
 Since `@chakra-ui/icons` is deprecated, install a replacement:
 ```bash
 npm install lucide-react
 # OR
 npm install react-icons
 ```
+
+**Status (this repo)**: Using `react-icons` (already required by the Chakra snippet icons).
 
 **Recommendation**: Use `lucide-react` for consistency with modern React patterns.
 
