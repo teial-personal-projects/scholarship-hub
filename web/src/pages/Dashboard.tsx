@@ -9,25 +9,24 @@ import {
   Stack,
   HStack,
   VStack,
-  Card,
+  CardRoot,
   CardBody,
   CardHeader,
   Spinner,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
+  TableRoot,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableColumnHeader,
+  TableCell,
   Badge,
   Link,
   Flex,
   IconButton,
-  Tabs,
-  TabList,
-  TabPanels,
-  Tab,
-  TabPanel,
+  TabsRoot,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
 } from '@chakra-ui/react';
 import { apiGet } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -48,7 +47,7 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [activeTab, setActiveTab] = useState(0);
+  const [activeTab, setActiveTab] = useState<'inProgress' | 'submitted'>('inProgress');
   const itemsPerPage = 10;
 
   useEffect(() => {
@@ -103,7 +102,7 @@ function Dashboard() {
 
   // Filter applications by tab (must be before early returns)
   const filteredApplications = useMemo(() => {
-    if (activeTab === 0) {
+    if (activeTab === 'inProgress') {
       // "In Progress" tab - show applications with status "In Progress"
       return applications.filter(app => app.status === 'In Progress');
     } else {
@@ -136,7 +135,7 @@ function Dashboard() {
   if (authLoading || loading) {
     return (
       <Container maxW="7xl" py={{ base: '8', md: '12' }}>
-        <Stack spacing="8" align="center">
+        <Stack gap="8" align="center">
           <Spinner size="xl" />
           <Text>Loading dashboard...</Text>
         </Stack>
@@ -147,11 +146,11 @@ function Dashboard() {
   if (error) {
     return (
       <Container maxW="7xl" py={{ base: '8', md: '12' }}>
-        <Card>
+        <CardRoot>
           <CardBody>
             <Text color="red.500">{error}</Text>
           </CardBody>
-        </Card>
+        </CardRoot>
       </Container>
     );
   }
@@ -161,7 +160,7 @@ function Dashboard() {
   return (
     <Box bg="gray.50" minH="100vh" pb="8">
       <Container maxW="7xl" py={{ base: '4', md: '8' }} px={{ base: '4', md: '6' }}>
-        <Stack spacing={{ base: '6', md: '8' }}>
+        <Stack gap={{ base: '6', md: '8' }}>
           {/* Welcome Section - Minimal Academic Style */}
           <Box
             bg="brand.500"
@@ -170,7 +169,7 @@ function Dashboard() {
             color="white"
             boxShadow="md"
           >
-            <VStack align="start" spacing="2">
+            <VStack align="start" gap="2">
               <Heading size={{ base: 'lg', md: 'xl' }} fontWeight="bold">
                 Welcome back, {firstName}!
               </Heading>
@@ -181,7 +180,7 @@ function Dashboard() {
           </Box>
 
           {/* Actions */}
-          <HStack spacing="4" flexWrap="wrap">
+          <HStack gap="4" flexWrap="wrap">
             <Button
               colorScheme="green"
               size={{ base: 'md', md: 'lg' }}
@@ -205,7 +204,7 @@ function Dashboard() {
 
           {/* Recommended Scholarships Widget */}
           {recommendedScholarships.length > 0 && (
-            <Card variant="elevated" bg="white">
+            <CardRoot variant="elevated" bg="white">
               <CardHeader
                 bg="highlight.50"
                 borderTopRadius="xl"
@@ -219,8 +218,8 @@ function Dashboard() {
                     📚 New Scholarships for You
                   </Heading>
                   <Button
-                    variant="link"
-                    colorScheme="brand"
+                    variant="plain"
+                    colorPalette="brand"
                     onClick={() => navigate('/scholarships/search')}
                   >
                     Browse All →
@@ -228,9 +227,9 @@ function Dashboard() {
                 </Flex>
               </CardHeader>
               <CardBody>
-                <Stack spacing={4}>
+                <Stack gap={4}>
                   {recommendedScholarships.map((scholarship) => (
-                    <Card
+                    <CardRoot
                       key={scholarship.id}
                       variant="outline"
                       _hover={{ shadow: 'sm' }}
@@ -257,15 +256,15 @@ function Dashboard() {
                           </Text>
                         )}
                       </CardBody>
-                    </Card>
+                    </CardRoot>
                   ))}
                 </Stack>
               </CardBody>
-            </Card>
+            </CardRoot>
           )}
 
           {/* Applications Section */}
-        <Card variant="elevated" bg="white">
+        <CardRoot variant="elevated" bg="white">
           <CardHeader
             bg="highlight.50"
             borderTopRadius="xl"
@@ -291,7 +290,7 @@ function Dashboard() {
                   You don't have any applications yet. Create your first application to get started!
                 </Text>
                 <Button
-                  colorScheme="accent"
+                  colorPalette="accent"
                   size="lg"
                   onClick={() => navigate('/applications/new')}
                 >
@@ -299,29 +298,28 @@ function Dashboard() {
                 </Button>
               </Box>
             ) : (
-              <Tabs index={activeTab} onChange={setActiveTab}>
-                <TabList>
-                  <Tab>
+              <TabsRoot value={activeTab} onValueChange={(details) => setActiveTab(details.value as typeof activeTab)}>
+                <TabsList>
+                  <TabsTrigger value="inProgress">
                     In Progress
                     {inProgressCount > 0 && (
                       <Badge ml="2" colorScheme="accent" borderRadius="full" px="2" py="0.5">
                         {inProgressCount}
                       </Badge>
                     )}
-                  </Tab>
-                  <Tab>
+                  </TabsTrigger>
+                  <TabsTrigger value="submitted">
                     Submitted
                     {submittedCount > 0 && (
                       <Badge ml="2" colorScheme="accent" borderRadius="full" px="2" py="0.5">
                         {submittedCount}
                       </Badge>
                     )}
-                  </Tab>
-                </TabList>
+                  </TabsTrigger>
+                </TabsList>
 
-                <TabPanels>
-                  {/* In Progress Tab */}
-                  <TabPanel px="0" pt="6">
+                {/* In Progress Tab */}
+                <TabsContent value="inProgress" px="0" pt="6">
                     {filteredApplications.length === 0 ? (
                       <Box textAlign="center" py="12">
                         <Box fontSize="5xl" mb="4" color="brand.500">
@@ -330,22 +328,22 @@ function Dashboard() {
                         <Text color="gray.600">No applications in progress yet.</Text>
                       </Box>
                     ) : (
-                      <Stack spacing="4">
+                      <Stack gap="4">
                         {/* Desktop Table View */}
                         <Box overflowX="auto" display={{ base: 'none', md: 'block' }}>
-                          <Table variant="simple" size="md">
-                            <Thead>
-                              <Tr>
-                                <Th>Scholarship Name</Th>
-                                <Th>Organization</Th>
-                                <Th>Status</Th>
-                                <Th>Due Date</Th>
-                                <Th>Actions</Th>
-                              </Tr>
-                            </Thead>
-                            <Tbody>
+                          <TableRoot size="md">
+                            <TableHeader>
+                              <TableRow>
+                                <TableColumnHeader>Scholarship Name</TableColumnHeader>
+                                <TableColumnHeader>Organization</TableColumnHeader>
+                                <TableColumnHeader>Status</TableColumnHeader>
+                                <TableColumnHeader>Due Date</TableColumnHeader>
+                                <TableColumnHeader>Actions</TableColumnHeader>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
                               {paginatedApplications.map((app) => (
-                                <Tr
+                                <TableRow
                                   key={app.id}
                                   _hover={{
                                     bg: 'highlight.50',
@@ -353,9 +351,9 @@ function Dashboard() {
                                   }}
                                   onClick={() => navigate(`/applications/${app.id}`)}
                                 >
-                                  <Td fontWeight="medium" color="brand.700">{app.scholarshipName}</Td>
-                                  <Td color="gray.600">{app.organization || '-'}</Td>
-                                  <Td>
+                                  <TableCell fontWeight="medium" color="brand.700">{app.scholarshipName}</TableCell>
+                                  <TableCell color="gray.600">{app.organization || '-'}</TableCell>
+                                  <TableCell>
                                     <Badge
                                       colorScheme="accent"
                                       borderRadius="full"
@@ -365,13 +363,13 @@ function Dashboard() {
                                     >
                                       {app.status}
                                     </Badge>
-                                  </Td>
-                                  <Td color="gray.700">
+                                  </TableCell>
+                                  <TableCell color="gray.700">
                                     {app.dueDate
                                       ? new Date(app.dueDate).toLocaleDateString()
                                       : '-'}
-                                  </Td>
-                                  <Td>
+                                  </TableCell>
+                                  <TableCell>
                                     <Link
                                       color="accent.400"
                                       fontWeight="semibold"
@@ -384,21 +382,21 @@ function Dashboard() {
                                     >
                                       View →
                                     </Link>
-                                  </Td>
-                                </Tr>
+                                  </TableCell>
+                                </TableRow>
                               ))}
-                            </Tbody>
-                          </Table>
+                            </TableBody>
+                          </TableRoot>
                         </Box>
 
                         {/* Mobile Card View */}
-                        <Stack spacing="4" display={{ base: 'flex', md: 'none' }}>
+                        <Stack gap="4" display={{ base: 'flex', md: 'none' }}>
                           {paginatedApplications.map((app) => (
-                            <Card
+                            <CardRoot
                               key={app.id}
                               cursor="pointer"
                               onClick={() => navigate(`/applications/${app.id}`)}
-                              variant="academic"
+                              variant="outline"
                               bg="highlight.50"
                               _hover={{
                                 transform: 'translateY(-2px)',
@@ -407,7 +405,7 @@ function Dashboard() {
                               transition="all 0.3s"
                             >
                               <CardBody>
-                                <Stack spacing="3">
+                                <Stack gap="3">
                                   <Flex justify="space-between" align="start">
                                     <Box flex="1">
                                       <Text fontWeight="bold" fontSize="md" mb="1" color="brand.700">
@@ -429,7 +427,7 @@ function Dashboard() {
                                       {app.status}
                                     </Badge>
                                   </Flex>
-                                  <HStack spacing="4" fontSize="sm" color="gray.600">
+                                  <HStack gap="4" fontSize="sm" color="gray.600">
                                     <Text>
                                       <Text as="span" fontWeight="semibold">Due:</Text>{' '}
                                       {app.dueDate
@@ -439,7 +437,7 @@ function Dashboard() {
                                   </HStack>
                                 </Stack>
                               </CardBody>
-                            </Card>
+                            </CardRoot>
                           ))}
                         </Stack>
 
@@ -456,13 +454,14 @@ function Dashboard() {
                           >
                             <IconButton
                               aria-label="Previous page"
-                              icon={<Text>‹</Text>}
                               onClick={() => handlePageChange(currentPage - 1)}
-                              isDisabled={currentPage === 1}
+                              disabled={currentPage === 1}
                               size="sm"
-                            />
+                            >
+                              <Text aria-hidden>‹</Text>
+                            </IconButton>
 
-                            <HStack spacing="1">
+                            <HStack gap="1">
                               {Array.from({ length: totalPages }, (_, i) => i + 1)
                                 .filter((page) => {
                                   if (page === 1 || page === totalPages) return true;
@@ -496,19 +495,20 @@ function Dashboard() {
 
                             <IconButton
                               aria-label="Next page"
-                              icon={<Text>›</Text>}
                               onClick={() => handlePageChange(currentPage + 1)}
-                              isDisabled={currentPage === totalPages}
+                              disabled={currentPage === totalPages}
                               size="sm"
-                            />
+                            >
+                              <Text aria-hidden>›</Text>
+                            </IconButton>
                           </Flex>
                         )}
                       </Stack>
                     )}
-                  </TabPanel>
+                </TabsContent>
 
-                  {/* Submitted Tab */}
-                  <TabPanel px="0" pt="6">
+                {/* Submitted Tab */}
+                <TabsContent value="submitted" px="0" pt="6">
                     {filteredApplications.length === 0 ? (
                       <Box textAlign="center" py="12">
                         <Box fontSize="5xl" mb="4" color="brand.500">
@@ -517,22 +517,22 @@ function Dashboard() {
                         <Text color="gray.600">No submitted applications yet.</Text>
                       </Box>
                     ) : (
-                      <Stack spacing="4">
+                      <Stack gap="4">
                         {/* Desktop Table View */}
                         <Box overflowX="auto" display={{ base: 'none', md: 'block' }}>
-                          <Table variant="simple" size="md">
-                            <Thead>
-                              <Tr>
-                                <Th>Scholarship Name</Th>
-                                <Th>Organization</Th>
-                                <Th>Status</Th>
-                                <Th>Due Date</Th>
-                                <Th>Actions</Th>
-                              </Tr>
-                            </Thead>
-                            <Tbody>
+                          <TableRoot size="md">
+                            <TableHeader>
+                              <TableRow>
+                                <TableColumnHeader>Scholarship Name</TableColumnHeader>
+                                <TableColumnHeader>Organization</TableColumnHeader>
+                                <TableColumnHeader>Status</TableColumnHeader>
+                                <TableColumnHeader>Due Date</TableColumnHeader>
+                                <TableColumnHeader>Actions</TableColumnHeader>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
                               {paginatedApplications.map((app) => (
-                                <Tr
+                                <TableRow
                                   key={app.id}
                                   _hover={{
                                     bg: 'highlight.50',
@@ -540,9 +540,9 @@ function Dashboard() {
                                   }}
                                   onClick={() => navigate(`/applications/${app.id}`)}
                                 >
-                                  <Td fontWeight="medium" color="brand.700">{app.scholarshipName}</Td>
-                                  <Td color="gray.600">{app.organization || '-'}</Td>
-                                  <Td>
+                                  <TableCell fontWeight="medium" color="brand.700">{app.scholarshipName}</TableCell>
+                                  <TableCell color="gray.600">{app.organization || '-'}</TableCell>
+                                  <TableCell>
                                     <Badge
                                       colorScheme={
                                         app.status === 'Awarded'
@@ -558,13 +558,13 @@ function Dashboard() {
                                     >
                                       {app.status}
                                     </Badge>
-                                  </Td>
-                                  <Td color="gray.700">
+                                  </TableCell>
+                                  <TableCell color="gray.700">
                                     {app.dueDate
                                       ? new Date(app.dueDate).toLocaleDateString()
                                       : '-'}
-                                  </Td>
-                                  <Td>
+                                  </TableCell>
+                                  <TableCell>
                                     <Link
                                       color="accent.400"
                                       fontWeight="semibold"
@@ -577,21 +577,21 @@ function Dashboard() {
                                     >
                                       View →
                                     </Link>
-                                  </Td>
-                                </Tr>
+                                  </TableCell>
+                                </TableRow>
                               ))}
-                            </Tbody>
-                          </Table>
+                            </TableBody>
+                          </TableRoot>
                         </Box>
 
                         {/* Mobile Card View */}
-                        <Stack spacing="4" display={{ base: 'flex', md: 'none' }}>
+                        <Stack gap="4" display={{ base: 'flex', md: 'none' }}>
                           {paginatedApplications.map((app) => (
-                            <Card
+                            <CardRoot
                               key={app.id}
                               cursor="pointer"
                               onClick={() => navigate(`/applications/${app.id}`)}
-                              variant="academic"
+                              variant="outline"
                               bg="highlight.50"
                               _hover={{
                                 transform: 'translateY(-2px)',
@@ -600,7 +600,7 @@ function Dashboard() {
                               transition="all 0.3s"
                             >
                               <CardBody>
-                                <Stack spacing="3">
+                                <Stack gap="3">
                                   <Flex justify="space-between" align="start">
                                     <Box flex="1">
                                       <Text fontWeight="bold" fontSize="md" mb="1" color="brand.700">
@@ -628,7 +628,7 @@ function Dashboard() {
                                       {app.status}
                                     </Badge>
                                   </Flex>
-                                  <HStack spacing="4" fontSize="sm" color="gray.600">
+                                  <HStack gap="4" fontSize="sm" color="gray.600">
                                     <Text>
                                       <Text as="span" fontWeight="semibold">Due:</Text>{' '}
                                       {app.dueDate
@@ -638,7 +638,7 @@ function Dashboard() {
                                   </HStack>
                                 </Stack>
                               </CardBody>
-                            </Card>
+                            </CardRoot>
                           ))}
                         </Stack>
 
@@ -655,13 +655,14 @@ function Dashboard() {
                           >
                             <IconButton
                               aria-label="Previous page"
-                              icon={<Text>‹</Text>}
                               onClick={() => handlePageChange(currentPage - 1)}
-                              isDisabled={currentPage === 1}
+                              disabled={currentPage === 1}
                               size="sm"
-                            />
+                            >
+                              <Text aria-hidden>‹</Text>
+                            </IconButton>
 
-                            <HStack spacing="1">
+                            <HStack gap="1">
                               {Array.from({ length: totalPages }, (_, i) => i + 1)
                                 .filter((page) => {
                                   if (page === 1 || page === totalPages) return true;
@@ -695,21 +696,21 @@ function Dashboard() {
 
                             <IconButton
                               aria-label="Next page"
-                              icon={<Text>›</Text>}
                               onClick={() => handlePageChange(currentPage + 1)}
-                              isDisabled={currentPage === totalPages}
+                              disabled={currentPage === totalPages}
                               size="sm"
-                            />
+                            >
+                              <Text aria-hidden>›</Text>
+                            </IconButton>
                           </Flex>
                         )}
                       </Stack>
                     )}
-                  </TabPanel>
-                </TabPanels>
-              </Tabs>
+                </TabsContent>
+              </TabsRoot>
             )}
           </CardBody>
-        </Card>
+        </CardRoot>
 
           {/* Collaborations Section */}
           <DashboardCollaborations />

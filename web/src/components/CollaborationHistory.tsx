@@ -11,18 +11,9 @@ import {
   Text,
   Badge,
   Spinner,
-  Divider,
-  Icon,
+  Separator,
 } from '@chakra-ui/react';
 import { useCollaborationHistory } from '../hooks/useCollaborations';
-
-interface HistoryEntry {
-  id: number;
-  collaborationId: number;
-  action: string;
-  details?: string | null;
-  createdAt: string;
-}
 
 interface CollaborationHistoryProps {
   collaborationId: number;
@@ -151,10 +142,10 @@ const CollaborationHistory: React.FC<CollaborationHistoryProps> = ({ collaborati
   }
 
   return (
-    <VStack align="stretch" spacing={0}>
+    <VStack align="stretch" gap={0}>
       {history.map((entry, index) => (
         <Box key={entry.id}>
-          <HStack align="flex-start" spacing={3} py={3}>
+          <HStack align="flex-start" gap={3} py={3}>
             {/* Icon/Timeline Marker */}
             <Box position="relative">
               <Box
@@ -211,7 +202,7 @@ const CollaborationHistory: React.FC<CollaborationHistoryProps> = ({ collaborati
               </Text>
             </Box>
           </HStack>
-          {index < history.length - 1 && <Divider />}
+          {index < history.length - 1 && <Separator />}
         </Box>
       ))}
     </VStack>

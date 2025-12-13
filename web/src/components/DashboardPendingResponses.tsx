@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import {
   Box,
-  Card,
+  CardRoot,
   CardBody,
   CardHeader,
   Heading,
@@ -9,20 +9,19 @@ import {
   Stack,
   Badge,
   Spinner,
-  Tabs,
-  TabList,
-  TabPanels,
-  Tab,
-  TabPanel,
+  TabsRoot,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
   HStack,
   Link,
   Flex,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
+  TableRoot,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableColumnHeader,
+  TableCell,
 } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
 import { apiGet } from '../services/api';
@@ -44,7 +43,7 @@ function DashboardPendingResponses() {
   const [collaborators, setCollaborators] = useState<Map<number, CollaboratorResponse>>(new Map());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState(0);
+  const [activeTab, setActiveTab] = useState<'recommendations' | 'essays'>('recommendations');
 
   useEffect(() => {
     async function fetchData() {
@@ -158,24 +157,24 @@ function DashboardPendingResponses() {
 
   if (loading) {
     return (
-      <Card variant="elevated" bg="white">
+      <CardRoot variant="elevated" bg="white">
         <CardBody>
           <Stack align="center" py="4">
             <Spinner size="lg" />
             <Text>Loading pending responses...</Text>
           </Stack>
         </CardBody>
-      </Card>
+      </CardRoot>
     );
   }
 
   if (error) {
     return (
-      <Card variant="elevated" bg="white">
+      <CardRoot variant="elevated" bg="white">
         <CardBody>
           <Text color="error.500">{error}</Text>
         </CardBody>
-      </Card>
+      </CardRoot>
     );
   }
 
@@ -192,7 +191,7 @@ function DashboardPendingResponses() {
       : `Collaborator #${collab.collaboratorId}`;
 
     return (
-      <Tr
+      <TableRow
         key={collab.id}
         _hover={{
           bg: 'highlight.50',
@@ -200,11 +199,11 @@ function DashboardPendingResponses() {
         }}
         onClick={() => navigate(`/applications/${collab.applicationId}`)}
       >
-        <Td fontWeight="medium" color="brand.700">
+        <TableCell fontWeight="medium" color="brand.700">
           {applicationName}
-        </Td>
-        <Td color="gray.600">{collaboratorName}</Td>
-        <Td>
+        </TableCell>
+        <TableCell color="gray.600">{collaboratorName}</TableCell>
+        <TableCell>
           <Badge
             colorScheme={getStatusColor(collab.status)}
             borderRadius="full"
@@ -214,13 +213,11 @@ function DashboardPendingResponses() {
           >
             {collab.status}
           </Badge>
-        </Td>
-        <Td color="gray.700">
-          {collab.nextActionDueDate
-            ? formatDate(collab.nextActionDueDate)
-            : '-'}
-        </Td>
-        <Td>
+        </TableCell>
+        <TableCell color="gray.700">
+          {collab.nextActionDueDate ? formatDate(collab.nextActionDueDate) : '-'}
+        </TableCell>
+        <TableCell>
           <Link
             color="accent.400"
             fontWeight="semibold"
@@ -233,8 +230,8 @@ function DashboardPendingResponses() {
           >
             View →
           </Link>
-        </Td>
-      </Tr>
+        </TableCell>
+      </TableRow>
     );
   };
 
@@ -255,11 +252,11 @@ function DashboardPendingResponses() {
       : `Collaborator #${collab.collaboratorId}`;
 
     return (
-      <Card
+      <CardRoot
         key={collab.id}
         cursor="pointer"
         onClick={() => navigate(`/applications/${collab.applicationId}`)}
-        variant="academic"
+        variant="outline"
         bg="highlight.50"
         _hover={{
           transform: 'translateY(-2px)',
@@ -268,7 +265,7 @@ function DashboardPendingResponses() {
         transition="all 0.3s"
       >
         <CardBody>
-          <Stack spacing="3">
+          <Stack gap="3">
             <Flex justify="space-between" align="start">
               <Box flex="1">
                 <Text fontWeight="bold" fontSize="md" mb="1" color="brand.700">
@@ -288,7 +285,7 @@ function DashboardPendingResponses() {
                 {collab.status}
               </Badge>
             </Flex>
-            <HStack spacing="4" fontSize="sm" color="gray.600">
+            <HStack gap="4" fontSize="sm" color="gray.600">
               {collab.nextActionDueDate && (
                 <Text>
                   <Text as="span" fontWeight="semibold">Due:</Text>{' '}
@@ -298,12 +295,12 @@ function DashboardPendingResponses() {
             </HStack>
           </Stack>
         </CardBody>
-      </Card>
+      </CardRoot>
     );
   };
 
   return (
-    <Card variant="elevated" bg="white">
+    <CardRoot variant="elevated" bg="white">
       <CardHeader
         bg="highlight.50"
         borderTopRadius="xl"
@@ -317,89 +314,87 @@ function DashboardPendingResponses() {
         </Heading>
       </CardHeader>
       <CardBody>
-        <Tabs index={activeTab} onChange={setActiveTab}>
-          <TabList>
-            <Tab>
+        <TabsRoot value={activeTab} onValueChange={(details) => setActiveTab(details.value as typeof activeTab)}>
+          <TabsList>
+            <TabsTrigger value="recommendations">
               Recommendations
               {recommendations.length > 0 && (
                 <Badge ml="2" colorScheme="accent" borderRadius="full" px="2" py="0.5">
                   {recommendations.length}
                 </Badge>
               )}
-            </Tab>
-            <Tab>
+            </TabsTrigger>
+            <TabsTrigger value="essays">
               Essays
               {essays.length > 0 && (
                 <Badge ml="2" colorScheme="accent" borderRadius="full" px="2" py="0.5">
                   {essays.length}
                 </Badge>
               )}
-            </Tab>
-          </TabList>
+            </TabsTrigger>
+          </TabsList>
 
-          <TabPanels>
-            <TabPanel px="0" pt="6">
+          <TabsContent value="recommendations" px="0" pt="6">
               {recommendations.length === 0 ? (
                 renderEmptyState('No pending recommendation responses.', '📝')
               ) : (
                 <>
                   {/* Desktop Table View */}
                   <Box overflowX="auto" display={{ base: 'none', md: 'block' }}>
-                    <Table variant="simple" size="md">
-                      <Thead>
-                        <Tr>
-                          <Th>Application</Th>
-                          <Th>Collaborator</Th>
-                          <Th>Status</Th>
-                          <Th>Due Date</Th>
-                          <Th>Actions</Th>
-                        </Tr>
-                      </Thead>
-                      <Tbody>
+                    <TableRoot size="md">
+                      <TableHeader>
+                        <TableRow>
+                          <TableColumnHeader>Application</TableColumnHeader>
+                          <TableColumnHeader>Collaborator</TableColumnHeader>
+                          <TableColumnHeader>Status</TableColumnHeader>
+                          <TableColumnHeader>Due Date</TableColumnHeader>
+                          <TableColumnHeader>Actions</TableColumnHeader>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
                         {recommendations.map(renderCollaborationRow)}
-                      </Tbody>
-                    </Table>
+                      </TableBody>
+                    </TableRoot>
                   </Box>
                   {/* Mobile Card View */}
-                  <Stack spacing="4" display={{ base: 'flex', md: 'none' }}>
+                  <Stack gap="4" display={{ base: 'flex', md: 'none' }}>
                     {recommendations.map(renderCollaborationCard)}
                   </Stack>
                 </>
               )}
-            </TabPanel>
-            <TabPanel px="0" pt="6">
+          </TabsContent>
+          <TabsContent value="essays" px="0" pt="6">
               {essays.length === 0 ? (
                 renderEmptyState('No pending essay review responses.', '✏️')
               ) : (
                 <>
                   {/* Desktop Table View */}
                   <Box overflowX="auto" display={{ base: 'none', md: 'block' }}>
-                    <Table variant="simple" size="md">
-                      <Thead>
-                        <Tr>
-                          <Th>Application</Th>
-                          <Th>Collaborator</Th>
-                          <Th>Status</Th>
-                          <Th>Due Date</Th>
-                          <Th>Actions</Th>
-                        </Tr>
-                      </Thead>
-                      <Tbody>
+                    <TableRoot size="md">
+                      <TableHeader>
+                        <TableRow>
+                          <TableColumnHeader>Application</TableColumnHeader>
+                          <TableColumnHeader>Collaborator</TableColumnHeader>
+                          <TableColumnHeader>Status</TableColumnHeader>
+                          <TableColumnHeader>Due Date</TableColumnHeader>
+                          <TableColumnHeader>Actions</TableColumnHeader>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
                         {essays.map(renderCollaborationRow)}
-                      </Tbody>
-                    </Table>
+                      </TableBody>
+                    </TableRoot>
                   </Box>
                   {/* Mobile Card View */}
-                  <Stack spacing="4" display={{ base: 'flex', md: 'none' }}>
+                  <Stack gap="4" display={{ base: 'flex', md: 'none' }}>
                     {essays.map(renderCollaborationCard)}
                   </Stack>
                 </>
               )}
-            </TabPanel>
-          </TabPanels>
-        </Tabs>
+          </TabsContent>
+        </TabsRoot>
       </CardBody>
-    </Card>
+    </CardRoot>
   );
 }
 

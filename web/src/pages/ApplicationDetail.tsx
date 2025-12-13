@@ -8,46 +8,46 @@ import {
   Text,
   Stack,
   HStack,
-  Card,
+  CardRoot,
   CardBody,
   CardHeader,
   Spinner,
   Badge,
   Flex,
-  Divider,
+  Separator,
   SimpleGrid,
-  Progress,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
+  ProgressRoot,
+  ProgressTrack,
+  ProgressRange,
+  TableRoot,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableColumnHeader,
+  TableCell,
   IconButton,
-  Menu,
-  MenuButton,
-  MenuList,
+  MenuRoot,
+  MenuTrigger,
+  MenuPositioner,
+  MenuContent,
   MenuItem,
   Link as ChakraLink,
   useDisclosure,
-  AlertDialog,
-  AlertDialogBody,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogContent,
-  AlertDialogOverlay,
   DialogRoot,
   DialogBackdrop,
   DialogPositioner,
   DialogContent,
   DialogHeader,
   DialogBody,
+  DialogFooter,
+  DialogTitle,
   DialogCloseTrigger,
-  Accordion,
+  AccordionRoot,
   AccordionItem,
-  AccordionButton,
-  AccordionPanel,
-  AccordionIcon,
+  AccordionItemTrigger,
+  AccordionItemContent,
+  AccordionItemBody,
+  AccordionItemIndicator,
 } from '@chakra-ui/react';
 import { apiGet, apiDelete, apiPatch } from '../services/api';
 import type { ApplicationResponse, EssayResponse, CollaborationResponse, CollaboratorResponse } from '@scholarship-hub/shared';
@@ -72,35 +72,60 @@ function ApplicationDetail() {
   const [error, setError] = useState<string | null>(null);
 
   // Essay management
-  const { isOpen: isEssayFormOpen, onOpen: onEssayFormOpen, onClose: onEssayFormClose } = useDisclosure();
+  const {
+    open: isEssayFormOpen,
+    onOpen: onEssayFormOpen,
+    onClose: onEssayFormClose,
+  } = useDisclosure();
   const [selectedEssay, setSelectedEssay] = useState<EssayResponse | null>(null);
   const [deleteEssayId, setDeleteEssayId] = useState<number | null>(null);
-  const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();
+  const {
+    open: isDeleteOpen,
+    onOpen: onDeleteOpen,
+    onClose: onDeleteClose,
+    setOpen: setDeleteOpen,
+  } = useDisclosure();
   const cancelRef = useRef<HTMLButtonElement>(null);
 
   // Collaboration deletion
   const [deleteCollaborationId, setDeleteCollaborationId] = useState<number | null>(null);
-  const { isOpen: isDeleteCollabOpen, onOpen: onDeleteCollabOpen, onClose: onDeleteCollabClose } = useDisclosure();
+  const {
+    open: isDeleteCollabOpen,
+    onOpen: onDeleteCollabOpen,
+    onClose: onDeleteCollabClose,
+    setOpen: setDeleteCollabOpen,
+  } = useDisclosure();
   const cancelCollabRef = useRef<HTMLButtonElement>(null);
 
   // Collaboration invitation
-  const { isOpen: isInviteDialogOpen, onOpen: onInviteDialogOpen, onClose: onInviteDialogClose } = useDisclosure();
+  const {
+    open: isInviteDialogOpen,
+    onOpen: onInviteDialogOpen,
+    onClose: onInviteDialogClose,
+  } = useDisclosure();
   const [selectedCollaboration, setSelectedCollaboration] = useState<CollaborationResponse | null>(null);
 
   // Collaboration history
   const {
     open: isHistoryOpen,
     onOpen: onHistoryOpen,
-    onClose: onHistoryClose,
     setOpen: setHistoryOpen,
   } = useDisclosure();
   const [historyCollaborationId, setHistoryCollaborationId] = useState<number | null>(null);
 
   // Add collaboration modal
-  const { isOpen: isAddCollabOpen, onOpen: onAddCollabOpen, onClose: onAddCollabClose } = useDisclosure();
+  const {
+    open: isAddCollabOpen,
+    onOpen: onAddCollabOpen,
+    onClose: onAddCollabClose,
+  } = useDisclosure();
   
   // Edit collaboration modal
-  const { isOpen: isEditCollabOpen, onOpen: onEditCollabOpen, onClose: onEditCollabClose } = useDisclosure();
+  const {
+    open: isEditCollabOpen,
+    onOpen: onEditCollabOpen,
+    onClose: onEditCollabClose,
+  } = useDisclosure();
   const [selectedCollaborationForEdit, setSelectedCollaborationForEdit] = useState<CollaborationResponse | null>(null);
   const prevIsEditCollabOpenRef = useRef(false);
 
@@ -497,7 +522,7 @@ function ApplicationDetail() {
   if (loading) {
     return (
       <Container maxW="7xl" py={{ base: '8', md: '12' }}>
-        <Stack spacing="8" align="center">
+        <Stack gap="8" align="center">
           <Spinner size="xl" />
           <Text>Loading application...</Text>
         </Stack>
@@ -508,14 +533,14 @@ function ApplicationDetail() {
   if (error || !application) {
     return (
       <Container maxW="7xl" py={{ base: '8', md: '12' }}>
-        <Card>
+        <CardRoot>
           <CardBody>
             <Text color="red.500">{error || 'Application not found'}</Text>
             <Button mt="4" onClick={() => navigate('/applications')}>
               Back to Applications
             </Button>
           </CardBody>
-        </Card>
+        </CardRoot>
       </Container>
     );
   }
@@ -569,7 +594,7 @@ function ApplicationDetail() {
       py={{ base: '4', md: '12' }}
     >
       <Container as="main" maxW="7xl" px={{ base: '4', md: '6' }}>
-        <Stack spacing={{ base: '4', md: '6' }}>
+        <Stack gap={{ base: '4', md: '6' }}>
         {/* Skip link for keyboard users */}
         <ChakraLink
           href="#main-content"
@@ -591,7 +616,7 @@ function ApplicationDetail() {
         <Box id="main-content" tabIndex={-1} />
 
         {/* Hero summary */}
-        <Card
+        <CardRoot
           variant="outline"
           borderRadius="2xl"
           overflow="hidden"
@@ -607,16 +632,16 @@ function ApplicationDetail() {
             borderBottomWidth="1px"
             borderColor="blackAlpha.100"
           >
-            <Stack spacing="4">
+            <Stack gap="4">
               <Stack
                 direction={{ base: 'column', md: 'row' }}
                 justify="space-between"
                 align={{ base: 'stretch', md: 'flex-start' }}
-                spacing="4"
+                gap="4"
               >
                 <Box flex="1" minW="0">
-                  <Stack spacing="1">
-                    <Heading size={{ base: 'md', md: 'lg' }} noOfLines={2}>
+                  <Stack gap="1">
+                    <Heading size={{ base: 'md', md: 'lg' }} lineClamp={2}>
                       {application.scholarshipName}
                     </Heading>
                     {application.organization && (
@@ -626,7 +651,7 @@ function ApplicationDetail() {
                     )}
                   </Stack>
 
-                  <HStack spacing="2" flexWrap="wrap" mt="2">
+                  <HStack gap="2" flexWrap="wrap" mt="2">
                     <Badge
                       colorScheme={getStatusColor(application.status)}
                       fontSize={{ base: 'sm', md: 'md' }}
@@ -667,7 +692,7 @@ function ApplicationDetail() {
 
                 <Stack
                   direction={{ base: 'column', sm: 'row' }}
-                  spacing={{ base: 3, sm: 4 }}
+                  gap={{ base: 3, sm: 4 }}
                   justify={{ base: 'stretch', md: 'flex-end' }}
                   align={{ base: 'stretch', sm: 'center' }}
                   flexWrap="wrap"
@@ -675,72 +700,70 @@ function ApplicationDetail() {
                   {/* External links (primary actions) */}
                   <Stack
                     direction={{ base: 'column', sm: 'row' }}
-                    spacing="3"
+                    gap="3"
                     align={{ base: 'stretch', sm: 'center' }}
                   >
                     {application.applicationLink && (
-                      <Button
-                        as={ChakraLink}
-                        href={application.applicationLink}
-                        isExternal
-                        colorScheme="green"
-                        size={{ base: 'md', md: 'md' }}
-                        leftIcon={<Text aria-hidden>↗</Text>}
-                        boxShadow="sm"
-                      >
-                        Open Application Portal
+                      <Button asChild colorPalette="green" size={{ base: 'md', md: 'md' }} boxShadow="sm">
+                        <a href={application.applicationLink} target="_blank" rel="noreferrer noopener">
+                          <Text as="span" aria-hidden me="2">
+                            ↗
+                          </Text>
+                          Open Application Portal
+                        </a>
                       </Button>
                     )}
                     {application.orgWebsite && (
-                      <Button
-                        as={ChakraLink}
-                        href={application.orgWebsite}
-                        isExternal
-                        variant="outline"
-                        colorScheme="blue"
-                        size={{ base: 'md', md: 'md' }}
-                        leftIcon={<Text aria-hidden>↗</Text>}
-                      >
-                        Visit Organization Website
+                      <Button asChild variant="outline" colorPalette="blue" size={{ base: 'md', md: 'md' }}>
+                        <a href={application.orgWebsite} target="_blank" rel="noreferrer noopener">
+                          <Text as="span" aria-hidden me="2">
+                            ↗
+                          </Text>
+                          Visit Organization Website
+                        </a>
                       </Button>
                     )}
                   </Stack>
 
                   {/* Visual separator so links don't feel grouped with page actions */}
                   {(application.applicationLink || application.orgWebsite) && (
-                    <Divider
-                      orientation="vertical"
+                    <Box
+                      w="1px"
                       h="10"
-                      borderColor="blackAlpha.200"
+                      bg="blackAlpha.200"
                       display={{ base: 'none', sm: 'block' }}
                     />
                   )}
 
                   {/* Page actions */}
-                  <HStack spacing="2" justify={{ base: 'stretch', sm: 'flex-end' }}>
+                  <HStack gap="2" justify={{ base: 'stretch', sm: 'flex-end' }}>
                     <Button
                       variant="outline"
-                      colorScheme="brand"
+                      colorPalette="brand"
                       onClick={() => navigate(`/applications/${id}/edit`)}
                       size={{ base: 'md', md: 'md' }}
-                      leftIcon={<Text aria-hidden>✎</Text>}
                     >
+                      <Text as="span" aria-hidden me="2">
+                        ✎
+                      </Text>
                       Edit
                     </Button>
                     <Button
                       variant="ghost"
-                      colorScheme="brand"
+                      colorPalette="brand"
                       onClick={() => navigate('/applications')}
                       size={{ base: 'md', md: 'md' }}
-                      leftIcon={<Text aria-hidden>←</Text>}
                     >
+                      <Text as="span" aria-hidden me="2">
+                        ←
+                      </Text>
                       Back
                     </Button>
                   </HStack>
                 </Stack>
               </Stack>
 
-              <SimpleGrid as="dl" columns={{ base: 1, sm: 3 }} spacing="3">
+              <SimpleGrid as="dl" columns={{ base: 1, sm: 3 }} gap="3">
                 <Box
                   p="3.5"
                   borderRadius="xl"
@@ -794,7 +817,7 @@ function ApplicationDetail() {
                   boxShadow="0 8px 20px rgba(15, 23, 42, 0.06)"
                   p={{ base: 4, md: 5 }}
                 >
-                  <HStack spacing="3" align="start" mb="4">
+                  <HStack gap="3" align="start" mb="4">
                     <Box
                       w="10"
                       h="10"
@@ -822,9 +845,9 @@ function ApplicationDetail() {
                     </Box>
                   </HStack>
 
-                  <Stack spacing="4">
+                  <Stack gap="4">
                     {/* Recommendations + Essay Reviews side-by-side */}
-                    <SimpleGrid columns={{ base: 1, md: 2 }} spacing="4">
+                    <SimpleGrid columns={{ base: 1, md: 2 }} gap="4">
                       {recommendationsTotalCount > 0 && (
                         <Box
                           bg="white"
@@ -834,7 +857,7 @@ function ApplicationDetail() {
                           p="4"
                         >
                           <HStack justify="space-between" align="start" mb="3">
-                            <HStack spacing="2">
+                            <HStack gap="2">
                               <Text aria-hidden>📨</Text>
                               <Text fontSize="sm" color="gray.700" fontWeight="semibold">
                                 Recommendations
@@ -851,7 +874,7 @@ function ApplicationDetail() {
                             </Badge>
                           </HStack>
 
-                          <HStack spacing="2" align="baseline">
+                          <HStack gap="2" align="baseline">
                             <Text fontSize="2xl" fontWeight="bold" color="gray.900">
                               {recommendationsUncompletedCount}
                             </Text>
@@ -860,17 +883,22 @@ function ApplicationDetail() {
                             </Text>
                           </HStack>
 
-                          <Progress
+                          <ProgressRoot
                             mt="3"
-                            borderRadius="full"
-                            size="sm"
-                            colorScheme={recommendationsUncompletedCount === 0 ? 'green' : 'orange'}
                             value={
                               recommendationsTotalCount === 0
                                 ? 0
                                 : ((recommendationsTotalCount - recommendationsUncompletedCount) / recommendationsTotalCount) * 100
                             }
-                          />
+                            max={100}
+                            size="sm"
+                            borderRadius="full"
+                            colorPalette={recommendationsUncompletedCount === 0 ? 'green' : 'orange'}
+                          >
+                            <ProgressTrack borderRadius="full">
+                              <ProgressRange borderRadius="full" />
+                            </ProgressTrack>
+                          </ProgressRoot>
                         </Box>
                       )}
 
@@ -883,7 +911,7 @@ function ApplicationDetail() {
                           p="4"
                         >
                           <HStack justify="space-between" align="start" mb="3">
-                            <HStack spacing="2">
+                            <HStack gap="2">
                               <Text aria-hidden>🧑‍🏫</Text>
                               <Text fontSize="sm" color="gray.700" fontWeight="semibold">
                                 Essay Reviews
@@ -900,7 +928,7 @@ function ApplicationDetail() {
                             </Badge>
                           </HStack>
 
-                          <HStack spacing="2" align="baseline">
+                          <HStack gap="2" align="baseline">
                             <Text fontSize="2xl" fontWeight="bold" color="gray.900">
                               {essayReviewsUncompletedCount}
                             </Text>
@@ -909,17 +937,22 @@ function ApplicationDetail() {
                             </Text>
                           </HStack>
 
-                          <Progress
+                          <ProgressRoot
                             mt="3"
-                            borderRadius="full"
-                            size="sm"
-                            colorScheme={essayReviewsUncompletedCount === 0 ? 'green' : 'blue'}
                             value={
                               essayReviewsTotalCount === 0
                                 ? 0
                                 : ((essayReviewsTotalCount - essayReviewsUncompletedCount) / essayReviewsTotalCount) * 100
                             }
-                          />
+                            max={100}
+                            size="sm"
+                            borderRadius="full"
+                            colorPalette={essayReviewsUncompletedCount === 0 ? 'green' : 'blue'}
+                          >
+                            <ProgressTrack borderRadius="full">
+                              <ProgressRange borderRadius="full" />
+                            </ProgressTrack>
+                          </ProgressRoot>
                         </Box>
                       )}
                     </SimpleGrid>
@@ -934,7 +967,7 @@ function ApplicationDetail() {
                         p="4"
                       >
                         <HStack justify="space-between" align="start" mb="3">
-                          <HStack spacing="2">
+                          <HStack gap="2">
                             <Text aria-hidden>📝</Text>
                             <Text fontSize="sm" color="gray.700" fontWeight="semibold">
                               Essays
@@ -951,7 +984,7 @@ function ApplicationDetail() {
                           </Badge>
                         </HStack>
 
-                        <HStack spacing="2" align="baseline">
+                        <HStack gap="2" align="baseline">
                           <Text fontSize="2xl" fontWeight="bold" color="gray.900">
                             {essaysUncompletedCount}
                           </Text>
@@ -960,17 +993,22 @@ function ApplicationDetail() {
                           </Text>
                         </HStack>
 
-                        <Progress
+                        <ProgressRoot
                           mt="3"
-                          borderRadius="full"
-                          size="sm"
-                          colorScheme={essaysUncompletedCount === 0 ? 'green' : 'purple'}
                           value={
                             essaysTotalCount === 0
                               ? 0
                               : ((essaysTotalCount - essaysUncompletedCount) / essaysTotalCount) * 100
                           }
-                        />
+                          max={100}
+                          size="sm"
+                          borderRadius="full"
+                          colorPalette={essaysUncompletedCount === 0 ? 'green' : 'purple'}
+                        >
+                          <ProgressTrack borderRadius="full">
+                            <ProgressRange borderRadius="full" />
+                          </ProgressTrack>
+                        </ProgressRoot>
                       </Box>
                     )}
                   </Stack>
@@ -978,20 +1016,32 @@ function ApplicationDetail() {
               )}
             </Stack>
           </Box>
-        </Card>
+        </CardRoot>
 
         {/* Main Content Sections */}
-        <Accordion defaultIndex={[0, 1, 2]} allowMultiple>
+        <AccordionRoot multiple defaultValue={['details', 'essays', 'collabs']}>
           {/* Application Details */}
-          <AccordionItem border="none" mb="4">
-            <Card>
-              <AccordionButton as={CardHeader} _hover={{ bg: 'gray.50' }}>
-                <Heading size="md" flex="1" textAlign="left">Application Details</Heading>
-                <AccordionIcon fontSize="2xl" color="brand.700" />
-              </AccordionButton>
-              <AccordionPanel as={CardBody} p="0">
-                <CardBody>
-            <SimpleGrid as="dl" columns={{ base: 1, md: 2 }} spacing="6">
+          <AccordionItem value="details" border="none" mb="4">
+            <CardRoot>
+              <CardHeader p="0" _hover={{ bg: 'gray.50' }}>
+                <AccordionItemTrigger
+                  px={{ base: 4, md: 6 }}
+                  py="4"
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="space-between"
+                  w="full"
+                >
+                  <Heading size="md" flex="1" textAlign="left">
+                    Application Details
+                  </Heading>
+                  <AccordionItemIndicator fontSize="2xl" color="brand.700" />
+                </AccordionItemTrigger>
+              </CardHeader>
+              <AccordionItemContent>
+                <AccordionItemBody p="0">
+                  <CardBody>
+            <SimpleGrid as="dl" columns={{ base: 1, md: 2 }} gap="6">
               <Box>
                 <Text as="dt" fontWeight="bold" color="brand.700" mb="1">
                   Organization
@@ -1029,7 +1079,7 @@ function ApplicationDetail() {
 
             {application.requirements && (
               <>
-                <Divider my="6" />
+                <Separator my="6" />
                 <Box>
                   <Text fontWeight="bold" color="brand.700" mb="2">Requirements</Text>
                   <Text whiteSpace="pre-wrap">{application.requirements}</Text>
@@ -1039,10 +1089,10 @@ function ApplicationDetail() {
 
             {(application.renewable || application.renewableTerms) && (
               <>
-                <Divider my="6" />
+                <Separator my="6" />
                 <Box>
                   <Text fontWeight="bold" color="brand.700" mb="3">Renewable Information</Text>
-                  <SimpleGrid columns={{ base: 1, md: 2 }} spacing="4">
+                  <SimpleGrid columns={{ base: 1, md: 2 }} gap="4">
                     <Box>
                       <Text fontWeight="semibold" fontSize="sm" color="brand.700" mb="1">Renewable</Text>
                       <Text>{application.renewable ? 'Yes' : 'No'}</Text>
@@ -1059,24 +1109,37 @@ function ApplicationDetail() {
             )}
 
             {/* Links moved to hero summary */}
-                </CardBody>
-              </AccordionPanel>
-            </Card>
+                  </CardBody>
+                </AccordionItemBody>
+              </AccordionItemContent>
+            </CardRoot>
           </AccordionItem>
 
           {/* Essays Section */}
-          <AccordionItem border="none" mb="4">
-            <Card>
-              <AccordionButton as={CardHeader} _hover={{ bg: 'gray.50' }}>
-                <Heading size="md" flex="1" textAlign="left">Essays ({essays.length})</Heading>
-                <AccordionIcon fontSize="2xl" color="brand.700" />
-              </AccordionButton>
-              <AccordionPanel as={CardBody} p="0">
-                <CardBody>
+          <AccordionItem value="essays" border="none" mb="4">
+            <CardRoot>
+              <CardHeader p="0" _hover={{ bg: 'gray.50' }}>
+                <AccordionItemTrigger
+                  px={{ base: 4, md: 6 }}
+                  py="4"
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="space-between"
+                  w="full"
+                >
+                  <Heading size="md" flex="1" textAlign="left">
+                    Essays ({essays.length})
+                  </Heading>
+                  <AccordionItemIndicator fontSize="2xl" color="brand.700" />
+                </AccordionItemTrigger>
+              </CardHeader>
+              <AccordionItemContent>
+                <AccordionItemBody p="0">
+                  <CardBody>
                   <Flex justify="flex-end" mb="4">
                     <Button
                       size="sm"
-                      colorScheme="blue"
+                      colorPalette="blue"
                       onClick={handleAddEssay}
                     >
                       Add Essay
@@ -1088,67 +1151,70 @@ function ApplicationDetail() {
               <>
                 {/* Desktop Table View */}
                 <Box display={{ base: 'none', md: 'block' }} overflowX="auto">
-                  <Table variant="simple">
-                    <Thead>
-                      <Tr>
-                        <Th>Theme</Th>
-                        <Th>Status</Th>
-                        <Th>Word Count</Th>
-                        <Th>Actions</Th>
-                      </Tr>
-                    </Thead>
-                    <Tbody>
+                  <TableRoot size="sm">
+                    <TableHeader>
+                      <TableRow>
+                        <TableColumnHeader>Theme</TableColumnHeader>
+                        <TableColumnHeader>Status</TableColumnHeader>
+                        <TableColumnHeader>Word Count</TableColumnHeader>
+                        <TableColumnHeader>Actions</TableColumnHeader>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
                       {essays.map((essay) => (
-                        <Tr key={essay.id}>
-                          <Td>{essay.theme || 'Untitled'}</Td>
-                          <Td>
+                        <TableRow key={essay.id}>
+                          <TableCell>{essay.theme || 'Untitled'}</TableCell>
+                          <TableCell>
                             {(() => {
                               const status = getEssayStatus(essay);
                               return <Badge colorScheme={status.colorScheme}>{status.label}</Badge>;
                             })()}
-                          </Td>
-                          <Td>{essay.wordCount || '-'}</Td>
-                          <Td>
-                            <Menu>
-                              <MenuButton
-                                as={IconButton}
-                                icon={<Text>⋮</Text>}
-                                variant="ghost"
-                                size="sm"
-                              />
-                              <MenuList>
-                                <MenuItem onClick={() => handleEditEssay(essay)}>View/Edit</MenuItem>
-                                {essay.essayLink && (
-                                  <MenuItem
-                                    as="a"
-                                    href={essay.essayLink}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                  >
-                                    Open Document ↗
+                          </TableCell>
+                          <TableCell>{essay.wordCount || '-'}</TableCell>
+                          <TableCell>
+                            <MenuRoot>
+                              <MenuTrigger asChild>
+                                <IconButton variant="ghost" size="sm" aria-label="Essay actions">
+                                  <Text aria-hidden>⋮</Text>
+                                </IconButton>
+                              </MenuTrigger>
+                              <MenuPositioner>
+                                <MenuContent>
+                                  <MenuItem value="edit" onClick={() => handleEditEssay(essay)}>
+                                    View/Edit
                                   </MenuItem>
-                                )}
-                                <MenuItem color="red.500" onClick={() => handleDeleteClick(essay.id)}>Delete</MenuItem>
-                              </MenuList>
-                            </Menu>
-                          </Td>
-                        </Tr>
+                                  {essay.essayLink && (
+                                    <MenuItem
+                                      value="open-doc"
+                                      onClick={() => window.open(essay.essayLink!, '_blank', 'noopener,noreferrer')}
+                                    >
+                                      Open Document <Text as="span" aria-hidden ms="1">↗</Text>
+                                    </MenuItem>
+                                  )}
+                                  <MenuItem value="delete" color="red.500" onClick={() => handleDeleteClick(essay.id)}>
+                                    Delete
+                                  </MenuItem>
+                                </MenuContent>
+                              </MenuPositioner>
+                            </MenuRoot>
+                          </TableCell>
+                        </TableRow>
                       ))}
-                    </Tbody>
-                  </Table>
+                    </TableBody>
+                  </TableRoot>
                 </Box>
 
                 {/* Mobile Card View */}
-                <Stack spacing="3" display={{ base: 'flex', md: 'none' }}>
+                <Stack gap="3" display={{ base: 'flex', md: 'none' }}>
                   {essays.map((essay) => (
-                    <Card key={essay.id}>
+                    <CardRoot key={essay.id}>
                       <CardBody>
                         <Flex justify="space-between" align="start">
                           <Box flex="1">
                             <Text fontWeight="bold" fontSize="md" mb="1">
                               {essay.theme || 'Untitled'}
                             </Text>
-                            <HStack spacing="2" mb="1">
+                            <HStack gap="2" mb="1">
                               {(() => {
                                 const status = getEssayStatus(essay);
                                 return <Badge colorScheme={status.colorScheme}>{status.label}</Badge>;
@@ -1161,53 +1227,69 @@ function ApplicationDetail() {
                             </HStack>
                             {/* word count shown in the row above */}
                           </Box>
-                          <Menu>
-                            <MenuButton
-                              as={IconButton}
-                              icon={<Text>⋮</Text>}
-                              variant="ghost"
-                              size="sm"
-                            />
-                            <MenuList>
-                              <MenuItem onClick={() => handleEditEssay(essay)}>View/Edit</MenuItem>
-                              {essay.essayLink && (
-                                <MenuItem
-                                  as="a"
-                                  href={essay.essayLink}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                >
-                                  Open Document ↗
+                          <MenuRoot>
+                            <MenuTrigger asChild>
+                              <IconButton variant="ghost" size="sm" aria-label="Essay actions">
+                                <Text aria-hidden>⋮</Text>
+                              </IconButton>
+                            </MenuTrigger>
+                            <MenuPositioner>
+                              <MenuContent>
+                                <MenuItem value="edit" onClick={() => handleEditEssay(essay)}>
+                                  View/Edit
                                 </MenuItem>
-                              )}
-                              <MenuItem color="red.500" onClick={() => handleDeleteClick(essay.id)}>Delete</MenuItem>
-                            </MenuList>
-                          </Menu>
+                                {essay.essayLink && (
+                                  <MenuItem
+                                    value="open-doc"
+                                    onClick={() => window.open(essay.essayLink!, '_blank', 'noopener,noreferrer')}
+                                  >
+                                    Open Document <Text as="span" aria-hidden ms="1">↗</Text>
+                                  </MenuItem>
+                                )}
+                                <MenuItem value="delete" color="red.500" onClick={() => handleDeleteClick(essay.id)}>
+                                  Delete
+                                </MenuItem>
+                              </MenuContent>
+                            </MenuPositioner>
+                          </MenuRoot>
                         </Flex>
                       </CardBody>
-                    </Card>
+                    </CardRoot>
                   ))}
                 </Stack>
               </>
             )}
-                </CardBody>
-              </AccordionPanel>
-            </Card>
+                  </CardBody>
+                </AccordionItemBody>
+              </AccordionItemContent>
+            </CardRoot>
           </AccordionItem>
 
           {/* Collaborations Section */}
-          <AccordionItem border="none" mb="4">
-            <Card>
-              <AccordionButton as={CardHeader} _hover={{ bg: 'gray.50' }}>
-                <Heading size="md" flex="1" textAlign="left">Collaborations ({collaborations.length})</Heading>
-                <AccordionIcon fontSize="2xl" color="brand.700" />
-              </AccordionButton>
-              <AccordionPanel as={CardBody} p="0">
-                <CardBody>
+          <AccordionItem value="collabs" border="none" mb="4">
+            <CardRoot>
+              <CardHeader p="0" _hover={{ bg: 'gray.50' }}>
+                <AccordionItemTrigger
+                  px={{ base: 4, md: 6 }}
+                  py="4"
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="space-between"
+                  w="full"
+                >
+                  <Heading size="md" flex="1" textAlign="left">
+                    Collaborations ({collaborations.length})
+                  </Heading>
+                  <AccordionItemIndicator fontSize="2xl" color="brand.700" />
+                </AccordionItemTrigger>
+              </CardHeader>
+              <AccordionItemContent>
+                <AccordionItemBody p="0">
+                  <CardBody>
                   <Flex justify="flex-end" mb="4">
                     <Button
                       size="sm"
-                      colorScheme="blue"
+                      colorPalette="blue"
                       onClick={onAddCollabOpen}
                     >
                       Add Collaborator
@@ -1216,7 +1298,7 @@ function ApplicationDetail() {
             {collaborations.length === 0 ? (
               <Text color="gray.500">No collaborations added yet. Click "Add Collaborator" to get started.</Text>
             ) : (
-              <Stack spacing="6">
+              <Stack gap="6">
                 {/* Recommendations Section */}
                 {collaborations.filter((c) => c.collaborationType === 'recommendation').length > 0 && (
                   <Box>
@@ -1225,93 +1307,98 @@ function ApplicationDetail() {
                     </Heading>
                     {/* Desktop Table View */}
                     <Box display={{ base: 'none', md: 'block' }} overflowX="auto">
-                      <Table variant="simple" size="sm">
-                        <Thead>
-                          <Tr>
-                            <Th>Collaborator</Th>
-                            <Th>Status</Th>
-                            <Th>Due Date</Th>
-                            <Th>Last Updated</Th>
-                            <Th>Actions</Th>
-                          </Tr>
-                        </Thead>
-                        <Tbody>
+                      <TableRoot size="sm">
+                        <TableHeader>
+                          <TableRow>
+                            <TableColumnHeader>Collaborator</TableColumnHeader>
+                            <TableColumnHeader>Status</TableColumnHeader>
+                            <TableColumnHeader>Due Date</TableColumnHeader>
+                            <TableColumnHeader>Last Updated</TableColumnHeader>
+                            <TableColumnHeader>Actions</TableColumnHeader>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
                           {collaborations
                             .filter((c) => c.collaborationType === 'recommendation')
                             .map((collab) => {
                               const collaborator = collaborators.get(collab.collaboratorId);
                               return (
-                                <Tr key={collab.id}>
-                                  <Td>
+                                <TableRow key={collab.id}>
+                                  <TableCell>
                                     {collaborator
                                       ? `${collaborator.firstName} ${collaborator.lastName}`
                                       : 'Loading...'}
-                                  </Td>
-                                  <Td>
+                                  </TableCell>
+                                  <TableCell>
                                     <Badge colorScheme={getCollaborationStatusColor(collab.status)}>
                                       {collab.status}
                                     </Badge>
-                                  </Td>
-                                  <Td>
+                                  </TableCell>
+                                  <TableCell>
                                     {collab.nextActionDueDate
                                       ? formatDateNoTimezone(collab.nextActionDueDate)
                                       : '-'}
-                                  </Td>
-                                  <Td>
+                                  </TableCell>
+                                  <TableCell>
                                     <Text fontSize="sm" color="gray.600">
                                       {formatLastUpdated(collab.updatedAt)}
                                     </Text>
-                                  </Td>
-                                  <Td>
-                                    <Menu>
-                                      <MenuButton
-                                        as={IconButton}
-                                        icon={<Text>⋮</Text>}
-                                        variant="ghost"
-                                        size="sm"
-                                      />
-                                      <MenuList>
-                                        <MenuItem onClick={() => handleViewHistory(collab.id)}>
-                                          View History
-                                        </MenuItem>
-                                        <MenuItem onClick={() => handleEditCollaboration(collab)}>
-                                          Edit
-                                        </MenuItem>
-                                        {collab.status === 'pending' && (
-                                          <MenuItem onClick={() => handleSendInvite(collab)}>
-                                            Send Invite
+                                  </TableCell>
+                                  <TableCell>
+                                    <MenuRoot>
+                                      <MenuTrigger asChild>
+                                        <IconButton variant="ghost" size="sm" aria-label="Collaboration actions">
+                                          <Text aria-hidden>⋮</Text>
+                                        </IconButton>
+                                      </MenuTrigger>
+                                      <MenuPositioner>
+                                        <MenuContent>
+                                          <MenuItem value="history" onClick={() => handleViewHistory(collab.id)}>
+                                            View History
                                           </MenuItem>
-                                        )}
-                                        {shouldShowResend(collab) && (
-                                          <MenuItem onClick={() => handleSendInvite(collab)}>
-                                            Resend Invite
+                                          <MenuItem value="edit" onClick={() => handleEditCollaboration(collab)}>
+                                            Edit
                                           </MenuItem>
-                                        )}
-                                        {collab.status === 'submitted' && (
-                                          <MenuItem color="green.500" onClick={() => handleUpdateCollaborationStatus(collab.id, 'completed')}>
-                                            Mark as Completed
+                                          {collab.status === 'pending' && (
+                                            <MenuItem value="send-invite" onClick={() => handleSendInvite(collab)}>
+                                              Send Invite
+                                            </MenuItem>
+                                          )}
+                                          {shouldShowResend(collab) && (
+                                            <MenuItem value="resend-invite" onClick={() => handleSendInvite(collab)}>
+                                              Resend Invite
+                                            </MenuItem>
+                                          )}
+                                          {collab.status === 'submitted' && (
+                                            <MenuItem
+                                              value="mark-completed"
+                                              color="green.500"
+                                              onClick={() => handleUpdateCollaborationStatus(collab.id, 'completed')}
+                                            >
+                                              Mark as Completed
+                                            </MenuItem>
+                                          )}
+                                          <MenuItem value="remove" color="red.500" onClick={() => handleDeleteCollaborationClick(collab.id)}>
+                                            Remove
                                           </MenuItem>
-                                        )}
-                                        <MenuItem color="red.500" onClick={() => handleDeleteCollaborationClick(collab.id)}>
-                                          Remove
-                                        </MenuItem>
-                                      </MenuList>
-                                    </Menu>
-                                  </Td>
-                                </Tr>
+                                        </MenuContent>
+                                      </MenuPositioner>
+                                    </MenuRoot>
+                                  </TableCell>
+                                </TableRow>
                               );
                             })}
-                        </Tbody>
-                      </Table>
+                        </TableBody>
+                      </TableRoot>
                     </Box>
                     {/* Mobile Card View */}
-                    <Stack spacing="3" display={{ base: 'flex', md: 'none' }}>
+                    <Stack gap="3" display={{ base: 'flex', md: 'none' }}>
                       {collaborations
                         .filter((c) => c.collaborationType === 'recommendation')
                         .map((collab) => {
                           const collaborator = collaborators.get(collab.collaboratorId);
                           return (
-                            <Card key={collab.id}>
+                            <CardRoot key={collab.id}>
                               <CardBody>
                                 <Flex justify="space-between" align="start">
                                   <Box flex="1">
@@ -1320,7 +1407,7 @@ function ApplicationDetail() {
                                         ? `${collaborator.firstName} ${collaborator.lastName}` 
                                         : 'Loading...'}
                                     </Text>
-                                    <HStack spacing="2" mb="2">
+                                    <HStack gap="2" mb="2">
                                       <Badge colorScheme={getCollaborationStatusColor(collab.status)}>
                                         {collab.status}
                                       </Badge>
@@ -1334,38 +1421,39 @@ function ApplicationDetail() {
                                       Updated: {formatLastUpdated(collab.updatedAt)}
                                     </Text>
                                   </Box>
-                                  <Menu>
-                                    <MenuButton
-                                      as={IconButton}
-                                      icon={<Text>⋮</Text>}
-                                      variant="ghost"
-                                      size="sm"
-                                    />
-                                    <MenuList>
-                                      <MenuItem onClick={() => handleViewHistory(collab.id)}>
-                                        View History
-                                      </MenuItem>
-                                      <MenuItem onClick={() => handleEditCollaboration(collab)}>
-                                        Edit
-                                      </MenuItem>
-                                      {collab.status === 'pending' && (
-                                        <MenuItem onClick={() => handleSendInvite(collab)}>
-                                          Send Invite
+                                  <MenuRoot>
+                                    <MenuTrigger asChild>
+                                      <IconButton variant="ghost" size="sm" aria-label="Collaboration actions">
+                                        <Text aria-hidden>⋮</Text>
+                                      </IconButton>
+                                    </MenuTrigger>
+                                    <MenuPositioner>
+                                      <MenuContent>
+                                        <MenuItem value="history" onClick={() => handleViewHistory(collab.id)}>
+                                          View History
                                         </MenuItem>
-                                      )}
-                                      {shouldShowResend(collab) && (
-                                        <MenuItem onClick={() => handleSendInvite(collab)}>
-                                          Resend Invite
+                                        <MenuItem value="edit" onClick={() => handleEditCollaboration(collab)}>
+                                          Edit
                                         </MenuItem>
-                                      )}
-                                      <MenuItem color="red.500" onClick={() => handleDeleteCollaborationClick(collab.id)}>
-                                        Remove
-                                      </MenuItem>
-                                    </MenuList>
-                                  </Menu>
+                                        {collab.status === 'pending' && (
+                                          <MenuItem value="send-invite" onClick={() => handleSendInvite(collab)}>
+                                            Send Invite
+                                          </MenuItem>
+                                        )}
+                                        {shouldShowResend(collab) && (
+                                          <MenuItem value="resend-invite" onClick={() => handleSendInvite(collab)}>
+                                            Resend Invite
+                                          </MenuItem>
+                                        )}
+                                        <MenuItem value="remove" color="red.500" onClick={() => handleDeleteCollaborationClick(collab.id)}>
+                                          Remove
+                                        </MenuItem>
+                                      </MenuContent>
+                                    </MenuPositioner>
+                                  </MenuRoot>
                                 </Flex>
                               </CardBody>
-                            </Card>
+                            </CardRoot>
                           );
                         })}
                     </Stack>
@@ -1380,93 +1468,98 @@ function ApplicationDetail() {
                     </Heading>
                     {/* Desktop Table View */}
                     <Box display={{ base: 'none', md: 'block' }} overflowX="auto">
-                      <Table variant="simple" size="sm">
-                        <Thead>
-                          <Tr>
-                            <Th>Collaborator</Th>
-                            <Th>Status</Th>
-                            <Th>Due Date</Th>
-                            <Th>Last Updated</Th>
-                            <Th>Actions</Th>
-                          </Tr>
-                        </Thead>
-                        <Tbody>
+                      <TableRoot size="sm">
+                        <TableHeader>
+                          <TableRow>
+                            <TableColumnHeader>Collaborator</TableColumnHeader>
+                            <TableColumnHeader>Status</TableColumnHeader>
+                            <TableColumnHeader>Due Date</TableColumnHeader>
+                            <TableColumnHeader>Last Updated</TableColumnHeader>
+                            <TableColumnHeader>Actions</TableColumnHeader>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
                           {collaborations
                             .filter((c) => c.collaborationType === 'essayReview')
                             .map((collab) => {
                               const collaborator = collaborators.get(collab.collaboratorId);
                               return (
-                                <Tr key={collab.id}>
-                                  <Td>
+                                <TableRow key={collab.id}>
+                                  <TableCell>
                                     {collaborator 
                                       ? `${collaborator.firstName} ${collaborator.lastName}` 
                                       : 'Loading...'}
-                                  </Td>
-                                  <Td>
+                                  </TableCell>
+                                  <TableCell>
                                     <Badge colorScheme={getCollaborationStatusColor(collab.status)}>
                                       {collab.status}
                                     </Badge>
-                                  </Td>
-                                  <Td>
+                                  </TableCell>
+                                  <TableCell>
                                     {collab.nextActionDueDate
                                       ? formatDateNoTimezone(collab.nextActionDueDate)
                                       : '-'}
-                                  </Td>
-                                  <Td>
+                                  </TableCell>
+                                  <TableCell>
                                     <Text fontSize="sm" color="gray.600">
                                       {formatLastUpdated(collab.updatedAt)}
                                     </Text>
-                                  </Td>
-                                  <Td>
-                                    <Menu>
-                                      <MenuButton
-                                        as={IconButton}
-                                        icon={<Text>⋮</Text>}
-                                        variant="ghost"
-                                        size="sm"
-                                      />
-                                      <MenuList>
-                                        <MenuItem onClick={() => handleViewHistory(collab.id)}>
-                                          View History
-                                        </MenuItem>
-                                        <MenuItem onClick={() => handleEditCollaboration(collab)}>
-                                          Edit
-                                        </MenuItem>
-                                        {collab.status === 'pending' && (
-                                          <MenuItem onClick={() => handleSendInvite(collab)}>
-                                            Send Invite
+                                  </TableCell>
+                                  <TableCell>
+                                    <MenuRoot>
+                                      <MenuTrigger asChild>
+                                        <IconButton variant="ghost" size="sm" aria-label="Collaboration actions">
+                                          <Text aria-hidden>⋮</Text>
+                                        </IconButton>
+                                      </MenuTrigger>
+                                      <MenuPositioner>
+                                        <MenuContent>
+                                          <MenuItem value="history" onClick={() => handleViewHistory(collab.id)}>
+                                            View History
                                           </MenuItem>
-                                        )}
-                                        {shouldShowResend(collab) && (
-                                          <MenuItem onClick={() => handleSendInvite(collab)}>
-                                            Resend Invite
+                                          <MenuItem value="edit" onClick={() => handleEditCollaboration(collab)}>
+                                            Edit
                                           </MenuItem>
-                                        )}
-                                        {collab.status === 'submitted' && (
-                                          <MenuItem color="green.500" onClick={() => handleUpdateCollaborationStatus(collab.id, 'completed')}>
-                                            Mark as Completed
+                                          {collab.status === 'pending' && (
+                                            <MenuItem value="send-invite" onClick={() => handleSendInvite(collab)}>
+                                              Send Invite
+                                            </MenuItem>
+                                          )}
+                                          {shouldShowResend(collab) && (
+                                            <MenuItem value="resend-invite" onClick={() => handleSendInvite(collab)}>
+                                              Resend Invite
+                                            </MenuItem>
+                                          )}
+                                          {collab.status === 'submitted' && (
+                                            <MenuItem
+                                              value="mark-completed"
+                                              color="green.500"
+                                              onClick={() => handleUpdateCollaborationStatus(collab.id, 'completed')}
+                                            >
+                                              Mark as Completed
+                                            </MenuItem>
+                                          )}
+                                          <MenuItem value="remove" color="red.500" onClick={() => handleDeleteCollaborationClick(collab.id)}>
+                                            Remove
                                           </MenuItem>
-                                        )}
-                                        <MenuItem color="red.500" onClick={() => handleDeleteCollaborationClick(collab.id)}>
-                                          Remove
-                                        </MenuItem>
-                                      </MenuList>
-                                    </Menu>
-                                  </Td>
-                                </Tr>
+                                        </MenuContent>
+                                      </MenuPositioner>
+                                    </MenuRoot>
+                                  </TableCell>
+                                </TableRow>
                               );
                             })}
-                        </Tbody>
-                      </Table>
+                        </TableBody>
+                      </TableRoot>
                     </Box>
                     {/* Mobile Card View */}
-                    <Stack spacing="3" display={{ base: 'flex', md: 'none' }}>
+                    <Stack gap="3" display={{ base: 'flex', md: 'none' }}>
                       {collaborations
                         .filter((c) => c.collaborationType === 'essayReview')
                         .map((collab) => {
                           const collaborator = collaborators.get(collab.collaboratorId);
                           return (
-                            <Card key={collab.id}>
+                            <CardRoot key={collab.id}>
                               <CardBody>
                                 <Flex justify="space-between" align="start">
                                   <Box flex="1">
@@ -1475,7 +1568,7 @@ function ApplicationDetail() {
                                         ? `${collaborator.firstName} ${collaborator.lastName}` 
                                         : 'Loading...'}
                                     </Text>
-                                    <HStack spacing="2" mb="2">
+                                    <HStack gap="2" mb="2">
                                       <Badge colorScheme={getCollaborationStatusColor(collab.status)}>
                                         {collab.status}
                                       </Badge>
@@ -1489,38 +1582,39 @@ function ApplicationDetail() {
                                       Updated: {formatLastUpdated(collab.updatedAt)}
                                     </Text>
                                   </Box>
-                                  <Menu>
-                                    <MenuButton
-                                      as={IconButton}
-                                      icon={<Text>⋮</Text>}
-                                      variant="ghost"
-                                      size="sm"
-                                    />
-                                    <MenuList>
-                                      <MenuItem onClick={() => handleViewHistory(collab.id)}>
-                                        View History
-                                      </MenuItem>
-                                      <MenuItem onClick={() => handleEditCollaboration(collab)}>
-                                        Edit
-                                      </MenuItem>
-                                      {collab.status === 'pending' && (
-                                        <MenuItem onClick={() => handleSendInvite(collab)}>
-                                          Send Invite
+                                  <MenuRoot>
+                                    <MenuTrigger asChild>
+                                      <IconButton variant="ghost" size="sm" aria-label="Collaboration actions">
+                                        <Text aria-hidden>⋮</Text>
+                                      </IconButton>
+                                    </MenuTrigger>
+                                    <MenuPositioner>
+                                      <MenuContent>
+                                        <MenuItem value="history" onClick={() => handleViewHistory(collab.id)}>
+                                          View History
                                         </MenuItem>
-                                      )}
-                                      {shouldShowResend(collab) && (
-                                        <MenuItem onClick={() => handleSendInvite(collab)}>
-                                          Resend Invite
+                                        <MenuItem value="edit" onClick={() => handleEditCollaboration(collab)}>
+                                          Edit
                                         </MenuItem>
-                                      )}
-                                      <MenuItem color="red.500" onClick={() => handleDeleteCollaborationClick(collab.id)}>
-                                        Remove
-                                      </MenuItem>
-                                    </MenuList>
-                                  </Menu>
+                                        {collab.status === 'pending' && (
+                                          <MenuItem value="send-invite" onClick={() => handleSendInvite(collab)}>
+                                            Send Invite
+                                          </MenuItem>
+                                        )}
+                                        {shouldShowResend(collab) && (
+                                          <MenuItem value="resend-invite" onClick={() => handleSendInvite(collab)}>
+                                            Resend Invite
+                                          </MenuItem>
+                                        )}
+                                        <MenuItem value="remove" color="red.500" onClick={() => handleDeleteCollaborationClick(collab.id)}>
+                                          Remove
+                                        </MenuItem>
+                                      </MenuContent>
+                                    </MenuPositioner>
+                                  </MenuRoot>
                                 </Flex>
                               </CardBody>
-                            </Card>
+                            </CardRoot>
                           );
                         })}
                     </Stack>
@@ -1535,93 +1629,98 @@ function ApplicationDetail() {
                     </Heading>
                     {/* Desktop Table View */}
                     <Box display={{ base: 'none', md: 'block' }} overflowX="auto">
-                      <Table variant="simple" size="sm">
-                        <Thead>
-                          <Tr>
-                            <Th>Collaborator</Th>
-                            <Th>Status</Th>
-                            <Th>Due Date</Th>
-                            <Th>Last Updated</Th>
-                            <Th>Actions</Th>
-                          </Tr>
-                        </Thead>
-                        <Tbody>
+                      <TableRoot size="sm">
+                        <TableHeader>
+                          <TableRow>
+                            <TableColumnHeader>Collaborator</TableColumnHeader>
+                            <TableColumnHeader>Status</TableColumnHeader>
+                            <TableColumnHeader>Due Date</TableColumnHeader>
+                            <TableColumnHeader>Last Updated</TableColumnHeader>
+                            <TableColumnHeader>Actions</TableColumnHeader>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
                           {collaborations
                             .filter((c) => c.collaborationType === 'guidance')
                             .map((collab) => {
                               const collaborator = collaborators.get(collab.collaboratorId);
                               return (
-                                <Tr key={collab.id}>
-                                  <Td>
+                                <TableRow key={collab.id}>
+                                  <TableCell>
                                     {collaborator
                                       ? `${collaborator.firstName} ${collaborator.lastName}`
                                       : 'Loading...'}
-                                  </Td>
-                                  <Td>
+                                  </TableCell>
+                                  <TableCell>
                                     <Badge colorScheme={getCollaborationStatusColor(collab.status)}>
                                       {collab.status}
                                     </Badge>
-                                  </Td>
-                                  <Td>
+                                  </TableCell>
+                                  <TableCell>
                                     {collab.nextActionDueDate
                                       ? formatDateNoTimezone(collab.nextActionDueDate)
                                       : '-'}
-                                  </Td>
-                                  <Td>
+                                  </TableCell>
+                                  <TableCell>
                                     <Text fontSize="sm" color="gray.600">
                                       {formatLastUpdated(collab.updatedAt)}
                                     </Text>
-                                  </Td>
-                                  <Td>
-                                    <Menu>
-                                      <MenuButton
-                                        as={IconButton}
-                                        icon={<Text>⋮</Text>}
-                                        variant="ghost"
-                                        size="sm"
-                                      />
-                                      <MenuList>
-                                        <MenuItem onClick={() => handleViewHistory(collab.id)}>
-                                          View History
-                                        </MenuItem>
-                                        <MenuItem onClick={() => handleEditCollaboration(collab)}>
-                                          Edit
-                                        </MenuItem>
-                                        {collab.status === 'pending' && (
-                                          <MenuItem onClick={() => handleSendInvite(collab)}>
-                                            Send Invite
+                                  </TableCell>
+                                  <TableCell>
+                                    <MenuRoot>
+                                      <MenuTrigger asChild>
+                                        <IconButton variant="ghost" size="sm" aria-label="Collaboration actions">
+                                          <Text aria-hidden>⋮</Text>
+                                        </IconButton>
+                                      </MenuTrigger>
+                                      <MenuPositioner>
+                                        <MenuContent>
+                                          <MenuItem value="history" onClick={() => handleViewHistory(collab.id)}>
+                                            View History
                                           </MenuItem>
-                                        )}
-                                        {shouldShowResend(collab) && (
-                                          <MenuItem onClick={() => handleSendInvite(collab)}>
-                                            Resend Invite
+                                          <MenuItem value="edit" onClick={() => handleEditCollaboration(collab)}>
+                                            Edit
                                           </MenuItem>
-                                        )}
-                                        {collab.status === 'submitted' && (
-                                          <MenuItem color="green.500" onClick={() => handleUpdateCollaborationStatus(collab.id, 'completed')}>
-                                            Mark as Completed
+                                          {collab.status === 'pending' && (
+                                            <MenuItem value="send-invite" onClick={() => handleSendInvite(collab)}>
+                                              Send Invite
+                                            </MenuItem>
+                                          )}
+                                          {shouldShowResend(collab) && (
+                                            <MenuItem value="resend-invite" onClick={() => handleSendInvite(collab)}>
+                                              Resend Invite
+                                            </MenuItem>
+                                          )}
+                                          {collab.status === 'submitted' && (
+                                            <MenuItem
+                                              value="mark-completed"
+                                              color="green.500"
+                                              onClick={() => handleUpdateCollaborationStatus(collab.id, 'completed')}
+                                            >
+                                              Mark as Completed
+                                            </MenuItem>
+                                          )}
+                                          <MenuItem value="remove" color="red.500" onClick={() => handleDeleteCollaborationClick(collab.id)}>
+                                            Remove
                                           </MenuItem>
-                                        )}
-                                        <MenuItem color="red.500" onClick={() => handleDeleteCollaborationClick(collab.id)}>
-                                          Remove
-                                        </MenuItem>
-                                      </MenuList>
-                                    </Menu>
-                                  </Td>
-                                </Tr>
+                                        </MenuContent>
+                                      </MenuPositioner>
+                                    </MenuRoot>
+                                  </TableCell>
+                                </TableRow>
                               );
                             })}
-                        </Tbody>
-                      </Table>
+                        </TableBody>
+                      </TableRoot>
                     </Box>
                     {/* Mobile Card View */}
-                    <Stack spacing="3" display={{ base: 'flex', md: 'none' }}>
+                    <Stack gap="3" display={{ base: 'flex', md: 'none' }}>
                       {collaborations
                         .filter((c) => c.collaborationType === 'guidance')
                         .map((collab) => {
                           const collaborator = collaborators.get(collab.collaboratorId);
                           return (
-                            <Card key={collab.id}>
+                            <CardRoot key={collab.id}>
                               <CardBody>
                                 <Flex justify="space-between" align="start">
                                   <Box flex="1">
@@ -1630,7 +1729,7 @@ function ApplicationDetail() {
                                         ? `${collaborator.firstName} ${collaborator.lastName}` 
                                         : 'Loading...'}
                                     </Text>
-                                    <HStack spacing="2" mb="2">
+                                    <HStack gap="2" mb="2">
                                       <Badge colorScheme={getCollaborationStatusColor(collab.status)}>
                                         {collab.status}
                                       </Badge>
@@ -1644,38 +1743,39 @@ function ApplicationDetail() {
                                       Updated: {formatLastUpdated(collab.updatedAt)}
                                     </Text>
                                   </Box>
-                                  <Menu>
-                                    <MenuButton
-                                      as={IconButton}
-                                      icon={<Text>⋮</Text>}
-                                      variant="ghost"
-                                      size="sm"
-                                    />
-                                    <MenuList>
-                                      <MenuItem onClick={() => handleViewHistory(collab.id)}>
-                                        View History
-                                      </MenuItem>
-                                      <MenuItem onClick={() => handleEditCollaboration(collab)}>
-                                        Edit
-                                      </MenuItem>
-                                      {collab.status === 'pending' && (
-                                        <MenuItem onClick={() => handleSendInvite(collab)}>
-                                          Send Invite
+                                  <MenuRoot>
+                                    <MenuTrigger asChild>
+                                      <IconButton variant="ghost" size="sm" aria-label="Collaboration actions">
+                                        <Text aria-hidden>⋮</Text>
+                                      </IconButton>
+                                    </MenuTrigger>
+                                    <MenuPositioner>
+                                      <MenuContent>
+                                        <MenuItem value="history" onClick={() => handleViewHistory(collab.id)}>
+                                          View History
                                         </MenuItem>
-                                      )}
-                                      {shouldShowResend(collab) && (
-                                        <MenuItem onClick={() => handleSendInvite(collab)}>
-                                          Resend Invite
+                                        <MenuItem value="edit" onClick={() => handleEditCollaboration(collab)}>
+                                          Edit
                                         </MenuItem>
-                                      )}
-                                      <MenuItem color="red.500" onClick={() => handleDeleteCollaborationClick(collab.id)}>
-                                        Remove
-                                      </MenuItem>
-                                    </MenuList>
-                                  </Menu>
+                                        {collab.status === 'pending' && (
+                                          <MenuItem value="send-invite" onClick={() => handleSendInvite(collab)}>
+                                            Send Invite
+                                          </MenuItem>
+                                        )}
+                                        {shouldShowResend(collab) && (
+                                          <MenuItem value="resend-invite" onClick={() => handleSendInvite(collab)}>
+                                            Resend Invite
+                                          </MenuItem>
+                                        )}
+                                        <MenuItem value="remove" color="red.500" onClick={() => handleDeleteCollaborationClick(collab.id)}>
+                                          Remove
+                                        </MenuItem>
+                                      </MenuContent>
+                                    </MenuPositioner>
+                                  </MenuRoot>
                                 </Flex>
                               </CardBody>
-                            </Card>
+                            </CardRoot>
                           );
                         })}
                     </Stack>
@@ -1683,11 +1783,12 @@ function ApplicationDetail() {
                 )}
               </Stack>
             )}
-                </CardBody>
-              </AccordionPanel>
-            </Card>
+                  </CardBody>
+                </AccordionItemBody>
+              </AccordionItemContent>
+            </CardRoot>
           </AccordionItem>
-        </Accordion>
+        </AccordionRoot>
 
         {/* Sticky mobile primary action */}
         {application.applicationLink && (
@@ -1703,17 +1804,13 @@ function ApplicationDetail() {
             borderColor="blackAlpha.100"
             zIndex={10}
           >
-            <Button
-              as={ChakraLink}
-              href={application.applicationLink}
-              isExternal
-              colorScheme="green"
-              size="lg"
-              width="100%"
-              leftIcon={<Text aria-hidden>↗</Text>}
-              boxShadow="sm"
-            >
-              Open Application Portal
+            <Button asChild colorPalette="green" size="lg" width="100%" boxShadow="sm">
+              <a href={application.applicationLink} target="_blank" rel="noreferrer noopener">
+                <Text as="span" aria-hidden me="2">
+                  ↗
+                </Text>
+                Open Application Portal
+              </a>
             </Button>
           </Box>
         )}
@@ -1729,32 +1826,28 @@ function ApplicationDetail() {
       />
 
       {/* Delete Essay Confirmation Dialog */}
-      <AlertDialog
-        isOpen={isDeleteOpen}
-        leastDestructiveRef={cancelRef}
-        onClose={onDeleteClose}
-      >
-        <AlertDialogOverlay>
-          <AlertDialogContent>
-            <AlertDialogHeader fontSize="lg" fontWeight="bold">
-              Delete Essay
-            </AlertDialogHeader>
-
-            <AlertDialogBody>
+      <DialogRoot open={isDeleteOpen} onOpenChange={(details) => setDeleteOpen(details.open)}>
+        <DialogBackdrop />
+        <DialogPositioner>
+          <DialogContent maxW="sm" w={{ base: '100vw', sm: 'auto' }}>
+            <DialogHeader>
+              <DialogTitle>Delete Essay</DialogTitle>
+            </DialogHeader>
+            <DialogCloseTrigger />
+            <DialogBody>
               Are you sure you want to delete this essay? This action cannot be undone.
-            </AlertDialogBody>
-
-            <AlertDialogFooter>
-              <Button ref={cancelRef} onClick={onDeleteClose}>
+            </DialogBody>
+            <DialogFooter>
+              <Button ref={cancelRef} variant="outline" onClick={onDeleteClose}>
                 Cancel
               </Button>
-              <Button colorScheme="red" onClick={handleDeleteConfirm} ml={3}>
+              <Button colorPalette="red" onClick={handleDeleteConfirm} ml={3}>
                 Delete
               </Button>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialogOverlay>
-      </AlertDialog>
+            </DialogFooter>
+          </DialogContent>
+        </DialogPositioner>
+      </DialogRoot>
 
       {/* Send Invite Dialog */}
       <SendInviteDialog
@@ -1804,32 +1897,28 @@ function ApplicationDetail() {
       />
 
       {/* Delete Collaboration Confirmation Dialog */}
-      <AlertDialog
-        isOpen={isDeleteCollabOpen}
-        leastDestructiveRef={cancelCollabRef}
-        onClose={onDeleteCollabClose}
-      >
-        <AlertDialogOverlay>
-          <AlertDialogContent>
-            <AlertDialogHeader fontSize="lg" fontWeight="bold">
-              Delete Collaboration
-            </AlertDialogHeader>
-
-            <AlertDialogBody>
+      <DialogRoot open={isDeleteCollabOpen} onOpenChange={(details) => setDeleteCollabOpen(details.open)}>
+        <DialogBackdrop />
+        <DialogPositioner>
+          <DialogContent maxW="sm" w={{ base: '100vw', sm: 'auto' }}>
+            <DialogHeader>
+              <DialogTitle>Delete Collaboration</DialogTitle>
+            </DialogHeader>
+            <DialogCloseTrigger />
+            <DialogBody>
               Are you sure you want to delete this collaboration? This action cannot be undone.
-            </AlertDialogBody>
-
-            <AlertDialogFooter>
-              <Button ref={cancelCollabRef} onClick={onDeleteCollabClose}>
+            </DialogBody>
+            <DialogFooter>
+              <Button ref={cancelCollabRef} variant="outline" onClick={onDeleteCollabClose}>
                 Cancel
               </Button>
-              <Button colorScheme="red" onClick={handleDeleteCollaborationConfirm} ml={3}>
+              <Button colorPalette="red" onClick={handleDeleteCollaborationConfirm} ml={3}>
                 Delete
               </Button>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialogOverlay>
-      </AlertDialog>
+            </DialogFooter>
+          </DialogContent>
+        </DialogPositioner>
+      </DialogRoot>
       </Container>
     </Box>
   );

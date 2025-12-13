@@ -45,8 +45,8 @@ function Register() {
 
   return (
     <Container maxW="lg" py={{ base: '8', md: '24' }} px={{ base: '4', md: '6' }}>
-      <Stack spacing={{ base: '6', md: '8' }}>
-        <Stack spacing="6" align="center">
+      <Stack gap={{ base: '6', md: '8' }}>
+        <Stack gap="6" align="center">
           <Heading size={{ base: 'lg', md: 'xl' }}>ScholarshipHub</Heading>
           <Text color="gray.600" fontSize={{ base: 'sm', md: 'md' }}>Create your account</Text>
         </Stack>
@@ -54,8 +54,8 @@ function Register() {
         <Card>
           <CardBody>
             <form onSubmit={handleSubmit}>
-              <Stack spacing="6">
-                <SimpleGrid columns={{ base: 1, md: 2 }} spacing="6">
+              <Stack gap="6">
+                <SimpleGrid columns={{ base: 1, md: 2 }} gap="6">
                   <Field.Root required>
                     <Field.Label>First Name</Field.Label>
                     <Input

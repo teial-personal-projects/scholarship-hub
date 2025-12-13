@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Container,
-  Card,
+  CardRoot,
   CardBody,
   Heading,
   Text,
@@ -15,10 +15,10 @@ import {
   Button,
   Box,
   Badge,
-  Divider,
+  Separator,
   Spinner,
-  Alert,
-  AlertIcon,
+  AlertRoot,
+  AlertIndicator,
   AlertTitle,
   AlertDescription,
 } from '@chakra-ui/react';
@@ -61,31 +61,31 @@ function CollaboratorInvite() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (token) {
-      fetchInviteDetails();
-    }
-  }, [token]);
+    if (!token) return;
 
-  const fetchInviteDetails = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      // GET /api/invites/:token
-      const data = await apiGet<InviteDetails>(`/invites/${token}`);
-      setInviteDetails(data);
+    async function fetchInviteDetails() {
+      try {
+        setLoading(true);
+        setError(null);
+        // GET /api/invites/:token
+        const data = await apiGet<InviteDetails>(`/invites/${token}`);
+        setInviteDetails(data);
 
-      // Check if invite is expired
-      if (data.expiresAt && new Date(data.expiresAt) < new Date()) {
-        setError('This invitation has expired. Please contact the student for a new invitation.');
+        // Check if invite is expired
+        if (data.expiresAt && new Date(data.expiresAt) < new Date()) {
+          setError('This invitation has expired. Please contact the student for a new invitation.');
+        }
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load invitation';
+        setError(errorMessage);
+        showError('Error', errorMessage);
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load invitation';
-      setError(errorMessage);
-      showError('Error', errorMessage);
-    } finally {
-      setLoading(false);
     }
-  };
+
+    fetchInviteDetails();
+  }, [token, showError]);
 
   const handleAccept = async () => {
     if (!token) return;
@@ -141,7 +141,7 @@ function CollaboratorInvite() {
   if (loading) {
     return (
       <Container maxW="2xl" py={{ base: '4', md: '12' }} px={{ base: '4', md: '6' }}>
-        <Stack spacing="8" align="center">
+        <Stack gap="8" align="center">
           <Spinner size="xl" />
           <Text>Loading invitation...</Text>
         </Stack>
@@ -152,7 +152,7 @@ function CollaboratorInvite() {
   if (error || !inviteDetails) {
     return (
       <Container maxW="2xl" py={{ base: '4', md: '12' }} px={{ base: '4', md: '6' }}>
-        <Alert
+        <AlertRoot
           status="error"
           variant="subtle"
           flexDirection="column"
@@ -161,26 +161,26 @@ function CollaboratorInvite() {
           textAlign="center"
           minHeight="200px"
         >
-          <AlertIcon boxSize="40px" mr={0} />
+          <AlertIndicator boxSize="40px" mr={0} />
           <AlertTitle mt={4} mb={1} fontSize="lg">
             Invalid or Expired Invitation
           </AlertTitle>
           <AlertDescription maxWidth="sm">
             {error || 'This invitation is no longer valid. Please contact the student who sent you this invitation.'}
           </AlertDescription>
-          <Button mt={6} colorScheme="blue" onClick={() => navigate('/')}>
+          <Button mt={6} colorPalette="blue" onClick={() => navigate('/')}>
             Go to Home
           </Button>
-        </Alert>
+        </AlertRoot>
       </Container>
     );
   }
 
   return (
     <Container maxW="2xl" py={{ base: '4', md: '12' }} px={{ base: '4', md: '6' }}>
-      <Card>
+      <CardRoot>
         <CardBody>
-          <Stack spacing={{ base: '4', md: '6' }}>
+          <Stack gap={{ base: '4', md: '6' }}>
             <Box textAlign="center">
               <Heading size={{ base: 'md', md: 'lg' }} mb="2">
                 Collaboration Invitation
@@ -190,7 +190,7 @@ function CollaboratorInvite() {
               </Text>
             </Box>
 
-            <Divider />
+            <Separator />
 
             {/* Student Information */}
             <Box>
@@ -254,40 +254,40 @@ function CollaboratorInvite() {
               </Box>
             )}
 
-            <Divider />
+            <Separator />
 
             {/* Authentication Status */}
             {!user && (
-              <Alert status="info" borderRadius="md">
-                <AlertIcon />
+              <AlertRoot status="info" borderRadius="md">
+                <AlertIndicator />
                 <Box flex="1">
                   <AlertTitle fontSize="sm">Account Required</AlertTitle>
                   <AlertDescription fontSize="sm">
                     You'll need to create an account or log in to accept this invitation.
                   </AlertDescription>
                 </Box>
-              </Alert>
+              </AlertRoot>
             )}
 
             {/* Action Buttons */}
-            <Stack spacing={3} direction={{ base: 'column', md: 'row' }} justify="center">
+            <Stack gap={3} direction={{ base: 'column', md: 'row' }} justify="center">
               <Button
                 variant="outline"
                 onClick={handleDecline}
-                isLoading={declining}
+                loading={declining}
                 loadingText="Declining..."
-                isDisabled={accepting}
+                disabled={accepting}
                 size={{ base: 'md', md: 'lg' }}
                 width={{ base: '100%', md: 'auto' }}
               >
                 Decline
               </Button>
               <Button
-                colorScheme="blue"
+                colorPalette="blue"
                 onClick={user ? handleAccept : () => navigate('/login', { state: { from: `/invite/${token}` } })}
-                isLoading={accepting}
+                loading={accepting}
                 loadingText="Accepting..."
-                isDisabled={declining}
+                disabled={declining}
                 size={{ base: 'md', md: 'lg' }}
                 width={{ base: '100%', md: 'auto' }}
               >
@@ -304,7 +304,7 @@ function CollaboratorInvite() {
             )}
           </Stack>
         </CardBody>
-      </Card>
+      </CardRoot>
     </Container>
   );
 }

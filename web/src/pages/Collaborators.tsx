@@ -9,29 +9,33 @@ import {
   Heading,
   Button,
   Stack,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
+  TableRoot,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableColumnHeader,
+  TableCell,
   Text,
   IconButton,
-  Menu,
-  MenuButton,
-  MenuList,
+  MenuRoot,
+  MenuTrigger,
+  MenuPositioner,
+  MenuContent,
   MenuItem,
   Spinner,
   useDisclosure,
-  AlertDialog,
-  AlertDialogBody,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogContent,
-  AlertDialogOverlay,
+  DialogRoot,
+  DialogBackdrop,
+  DialogPositioner,
+  DialogContent,
+  DialogHeader,
+  DialogBody,
+  DialogFooter,
+  DialogTitle,
+  DialogCloseTrigger,
   Box,
   Badge,
-  Card,
+  CardRoot,
   CardBody,
   Flex,
   HStack,
@@ -49,8 +53,8 @@ function Collaborators() {
   const [selectedCollaborator, setSelectedCollaborator] = useState<CollaboratorResponse | null>(null);
   const [deleteCollaboratorId, setDeleteCollaboratorId] = useState<number | null>(null);
 
-  const { isOpen: isFormOpen, onOpen: onFormOpen, onClose: onFormClose } = useDisclosure();
-  const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();
+  const { open: isFormOpen, onOpen: onFormOpen, onClose: onFormClose } = useDisclosure();
+  const { open: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose, setOpen: setDeleteOpen } = useDisclosure();
   const cancelRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -101,57 +105,60 @@ function Collaborators() {
       <>
         {/* Desktop Table View */}
         <Box display={{ base: 'none', md: 'block' }} overflowX="auto">
-          <Table variant="simple">
-            <Thead>
-              <Tr>
-                <Th>Name</Th>
-                <Th>Email</Th>
-                <Th>Relationship</Th>
-                <Th>Phone</Th>
-                <Th>Actions</Th>
-              </Tr>
-            </Thead>
-            <Tbody>
+          <TableRoot>
+            <TableHeader>
+              <TableRow>
+                <TableColumnHeader>Name</TableColumnHeader>
+                <TableColumnHeader>Email</TableColumnHeader>
+                <TableColumnHeader>Relationship</TableColumnHeader>
+                <TableColumnHeader>Phone</TableColumnHeader>
+                <TableColumnHeader>Actions</TableColumnHeader>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {collaborators.map((collab) => (
-                <Tr key={collab.id}>
-                  <Td fontWeight="semibold">
+                <TableRow key={collab.id}>
+                  <TableCell fontWeight="semibold">
                     {collab.firstName} {collab.lastName}
-                  </Td>
-                  <Td>{collab.emailAddress}</Td>
-                  <Td>
+                  </TableCell>
+                  <TableCell>{collab.emailAddress}</TableCell>
+                  <TableCell>
                     {collab.relationship ? (
                       <Badge colorScheme="blue">{collab.relationship}</Badge>
                     ) : (
                       <Text color="gray.400">-</Text>
                     )}
-                  </Td>
-                  <Td>{collab.phoneNumber || '-'}</Td>
-                  <Td>
-                    <Menu>
-                      <MenuButton
-                        as={IconButton}
-                        icon={<Text>⋮</Text>}
-                        variant="ghost"
-                        size="sm"
-                      />
-                      <MenuList>
-                        <MenuItem onClick={() => handleEditCollaborator(collab)}>Edit</MenuItem>
-                        <MenuItem color="red.500" onClick={() => handleDeleteClick(collab.id)}>
-                          Delete
-                        </MenuItem>
-                      </MenuList>
-                    </Menu>
-                  </Td>
-                </Tr>
+                  </TableCell>
+                  <TableCell>{collab.phoneNumber || '-'}</TableCell>
+                  <TableCell>
+                    <MenuRoot>
+                      <MenuTrigger asChild>
+                        <IconButton variant="ghost" size="sm" aria-label="Collaborator actions">
+                          <Text aria-hidden>⋮</Text>
+                        </IconButton>
+                      </MenuTrigger>
+                      <MenuPositioner>
+                        <MenuContent>
+                          <MenuItem value="edit" onClick={() => handleEditCollaborator(collab)}>
+                            Edit
+                          </MenuItem>
+                          <MenuItem value="delete" color="red.500" onClick={() => handleDeleteClick(collab.id)}>
+                            Delete
+                          </MenuItem>
+                        </MenuContent>
+                      </MenuPositioner>
+                    </MenuRoot>
+                  </TableCell>
+                </TableRow>
               ))}
-            </Tbody>
-          </Table>
+            </TableBody>
+          </TableRoot>
         </Box>
 
         {/* Mobile Card View */}
-        <Stack spacing="3" display={{ base: 'flex', md: 'none' }}>
+        <Stack gap="3" display={{ base: 'flex', md: 'none' }}>
           {collaborators.map((collab) => (
-            <Card key={collab.id}>
+            <CardRoot key={collab.id}>
               <CardBody>
                 <Flex justify="space-between" align="start">
                   <Box flex="1" minW="0">
@@ -161,7 +168,7 @@ function Collaborators() {
                     <Text fontSize="sm" color="gray.600" mb="2" wordBreak="break-all">
                       {collab.emailAddress}
                     </Text>
-                    <HStack spacing="2" mb="2" flexWrap="wrap">
+                    <HStack gap="2" mb="2" flexWrap="wrap">
                       {collab.relationship && (
                         <Badge colorScheme="blue" fontSize="xs">
                           {collab.relationship}
@@ -174,23 +181,26 @@ function Collaborators() {
                       )}
                     </HStack>
                   </Box>
-                  <Menu>
-                    <MenuButton
-                      as={IconButton}
-                      icon={<Text>⋮</Text>}
-                      variant="ghost"
-                      size="sm"
-                    />
-                    <MenuList>
-                      <MenuItem onClick={() => handleEditCollaborator(collab)}>Edit</MenuItem>
-                      <MenuItem color="red.500" onClick={() => handleDeleteClick(collab.id)}>
-                        Delete
-                      </MenuItem>
-                    </MenuList>
-                  </Menu>
+                  <MenuRoot>
+                    <MenuTrigger asChild>
+                      <IconButton variant="ghost" size="sm" aria-label="Collaborator actions">
+                        <Text aria-hidden>⋮</Text>
+                      </IconButton>
+                    </MenuTrigger>
+                    <MenuPositioner>
+                      <MenuContent>
+                        <MenuItem value="edit" onClick={() => handleEditCollaborator(collab)}>
+                          Edit
+                        </MenuItem>
+                        <MenuItem value="delete" color="red.500" onClick={() => handleDeleteClick(collab.id)}>
+                          Delete
+                        </MenuItem>
+                      </MenuContent>
+                    </MenuPositioner>
+                  </MenuRoot>
                 </Flex>
               </CardBody>
-            </Card>
+            </CardRoot>
           ))}
         </Stack>
       </>
@@ -200,7 +210,7 @@ function Collaborators() {
   if (loading) {
     return (
       <Container maxW="7xl" py={{ base: '4', md: '12' }} px={{ base: '4', md: '6' }}>
-        <Stack spacing="8" align="center">
+        <Stack gap="8" align="center">
           <Spinner size="xl" />
           <Text>Loading collaborators...</Text>
         </Stack>
@@ -210,12 +220,12 @@ function Collaborators() {
 
   return (
     <Container maxW="7xl" py={{ base: '4', md: '12' }} px={{ base: '4', md: '6' }}>
-      <Stack spacing={{ base: '4', md: '6' }}>
+      <Stack gap={{ base: '4', md: '6' }}>
         {/* Header */}
         <Flex justify="space-between" align="center" flexWrap="wrap" gap="4">
           <Heading size={{ base: 'md', md: 'lg' }}>Collaborators</Heading>
           <Button 
-            colorScheme="blue" 
+            colorPalette="blue" 
             onClick={handleAddCollaborator}
             size={{ base: 'sm', md: 'md' }}
           >
@@ -236,33 +246,28 @@ function Collaborators() {
       />
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog
-        isOpen={isDeleteOpen}
-        leastDestructiveRef={cancelRef}
-        onClose={onDeleteClose}
-      >
-        <AlertDialogOverlay>
-          <AlertDialogContent>
-            <AlertDialogHeader fontSize="lg" fontWeight="bold">
-              Delete Collaborator
-            </AlertDialogHeader>
-
-            <AlertDialogBody>
-              Are you sure you want to delete this collaborator? This will also remove all associated
-              collaborations. This action cannot be undone.
-            </AlertDialogBody>
-
-            <AlertDialogFooter>
-              <Button ref={cancelRef} onClick={onDeleteClose}>
+      <DialogRoot open={isDeleteOpen} onOpenChange={(details) => setDeleteOpen(details.open)}>
+        <DialogBackdrop />
+        <DialogPositioner>
+          <DialogContent maxW="sm" w={{ base: '100vw', sm: 'auto' }}>
+            <DialogHeader>
+              <DialogTitle>Delete Collaborator</DialogTitle>
+            </DialogHeader>
+            <DialogCloseTrigger />
+            <DialogBody>
+              Are you sure you want to delete this collaborator? This will also remove all associated collaborations. This action cannot be undone.
+            </DialogBody>
+            <DialogFooter>
+              <Button ref={cancelRef} variant="outline" onClick={onDeleteClose}>
                 Cancel
               </Button>
-              <Button colorScheme="red" onClick={handleDeleteConfirm} ml={3}>
+              <Button colorPalette="red" onClick={handleDeleteConfirm} ml={3}>
                 Delete
               </Button>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialogOverlay>
-      </AlertDialog>
+            </DialogFooter>
+          </DialogContent>
+        </DialogPositioner>
+      </DialogRoot>
     </Container>
   );
 }

@@ -8,26 +8,26 @@ import {
   Input,
   Stack,
   Text,
-  Card,
+  CardRoot,
   CardBody,
   CardHeader,
-  Select,
-  Checkbox,
-  NumberInput,
-  NumberInputField,
-  NumberInputStepper,
-  NumberIncrementStepper,
-  NumberDecrementStepper,
   SimpleGrid,
-  Tag,
-  TagCloseButton,
-  TagLabel,
   Wrap,
-  Accordion,
+  TagRoot,
+  TagLabel,
+  TagCloseTrigger,
+  NativeSelectRoot,
+  NativeSelectField,
+  CheckboxRoot,
+  CheckboxLabel,
+  CheckboxControl,
+  CheckboxHiddenInput,
+  AccordionRoot,
   AccordionItem,
-  AccordionButton,
-  AccordionPanel,
-  AccordionIcon,
+  AccordionItemTrigger,
+  AccordionItemContent,
+  AccordionItemBody,
+  AccordionItemIndicator,
 } from '@chakra-ui/react';
 import { Global } from '@emotion/react';
 import { apiGet, apiPatch } from '../services/api';
@@ -236,21 +236,33 @@ function Profile() {
         }}
       />
       <Container maxW="4xl" py={{ base: '4', md: '12' }} px={{ base: '4', md: '6' }}>
-        <Stack spacing={{ base: '4', md: '8' }}>
+      <Stack gap={{ base: '4', md: '8' }}>
           <Heading size={{ base: 'md', md: 'lg' }}>Profile & Preferences</Heading>
 
-        <Accordion defaultIndex={[0, 1, 2]} allowMultiple>
+        <AccordionRoot multiple defaultValue={['personal', 'search', 'notifications']}>
           {/* Profile Information */}
-          <AccordionItem border="none" mb="4">
-            <Card>
-              <AccordionButton as={CardHeader} _hover={{ bg: 'gray.50' }}>
-                <Heading size="md" flex="1" textAlign="left">Personal Information</Heading>
-                <AccordionIcon fontSize="2xl" color="brand.700" />
-              </AccordionButton>
-              <AccordionPanel as={CardBody} p="0">
-                <CardBody>
-            <Stack spacing="6">
-              <SimpleGrid columns={{ base: 1, md: 2 }} spacing="6">
+          <AccordionItem value="personal" border="none" mb="4">
+            <CardRoot>
+              <CardHeader p="0" _hover={{ bg: 'gray.50' }}>
+                <AccordionItemTrigger
+                  px={{ base: 4, md: 6 }}
+                  py="4"
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="space-between"
+                  w="full"
+                >
+                  <Heading size="md" flex="1" textAlign="left">
+                    Personal Information
+                  </Heading>
+                  <AccordionItemIndicator fontSize="2xl" color="brand.700" />
+                </AccordionItemTrigger>
+              </CardHeader>
+              <AccordionItemContent>
+                <AccordionItemBody p="0">
+                  <CardBody>
+            <Stack gap="6">
+              <SimpleGrid columns={{ base: 1, md: 2 }} gap="6">
                 <Field.Root>
                   <Field.Label fontSize={{ base: 'md', md: 'sm' }}>First Name</Field.Label>
                   <Input
@@ -278,7 +290,7 @@ function Profile() {
                 <Field.Label fontSize={{ base: 'md', md: 'sm' }}>Email</Field.Label>
                 <Input 
                   value={emailAddress} 
-                  isReadOnly 
+                  readOnly
                   bg="gray.50"
                   size={{ base: 'lg', md: 'md' }}
                   fontSize={{ base: 'md', md: 'sm' }}
@@ -300,152 +312,159 @@ function Profile() {
                 />
               </Field.Root>
             </Stack>
-                </CardBody>
-              </AccordionPanel>
-            </Card>
+                  </CardBody>
+                </AccordionItemBody>
+              </AccordionItemContent>
+            </CardRoot>
           </AccordionItem>
 
           {/* Search Preferences */}
-          <AccordionItem border="none" mb="4">
-            <Card>
-              <AccordionButton as={CardHeader} _hover={{ bg: 'gray.50' }}>
+          <AccordionItem value="search" border="none" mb="4">
+            <CardRoot>
+              <CardHeader p="0" _hover={{ bg: 'gray.50' }}>
+                <AccordionItemTrigger
+                  px={{ base: 4, md: 6 }}
+                  py="4"
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="space-between"
+                  w="full"
+                >
                 <Box flex="1" textAlign="left">
                   <Heading size="md">Search Preferences</Heading>
                   <Text fontSize="sm" color="gray.500" mt="1">
                     Customize your scholarship search criteria
                   </Text>
                 </Box>
-                <AccordionIcon fontSize="2xl" color="brand.700" />
-              </AccordionButton>
-              <AccordionPanel as={CardBody} p="0">
-                <CardBody>
-            <Stack spacing="6">
-              <SimpleGrid columns={{ base: 1, md: 2 }} spacing="6">
+                <AccordionItemIndicator fontSize="2xl" color="brand.700" />
+                </AccordionItemTrigger>
+              </CardHeader>
+              <AccordionItemContent>
+                <AccordionItemBody p="0">
+                  <CardBody>
+            <Stack gap="6">
+              <SimpleGrid columns={{ base: 1, md: 2 }} gap="6">
                 <Field.Root>
                   <Field.Label fontSize={{ base: 'lg', md: 'sm' }} fontWeight={{ base: 'semibold', md: 'normal' }}>Target Type</Field.Label>
-                  <Select
-                    value={targetType}
-                    onChange={(e) => setTargetType(e.target.value)}
-                    placeholder="Select target type"
-                    size={{ base: 'lg', md: 'md' }}
-                    fontSize={{ base: 'lg', md: 'sm' }}
-                    height={{ base: '48px', md: 'auto' }}
-                  >
-                    {TARGET_TYPES.map((type) => (
-                      <option key={type} value={type} style={{ fontSize: '18px', padding: '12px' }}>
-                        {type}
-                      </option>
-                    ))}
-                  </Select>
+                  <NativeSelectRoot size={{ base: 'lg', md: 'md' }}>
+                    <NativeSelectField
+                      value={targetType}
+                      onChange={(e) => setTargetType(e.target.value)}
+                      fontSize={{ base: 'lg', md: 'sm' }}
+                      height={{ base: '48px', md: 'auto' }}
+                    >
+                      <option value="">Select target type</option>
+                      {TARGET_TYPES.map((type) => (
+                        <option key={type} value={type} style={{ fontSize: '18px', padding: '12px' }}>
+                          {type}
+                        </option>
+                      ))}
+                    </NativeSelectField>
+                  </NativeSelectRoot>
                 </Field.Root>
 
                 <Field.Root>
                   <Field.Label fontSize={{ base: 'lg', md: 'sm' }} fontWeight={{ base: 'semibold', md: 'normal' }}>Academic Level</Field.Label>
-                  <Select
-                    value={academicLevel}
-                    onChange={(e) => setAcademicLevel(e.target.value)}
-                    placeholder="Select academic level"
-                    size={{ base: 'lg', md: 'md' }}
-                    fontSize={{ base: 'lg', md: 'sm' }}
-                    height={{ base: '48px', md: 'auto' }}
-                  >
-                    {ACADEMIC_LEVELS.map((level) => (
-                      <option key={level} value={level} style={{ fontSize: '18px', padding: '12px' }}>
-                        {level}
-                      </option>
-                    ))}
-                  </Select>
+                  <NativeSelectRoot size={{ base: 'lg', md: 'md' }}>
+                    <NativeSelectField
+                      value={academicLevel}
+                      onChange={(e) => setAcademicLevel(e.target.value)}
+                      fontSize={{ base: 'lg', md: 'sm' }}
+                      height={{ base: '48px', md: 'auto' }}
+                    >
+                      <option value="">Select academic level</option>
+                      {ACADEMIC_LEVELS.map((level) => (
+                        <option key={level} value={level} style={{ fontSize: '18px', padding: '12px' }}>
+                          {level}
+                        </option>
+                      ))}
+                    </NativeSelectField>
+                  </NativeSelectRoot>
                 </Field.Root>
               </SimpleGrid>
 
-              <SimpleGrid columns={{ base: 1, md: 2 }} spacing="6">
+              <SimpleGrid columns={{ base: 1, md: 2 }} gap="6">
                 <Field.Root>
                   <Field.Label fontSize={{ base: 'lg', md: 'sm' }} fontWeight={{ base: 'semibold', md: 'normal' }}>Gender</Field.Label>
-                  <Select
-                    value={gender}
-                    onChange={(e) => setGender(e.target.value)}
-                    placeholder="Select gender"
-                    size={{ base: 'lg', md: 'md' }}
-                    fontSize={{ base: 'lg', md: 'sm' }}
-                    height={{ base: '48px', md: 'auto' }}
-                  >
-                    {GENDER_OPTIONS.map((g) => (
-                      <option key={g} value={g} style={{ fontSize: '18px', padding: '12px' }}>
-                        {g}
-                      </option>
-                    ))}
-                  </Select>
+                  <NativeSelectRoot size={{ base: 'lg', md: 'md' }}>
+                    <NativeSelectField
+                      value={gender}
+                      onChange={(e) => setGender(e.target.value)}
+                      fontSize={{ base: 'lg', md: 'sm' }}
+                      height={{ base: '48px', md: 'auto' }}
+                    >
+                      <option value="">Select gender</option>
+                      {GENDER_OPTIONS.map((g) => (
+                        <option key={g} value={g} style={{ fontSize: '18px', padding: '12px' }}>
+                          {g}
+                        </option>
+                      ))}
+                    </NativeSelectField>
+                  </NativeSelectRoot>
                 </Field.Root>
 
                 <Field.Root>
                   <Field.Label fontSize={{ base: 'lg', md: 'sm' }} fontWeight={{ base: 'semibold', md: 'normal' }}>Ethnicity</Field.Label>
-                  <Select
-                    value={ethnicity}
-                    onChange={(e) => setEthnicity(e.target.value)}
-                    placeholder="Select ethnicity"
-                    size={{ base: 'lg', md: 'md' }}
-                    fontSize={{ base: 'lg', md: 'sm' }}
-                    height={{ base: '48px', md: 'auto' }}
-                  >
-                    {ETHNICITY_OPTIONS.map((e) => (
-                      <option key={e} value={e} style={{ fontSize: '18px', padding: '12px' }}>
-                        {e}
-                      </option>
-                    ))}
-                  </Select>
+                  <NativeSelectRoot size={{ base: 'lg', md: 'md' }}>
+                    <NativeSelectField
+                      value={ethnicity}
+                      onChange={(e) => setEthnicity(e.target.value)}
+                      fontSize={{ base: 'lg', md: 'sm' }}
+                      height={{ base: '48px', md: 'auto' }}
+                    >
+                      <option value="">Select ethnicity</option>
+                      {ETHNICITY_OPTIONS.map((eth) => (
+                        <option key={eth} value={eth} style={{ fontSize: '18px', padding: '12px' }}>
+                          {eth}
+                        </option>
+                      ))}
+                    </NativeSelectField>
+                  </NativeSelectRoot>
                 </Field.Root>
               </SimpleGrid>
 
               <Field.Root>
                 <Field.Label fontSize={{ base: 'md', md: 'sm' }}>Minimum Award Amount ($)</Field.Label>
-                <NumberInput
-                  value={minAward}
-                  onChange={(_, value) => setMinAward(value)}
+                <Input
+                  type="number"
                   min={0}
+                  value={minAward ?? ''}
+                  onChange={(e) => setMinAward(e.target.value === '' ? undefined : Number(e.target.value))}
+                  placeholder="Minimum award amount"
                   size={{ base: 'lg', md: 'md' }}
-                >
-                  <NumberInputField 
-                    placeholder="Minimum award amount"
-                    fontSize={{ base: 'md', md: 'sm' }}
-                  />
-                  <NumberInputStepper>
-                    <NumberIncrementStepper />
-                    <NumberDecrementStepper />
-                  </NumberInputStepper>
-                </NumberInput>
+                  fontSize={{ base: 'md', md: 'sm' }}
+                />
               </Field.Root>
 
               <Field.Root>
                 <Field.Label fontSize={{ base: 'md', md: 'sm' }}>Subject Areas</Field.Label>
-                <Wrap spacing="2" mb="3">
+                <Wrap gap="2" mb="3">
                   {subjectAreas.map((area) => (
-                    <Tag key={area} size={{ base: 'lg', md: 'md' }} colorScheme="blue" fontSize={{ base: 'sm', md: 'xs' }}>
+                    <TagRoot key={area} size={{ base: 'lg', md: 'md' }} colorPalette="blue" fontSize={{ base: 'sm', md: 'xs' }}>
                       <TagLabel>{area}</TagLabel>
-                      <TagCloseButton onClick={() => handleRemoveSubjectArea(area)} />
-                    </Tag>
+                      <TagCloseTrigger onClick={() => handleRemoveSubjectArea(area)} />
+                    </TagRoot>
                   ))}
                 </Wrap>
                 <Box display="flex" gap="2" flexDirection={{ base: 'column', md: 'row' }}>
-                  <Select
-                    value={newSubjectArea}
-                    onChange={(e) => setNewSubjectArea(e.target.value)}
-                    placeholder="Select subject area to add"
-                    flex="1"
-                    size={{ base: 'lg', md: 'md' }}
-                    fontSize={{ base: 'lg', md: 'sm' }}
-                    height={{ base: '48px', md: 'auto' }}
-                  >
-                    {SUBJECT_AREAS.filter((area) => !subjectAreas.includes(area)).map(
-                      (area) => (
+                  <NativeSelectRoot size={{ base: 'lg', md: 'md' }} flex="1">
+                    <NativeSelectField
+                      value={newSubjectArea}
+                      onChange={(e) => setNewSubjectArea(e.target.value)}
+                      fontSize={{ base: 'lg', md: 'sm' }}
+                      height={{ base: '48px', md: 'auto' }}
+                    >
+                      <option value="">Select subject area to add</option>
+                      {SUBJECT_AREAS.filter((area) => !subjectAreas.includes(area)).map((area) => (
                         <option key={area} value={area} style={{ fontSize: '18px', padding: '12px' }}>
                           {area}
                         </option>
-                      )
-                    )}
-                  </Select>
+                      ))}
+                    </NativeSelectField>
+                  </NativeSelectRoot>
                   <Button 
                     onClick={handleAddSubjectArea} 
-                    isDisabled={!newSubjectArea}
+                    disabled={!newSubjectArea}
                     size={{ base: 'lg', md: 'md' }}
                     width={{ base: '100%', md: 'auto' }}
                     fontSize={{ base: 'lg', md: 'md' }}
@@ -467,42 +486,61 @@ function Profile() {
               </Field.Root>
 
               <Stack>
-                <Checkbox
-                  isChecked={essayRequired}
-                  onChange={(e) => setEssayRequired(e.target.checked)}
+                <CheckboxRoot
+                  checked={essayRequired}
+                  onCheckedChange={(details) => setEssayRequired(Boolean(details.checked))}
                   size={{ base: 'lg', md: 'md' }}
                 >
-                  <Text fontSize={{ base: 'md', md: 'sm' }}>Essay Required</Text>
-                </Checkbox>
-                <Checkbox
-                  isChecked={recommendationRequired}
-                  onChange={(e) => setRecommendationRequired(e.target.checked)}
+                  <CheckboxHiddenInput />
+                  <CheckboxControl />
+                  <CheckboxLabel>
+                    <Text fontSize={{ base: 'md', md: 'sm' }}>Essay Required</Text>
+                  </CheckboxLabel>
+                </CheckboxRoot>
+                <CheckboxRoot
+                  checked={recommendationRequired}
+                  onCheckedChange={(details) => setRecommendationRequired(Boolean(details.checked))}
                   size={{ base: 'lg', md: 'md' }}
                 >
-                  <Text fontSize={{ base: 'md', md: 'sm' }}>Recommendation Required</Text>
-                </Checkbox>
+                  <CheckboxHiddenInput />
+                  <CheckboxControl />
+                  <CheckboxLabel>
+                    <Text fontSize={{ base: 'md', md: 'sm' }}>Recommendation Required</Text>
+                  </CheckboxLabel>
+                </CheckboxRoot>
               </Stack>
             </Stack>
-                </CardBody>
-              </AccordionPanel>
-            </Card>
+                  </CardBody>
+                </AccordionItemBody>
+              </AccordionItemContent>
+            </CardRoot>
           </AccordionItem>
 
           {/* Notification Preferences */}
-          <AccordionItem border="none" mb="4">
-            <Card>
-              <AccordionButton as={CardHeader} _hover={{ bg: 'gray.50' }}>
+          <AccordionItem value="notifications" border="none" mb="4">
+            <CardRoot>
+              <CardHeader p="0" _hover={{ bg: 'gray.50' }}>
+                <AccordionItemTrigger
+                  px={{ base: 4, md: 6 }}
+                  py="4"
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="space-between"
+                  w="full"
+                >
                 <Box flex="1" textAlign="left">
                   <Heading size="md">Notification Preferences</Heading>
                   <Text fontSize="sm" color="gray.500" mt="1">
                     Control when you receive reminder emails
                   </Text>
                 </Box>
-                <AccordionIcon fontSize="2xl" color="brand.700" />
-              </AccordionButton>
-              <AccordionPanel as={CardBody} p="0">
-                <CardBody>
-            <Stack spacing="4">
+                <AccordionItemIndicator fontSize="2xl" color="brand.700" />
+                </AccordionItemTrigger>
+              </CardHeader>
+              <AccordionItemContent>
+                <AccordionItemBody p="0">
+                  <CardBody>
+            <Stack gap="4">
               <Field.Root display="flex" alignItems="center" flexDirection={{ base: 'column', md: 'row' }}>
                 <Box flex="1" mb={{ base: 2, md: 0 }}>
                   <Field.Label mb="0" fontSize={{ base: 'md', md: 'sm' }}>Application Reminders</Field.Label>
@@ -510,11 +548,14 @@ function Profile() {
                     Receive email reminders for upcoming scholarship application deadlines
                   </Text>
                 </Box>
-                <Checkbox
-                  isChecked={applicationRemindersEnabled}
-                  onChange={(e) => setApplicationRemindersEnabled(e.target.checked)}
+                <CheckboxRoot
+                  checked={applicationRemindersEnabled}
+                  onCheckedChange={(details) => setApplicationRemindersEnabled(Boolean(details.checked))}
                   size={{ base: 'lg', md: 'lg' }}
-                />
+                >
+                  <CheckboxHiddenInput />
+                  <CheckboxControl />
+                </CheckboxRoot>
               </Field.Root>
 
               <Field.Root display="flex" alignItems="center" flexDirection={{ base: 'column', md: 'row' }}>
@@ -524,26 +565,30 @@ function Profile() {
                     Receive email reminders for collaboration tasks and deadlines
                   </Text>
                 </Box>
-                <Checkbox
-                  isChecked={collaborationRemindersEnabled}
-                  onChange={(e) => setCollaborationRemindersEnabled(e.target.checked)}
+                <CheckboxRoot
+                  checked={collaborationRemindersEnabled}
+                  onCheckedChange={(details) => setCollaborationRemindersEnabled(Boolean(details.checked))}
                   size={{ base: 'lg', md: 'lg' }}
-                />
+                >
+                  <CheckboxHiddenInput />
+                  <CheckboxControl />
+                </CheckboxRoot>
               </Field.Root>
             </Stack>
-                </CardBody>
-              </AccordionPanel>
-            </Card>
+                  </CardBody>
+                </AccordionItemBody>
+              </AccordionItemContent>
+            </CardRoot>
           </AccordionItem>
-        </Accordion>
+        </AccordionRoot>
 
         {/* Save Button */}
         <Box>
           <Button
-            colorScheme="blue"
+            colorPalette="blue"
             size={{ base: 'md', md: 'lg' }}
             onClick={handleSave}
-            isLoading={saving}
+            loading={saving}
             loadingText="Saving..."
             width={{ base: '100%', md: 'auto' }}
           >

@@ -38,8 +38,8 @@ function ForgotPassword() {
 
   return (
     <Container maxW="lg" py={{ base: '8', md: '24' }} px={{ base: '4', md: '6' }}>
-      <Stack spacing={{ base: '6', md: '8' }}>
-        <Stack spacing="6" align="center">
+      <Stack gap={{ base: '6', md: '8' }}>
+        <Stack gap="6" align="center">
           <Heading size={{ base: 'lg', md: 'xl' }}>Forgot password?</Heading>
           <Text color="gray.600" textAlign="center" fontSize={{ base: 'sm', md: 'md' }}>
             Enter your email and we&apos;ll send you a password reset link.
@@ -49,7 +49,7 @@ function ForgotPassword() {
         <Card>
           <CardBody>
             <form onSubmit={handleSubmit}>
-              <Stack spacing="6">
+              <Stack gap="6">
                 <Field.Root required>
                   <Field.Label>Email</Field.Label>
                   <Input

@@ -120,7 +120,7 @@ function EssayForm({ isOpen, onClose, applicationId, essay, onSuccess }: EssayFo
           >
             <Flex justify="space-between" align="center" flexWrap="wrap" gap="4">
               <span>{isEditMode ? 'Edit Essay' : 'Add Essay'}</span>
-              <HStack spacing="3">
+              <HStack gap="3">
                 <Button
                   type="submit"
                   form="essay-form"
@@ -145,7 +145,7 @@ function EssayForm({ isOpen, onClose, applicationId, essay, onSuccess }: EssayFo
           </DialogHeader>
           <DialogCloseTrigger disabled={submitting} />
           <DialogBody>
-            <Stack spacing="4">
+            <Stack gap="4">
               <Field.Root>
                 <Field.Label>Theme/Topic</Field.Label>
                 <Input

@@ -108,7 +108,7 @@ function ScholarshipSearch() {
 
   return (
     <Container maxW="7xl" py={8}>
-      <Stack spacing={8}>
+      <Stack gap={8}>
         {/* Header */}
         <Box>
           <Heading size="lg" mb={2}>Scholarship Search</Heading>
@@ -120,7 +120,7 @@ function ScholarshipSearch() {
         {/* Search Filters */}
         <Card>
           <CardBody>
-            <VStack spacing={4} align="stretch">
+            <VStack gap={4} align="stretch">
               {/* Keyword Search */}
               <Box>
                 <Text fontWeight="semibold" mb={2}>Search</Text>
@@ -137,7 +137,7 @@ function ScholarshipSearch() {
               </Box>
 
               {/* Filters */}
-              <HStack spacing={4} flexWrap="wrap">
+              <HStack gap={4} flexWrap="wrap">
                 {/* Category */}
                 <Box flex="1" minW="200px">
                   <Text fontWeight="semibold" mb={2}>Category</Text>
@@ -199,7 +199,7 @@ function ScholarshipSearch() {
             <Spinner size="xl" />
           </Flex>
         ) : (
-          <Stack spacing={4}>
+          <Stack gap={4}>
             <Text fontWeight="semibold">
               {scholarships.length} scholarship{scholarships.length !== 1 ? 's' : ''} found
             </Text>
@@ -207,7 +207,7 @@ function ScholarshipSearch() {
             {scholarships.map((scholarship) => (
               <Card key={scholarship.id} _hover={{ shadow: 'md' }} cursor="pointer">
                 <CardBody>
-                  <Stack spacing={3}>
+                  <Stack gap={3}>
                     {/* Header */}
                     <Flex justify="space-between" align="start">
                       <Box flex="1">
@@ -231,7 +231,7 @@ function ScholarshipSearch() {
                     )}
 
                     {/* Meta */}
-                    <HStack spacing={4} fontSize="sm" color="gray.600">
+                    <HStack gap={4} fontSize="sm" color="gray.600">
                       {scholarship.deadline && (
                         <Text>📅 Due: {new Date(scholarship.deadline).toLocaleDateString()}</Text>
                       )}
@@ -244,7 +244,7 @@ function ScholarshipSearch() {
                     </HStack>
 
                     {/* Actions */}
-                    <HStack spacing={2}>
+                    <HStack gap={2}>
                       <Button
                         size="sm"
                         colorScheme="blue"

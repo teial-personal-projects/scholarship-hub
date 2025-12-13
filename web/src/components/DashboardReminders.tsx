@@ -122,11 +122,11 @@ function DashboardReminders() {
   }
 
   return (
-    <Stack spacing="4">
+    <Stack gap="4">
       {/* Summary Badge */}
       <Card bg={hasOverdueItems ? 'red.50' : 'blue.50'} borderColor={hasOverdueItems ? 'red.200' : 'blue.200'} borderWidth="1px">
         <CardBody>
-          <HStack spacing="4" flexWrap="wrap">
+          <HStack gap="4" flexWrap="wrap">
             {hasOverdueItems && (
               <Badge key="overdue" colorScheme="red" fontSize="md" px="3" py="1" borderRadius="full">
                 {reminders.stats.totalOverdue} Overdue
@@ -159,7 +159,7 @@ function DashboardReminders() {
           </CardHeader>
           <Collapse in={showApplications}>
             <CardBody pt="0">
-              <Stack spacing="3">
+              <Stack gap="3">
                 {reminders.applications.overdue.map((app) => {
                   const daysUntilDue = getDaysUntilDue(app.dueDate);
                   return (
@@ -217,7 +217,7 @@ function DashboardReminders() {
           </CardHeader>
           <Collapse in={showApplications}>
             <CardBody pt="0">
-              <Stack spacing="3">
+              <Stack gap="3">
                 {reminders.applications.dueSoon.map((app) => {
                   const daysUntilDue = getDaysUntilDue(app.dueDate);
                   return (
@@ -275,7 +275,7 @@ function DashboardReminders() {
           </CardHeader>
           <Collapse in={showCollaborations}>
             <CardBody pt="0">
-              <Stack spacing="3">
+              <Stack gap="3">
                 {reminders.collaborations.overdue.map((collab) => {
                   const daysUntilDue = collab.nextActionDueDate ? getDaysUntilDue(collab.nextActionDueDate) : null;
                   return (
@@ -336,7 +336,7 @@ function DashboardReminders() {
           </CardHeader>
           <Collapse in={showCollaborations}>
             <CardBody pt="0">
-              <Stack spacing="3">
+              <Stack gap="3">
                 {reminders.collaborations.dueSoon.map((collab) => {
                   const daysUntilDue = collab.nextActionDueDate ? getDaysUntilDue(collab.nextActionDueDate) : null;
                   return (

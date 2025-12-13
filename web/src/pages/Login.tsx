@@ -42,8 +42,8 @@ function Login() {
 
   return (
     <Container maxW="lg" py={{ base: '8', md: '24' }} px={{ base: '4', md: '6' }}>
-      <Stack spacing={{ base: '6', md: '8' }}>
-        <Stack spacing="6" align="center">
+      <Stack gap={{ base: '6', md: '8' }}>
+        <Stack gap="6" align="center">
           <Heading size={{ base: 'lg', md: 'xl' }}>ScholarshipHub</Heading>
           <Text color="gray.600" fontSize={{ base: 'sm', md: 'md' }}>Sign in to your account</Text>
         </Stack>
@@ -51,7 +51,7 @@ function Login() {
         <Card>
           <CardBody>
             <form onSubmit={handleSubmit}>
-              <Stack spacing="6">
+              <Stack gap="6">
                 <Field.Root required>
                   <Field.Label>Email</Field.Label>
                   <Input

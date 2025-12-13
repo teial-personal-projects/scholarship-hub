@@ -140,7 +140,7 @@ const CollaboratorForm: React.FC<CollaboratorFormProps> = ({
           >
             <Flex justify="space-between" align="center" flexWrap="wrap" gap="4">
               <span>{isEditMode ? 'Edit' : 'Add'} Collaborator</span>
-              <HStack spacing="3">
+              <HStack gap="3">
                 <Button
                   type="submit"
                   form="collaborator-form"
@@ -166,7 +166,7 @@ const CollaboratorForm: React.FC<CollaboratorFormProps> = ({
           <DialogCloseTrigger disabled={isLoading} />
 
           <DialogBody>
-            <VStack spacing={4}>
+            <VStack gap={4}>
               <Field.Root required>
                 <Field.Label>First Name</Field.Label>
                 <Input

@@ -3,22 +3,21 @@
  * Shows all collaborations assigned to the logged-in user as a collaborator
  */
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   Container,
   Heading,
   Stack,
-  Tabs,
-  TabList,
-  TabPanels,
-  Tab,
-  TabPanel,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
+  TabsRoot,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+  TableRoot,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableColumnHeader,
+  TableCell,
   Text,
   Badge,
   Button,
@@ -32,12 +31,12 @@ import {
   DialogBody,
   DialogCloseTrigger,
   useDisclosure,
-  Card,
+  CardRoot,
   CardBody,
   Flex,
   HStack
 } from '@chakra-ui/react';
-import { useCollaborations } from '../hooks/useCollaborations';
+import { useCollaboratorCollaborations } from '../hooks/useCollaborations';
 import type { CollaborationResponse } from '@scholarship-hub/shared';
 import CollaborationHistory from '../components/CollaborationHistory';
 import { apiPatch } from '../services/api';
@@ -45,22 +44,18 @@ import { formatDateNoTimezone } from '../utils/date';
 import { useToastHelpers } from '../utils/toast';
 
 function CollaboratorDashboard() {
-  const { collaborations, loading, fetchCollaborations } = useCollaborations();
+  const { data: collaborations = [], isLoading: loading, refetch } = useCollaboratorCollaborations();
   const { showSuccess, showError } = useToastHelpers();
 
   // History modal state
   const {
     open: isHistoryOpen,
     onOpen: onHistoryOpen,
-    onClose: onHistoryClose,
     setOpen: setHistoryOpen,
   } = useDisclosure();
   const [historyCollaborationId, setHistoryCollaborationId] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState<number | null>(null);
-
-  useEffect(() => {
-    fetchCollaborations();
-  }, [fetchCollaborations]);
+  const [activeTab, setActiveTab] = useState<'all' | 'recommendations' | 'essayReviews' | 'guidance'>('all');
 
   // Handle marking collaboration as submitted
   const handleMarkAsSubmitted = async (collaborationId: number) => {
@@ -75,7 +70,7 @@ function CollaboratorDashboard() {
       showSuccess('Success', 'Marked as submitted. The student will be notified.', 3000, true);
 
       // Refresh collaborations
-      await fetchCollaborations();
+      await refetch();
     } catch (error) {
       showError('Error', 'Failed to update collaboration status', 5000, true);
       console.error(error);
@@ -153,51 +148,51 @@ function CollaboratorDashboard() {
       <>
         {/* Desktop Table View */}
         <Box display={{ base: 'none', md: 'block' }} overflowX="auto">
-          <Table variant="simple">
-            <Thead>
-              <Tr>
-                <Th>Student</Th>
-                <Th>Application</Th>
-                <Th>Status</Th>
-                <Th>Due Date</Th>
-                <Th>Last Updated</Th>
-                <Th>Actions</Th>
-              </Tr>
-            </Thead>
-            <Tbody>
+          <TableRoot>
+            <TableHeader>
+              <TableRow>
+                <TableColumnHeader>Student</TableColumnHeader>
+                <TableColumnHeader>Application</TableColumnHeader>
+                <TableColumnHeader>Status</TableColumnHeader>
+                <TableColumnHeader>Due Date</TableColumnHeader>
+                <TableColumnHeader>Last Updated</TableColumnHeader>
+                <TableColumnHeader>Actions</TableColumnHeader>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {collaborationsList.map((collab) => (
-                <Tr key={collab.id}>
-                  <Td fontWeight="semibold">
+                <TableRow key={collab.id}>
+                  <TableCell fontWeight="semibold">
                     {/* Student name would come from user profile */}
                     Student #{collab.userId}
-                  </Td>
-                  <Td>
+                  </TableCell>
+                  <TableCell>
                     {/* Application name would come from joined data */}
                     Application #{collab.applicationId}
                         {/* essayReview collaborations no longer link to a specific essay */}
-                  </Td>
-                  <Td>
+                  </TableCell>
+                  <TableCell>
                     <Badge colorScheme={getStatusColor(collab.status)}>
                       {getStatusLabel(collab.status)}
                     </Badge>
-                  </Td>
-                  <Td>
+                  </TableCell>
+                  <TableCell>
                     {collab.nextActionDueDate ? (
                       formatDateNoTimezone(collab.nextActionDueDate)
                     ) : (
                       <Text color="gray.400">-</Text>
                     )}
-                  </Td>
-                  <Td>
+                  </TableCell>
+                  <TableCell>
                     <Text fontSize="sm" color="gray.600">
                       {formatLastUpdated(collab.updatedAt)}
                     </Text>
-                  </Td>
-                  <Td>
-                    <HStack spacing={2}>
+                  </TableCell>
+                  <TableCell>
+                    <HStack gap={2}>
                       <Button
                         size="sm"
-                        colorScheme="blue"
+                        colorPalette="blue"
                         variant="outline"
                         onClick={() => handleViewHistory(collab.id)}
                       >
@@ -206,27 +201,27 @@ function CollaboratorDashboard() {
                       {collab.status === 'in_progress' && (
                         <Button
                           size="sm"
-                          colorScheme="green"
+                          colorPalette="green"
                           onClick={() => handleMarkAsSubmitted(collab.id)}
-                          isLoading={submitting === collab.id}
+                          loading={submitting === collab.id}
                         >
                           Mark as Submitted
                         </Button>
                       )}
                     </HStack>
-                  </Td>
-                </Tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </Tbody>
-          </Table>
+            </TableBody>
+          </TableRoot>
         </Box>
 
         {/* Mobile Card View */}
-        <Stack spacing="3" display={{ base: 'flex', md: 'none' }}>
+        <Stack gap="3" display={{ base: 'flex', md: 'none' }}>
           {collaborationsList.map((collab) => (
-            <Card key={collab.id}>
+            <CardRoot key={collab.id}>
               <CardBody>
-                <Stack spacing="3">
+                <Stack gap="3">
                   <Flex justify="space-between" align="start">
                     <Box flex="1">
                       <Text fontWeight="bold" fontSize="md" mb="1">
@@ -249,10 +244,10 @@ function CollaboratorDashboard() {
                   <Text fontSize="xs" color="gray.500">
                     Updated: {formatLastUpdated(collab.updatedAt)}
                   </Text>
-                  <Stack spacing={2} width="100%">
+                  <Stack gap={2} width="100%">
                     <Button
                       size="sm"
-                      colorScheme="blue"
+                      colorPalette="blue"
                       variant="outline"
                       onClick={() => handleViewHistory(collab.id)}
                       width="100%"
@@ -262,9 +257,9 @@ function CollaboratorDashboard() {
                     {collab.status === 'in_progress' && (
                       <Button
                         size="sm"
-                        colorScheme="green"
+                        colorPalette="green"
                         onClick={() => handleMarkAsSubmitted(collab.id)}
-                        isLoading={submitting === collab.id}
+                        loading={submitting === collab.id}
                         width="100%"
                       >
                         Mark as Submitted
@@ -273,7 +268,7 @@ function CollaboratorDashboard() {
                   </Stack>
                 </Stack>
               </CardBody>
-            </Card>
+            </CardRoot>
           ))}
         </Stack>
       </>
@@ -283,7 +278,7 @@ function CollaboratorDashboard() {
   if (loading) {
     return (
       <Container maxW="7xl" py={{ base: '4', md: '12' }} px={{ base: '4', md: '6' }}>
-        <Stack spacing="8" align="center">
+        <Stack gap="8" align="center">
           <Spinner size="xl" />
           <Text>Loading collaborations...</Text>
         </Stack>
@@ -293,7 +288,7 @@ function CollaboratorDashboard() {
 
   return (
     <Container maxW="7xl" py={{ base: '4', md: '12' }} px={{ base: '4', md: '6' }}>
-      <Stack spacing={{ base: '4', md: '6' }}>
+      <Stack gap={{ base: '4', md: '6' }}>
         {/* Header */}
         <Box>
           <Heading size={{ base: 'md', md: 'lg' }} mb="2">My Collaborations</Heading>
@@ -303,31 +298,37 @@ function CollaboratorDashboard() {
         </Box>
 
         {/* Tabs for different collaboration types */}
-        <Tabs colorScheme="blue">
+        <TabsRoot value={activeTab} onValueChange={(details) => setActiveTab(details.value as typeof activeTab)}>
           <Box overflowX="auto" overflowY="hidden">
-            <TabList display="flex" minW="max-content" flexWrap={{ base: 'nowrap', md: 'wrap' }}>
-              <Tab whiteSpace="nowrap">All ({collaborations.length})</Tab>
-              <Tab whiteSpace="nowrap">Recommendations ({recommendations.length})</Tab>
-              <Tab whiteSpace="nowrap">Essay Reviews ({essayReviews.length})</Tab>
-              <Tab whiteSpace="nowrap">Guidance ({guidance.length})</Tab>
-            </TabList>
+            <TabsList display="flex" minW="max-content" flexWrap={{ base: 'nowrap', md: 'wrap' }}>
+              <TabsTrigger value="all" whiteSpace="nowrap">
+                All ({collaborations.length})
+              </TabsTrigger>
+              <TabsTrigger value="recommendations" whiteSpace="nowrap">
+                Recommendations ({recommendations.length})
+              </TabsTrigger>
+              <TabsTrigger value="essayReviews" whiteSpace="nowrap">
+                Essay Reviews ({essayReviews.length})
+              </TabsTrigger>
+              <TabsTrigger value="guidance" whiteSpace="nowrap">
+                Guidance ({guidance.length})
+              </TabsTrigger>
+            </TabsList>
           </Box>
 
-          <TabPanels>
-            <TabPanel px={0}>
-              {renderCollaborationsTable(collaborations)}
-            </TabPanel>
-            <TabPanel px={0}>
-              {renderCollaborationsTable(recommendations)}
-            </TabPanel>
-            <TabPanel px={0}>
-              {renderCollaborationsTable(essayReviews)}
-            </TabPanel>
-            <TabPanel px={0}>
-              {renderCollaborationsTable(guidance)}
-            </TabPanel>
-          </TabPanels>
-        </Tabs>
+          <TabsContent value="all" px={0}>
+            {renderCollaborationsTable(collaborations)}
+          </TabsContent>
+          <TabsContent value="recommendations" px={0}>
+            {renderCollaborationsTable(recommendations)}
+          </TabsContent>
+          <TabsContent value="essayReviews" px={0}>
+            {renderCollaborationsTable(essayReviews)}
+          </TabsContent>
+          <TabsContent value="guidance" px={0}>
+            {renderCollaborationsTable(guidance)}
+          </TabsContent>
+        </TabsRoot>
       </Stack>
 
       {/* Collaboration History Modal */}

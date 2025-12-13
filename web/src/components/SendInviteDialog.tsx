@@ -19,7 +19,7 @@ import {
   Box,
   Field,
   Input,
-  Divider,
+  Separator,
   Flex,
 } from '@chakra-ui/react';
 import { apiPost } from '../services/api';
@@ -167,23 +167,23 @@ const SendInviteDialog: React.FC<SendInviteDialogProps> = ({
         >
           <Flex justify="space-between" align="center" flexWrap="wrap" gap="4">
             <span>{isResend ? 'Resend' : 'Send'} Collaboration Invitation</span>
-            <HStack spacing="3">
+            <HStack gap="3">
               {!showSchedule ? (
                 <>
                   <Button
                     variant="outline"
-                    colorScheme="brand"
+                    colorPalette="brand"
                     size="sm"
                     onClick={() => setShowSchedule(true)}
-                    isDisabled={isLoading}
+                    disabled={isLoading}
                   >
                     Schedule
                   </Button>
                   <Button
-                    colorScheme="accent"
+                    colorPalette="accent"
                     size="sm"
                     onClick={handleSendNow}
-                    isLoading={isLoading}
+                    loading={isLoading}
                     loadingText={isResend ? 'Resending...' : 'Sending...'}
                   >
                     {isResend ? 'Resend' : 'Send Now'}
@@ -193,23 +193,23 @@ const SendInviteDialog: React.FC<SendInviteDialogProps> = ({
                 <>
                   <Button
                     variant="outline"
-                    colorScheme="brand"
+                    colorPalette="brand"
                     size="sm"
                     onClick={() => {
                       setShowSchedule(false);
                       setScheduledFor('');
                     }}
-                    isDisabled={isLoading}
+                    disabled={isLoading}
                   >
                     Back
                   </Button>
                   <Button
-                    colorScheme="accent"
+                    colorPalette="accent"
                     size="sm"
                     onClick={handleSchedule}
-                    isLoading={isLoading}
+                    loading={isLoading}
                     loadingText="Scheduling..."
-                    isDisabled={!scheduledFor}
+                    disabled={!scheduledFor}
                   >
                     Schedule
                   </Button>
@@ -217,10 +217,10 @@ const SendInviteDialog: React.FC<SendInviteDialogProps> = ({
               )}
               <Button
                 variant="outline"
-                colorScheme="brand"
+                colorPalette="brand"
                 size="sm"
                 onClick={handleClose}
-                isDisabled={isLoading}
+                disabled={isLoading}
               >
                 Cancel
               </Button>
@@ -230,7 +230,7 @@ const SendInviteDialog: React.FC<SendInviteDialogProps> = ({
         <DialogCloseTrigger disabled={isLoading} />
 
         <DialogBody>
-          <VStack align="stretch" spacing={4}>
+          <VStack align="stretch" gap={4}>
             <Box>
               <Text fontSize="sm" color="gray.600" mb={1}>
                 Collaborator
@@ -276,7 +276,7 @@ const SendInviteDialog: React.FC<SendInviteDialogProps> = ({
 
             {showSchedule && (
               <>
-                <Divider />
+                <Separator />
                 <Field.Root required>
                   <Field.Label>Schedule For</Field.Label>
                   <Input

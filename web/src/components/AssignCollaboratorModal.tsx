@@ -134,7 +134,7 @@ const AssignCollaboratorModal: React.FC<AssignCollaboratorModalProps> = ({
           >
             <Flex justify="space-between" align="center" flexWrap="wrap" gap="4">
               <span>Assign Collaborator</span>
-              <HStack spacing="3">
+              <HStack gap="3">
                 <Button
                   type="submit"
                   form="assign-collaborator-form"
@@ -161,7 +161,7 @@ const AssignCollaboratorModal: React.FC<AssignCollaboratorModalProps> = ({
           <DialogCloseTrigger disabled={isLoading} />
 
           <DialogBody>
-            <VStack spacing={4}>
+            <VStack gap={4}>
               <Field.Root required>
                 <Field.Label>Select Collaborator</Field.Label>
                 <Select

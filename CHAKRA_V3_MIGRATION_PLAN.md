@@ -369,7 +369,9 @@ toaster.create({
 </Field.Root>
 ```
 
-### [ ] Step 5.4: Migrate Stack Components
+### [✅] Step 5.4: Migrate Stack Components
+**Status (this repo)**:
+- Replaced `spacing` prop usage with `gap` across `Stack`, `HStack`, `VStack`, and `SimpleGrid` in `web/src`
 **Files affected**: Almost all component files use Stack, VStack, HStack
 
 **Changes**:
@@ -392,10 +394,19 @@ toaster.create({
 </Stack>
 ```
 
-### [ ] Step 5.5: Migrate Tabs
+### [✅] Step 5.5: Migrate Tabs
 **Files affected**:
 - DashboardCollaborations.tsx
 - DashboardPendingResponses.tsx
+
+**Status (this repo)**:
+- Migrated legacy `Tabs` / `TabList` / `TabPanels` / `TabPanel` to v3 `TabsRoot` / `TabsList` / `TabsTrigger` / `TabsContent`
+- Converted index-based tabs to value-based tabs
+- Completed in:
+  - `web/src/pages/Dashboard.tsx`
+  - `web/src/pages/CollaboratorDashboard.tsx`
+  - `web/src/components/DashboardCollaborations.tsx`
+  - `web/src/components/DashboardPendingResponses.tsx`
 
 **Changes**:
 - `TabPanel` → `Tabs.Content` (requires `value` prop)
@@ -427,9 +438,19 @@ toaster.create({
 </Tabs.Root>
 ```
 
-### [ ] Step 5.6: Migrate Divider → Separator
+### [✅] Step 5.6: Migrate Divider → Separator
 **Files affected**:
 - CollaborationHistory.tsx
+
+**Status (this repo)**:
+- Replaced remaining `Divider` usages with `Separator` (and `Box` for vertical separators where appropriate)
+- Completed in:
+  - `web/src/components/CollaborationHistory.tsx`
+  - `web/src/components/SendInviteDialog.tsx`
+  - `web/src/components/Navigation.tsx`
+  - `web/src/pages/ScholarshipDetail.tsx`
+  - `web/src/pages/CollaboratorInvite.tsx`
+  - (and already handled in `web/src/pages/ApplicationDetail.tsx`)
 
 **Simple rename**:
 ```typescript
@@ -442,10 +463,21 @@ import { Separator } from '@chakra-ui/react';
 <Separator />
 ```
 
-### [ ] Step 5.7: Migrate Table Components
+### [✅] Step 5.7: Migrate Table Components
 **Files affected**:
 - DashboardCollaborations.tsx
 - DashboardPendingResponses.tsx
+
+**Status (this repo)**:
+- Migrated legacy `Table` / `Thead` / `Tbody` / `Tr` / `Th` / `Td` to v3 `TableRoot` / `TableHeader` / `TableBody` / `TableRow` / `TableColumnHeader` / `TableCell`
+- Completed in:
+  - `web/src/pages/Dashboard.tsx`
+  - `web/src/pages/ApplicationDetail.tsx`
+  - `web/src/pages/Applications.tsx`
+  - `web/src/pages/Collaborators.tsx`
+  - `web/src/components/DashboardCollaborations.tsx`
+  - `web/src/components/DashboardPendingResponses.tsx`
+  - `web/src/pages/CollaboratorDashboard.tsx`
 
 **Changes**:
 - `Th` → `Table.ColumnHeader`

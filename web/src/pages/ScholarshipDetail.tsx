@@ -13,11 +13,10 @@ import {
   HStack,
   Button,
   Badge,
-  Card,
+  CardRoot,
   CardBody,
   Spinner,
-  Link as ChakraLink,
-  Divider,
+  Separator,
 } from '@chakra-ui/react';
 import { apiGet, apiPost } from '../services/api';
 import type { ScholarshipResponse } from '@scholarship-hub/shared';
@@ -87,11 +86,11 @@ function ScholarshipDetail() {
 
   return (
     <Container maxW="4xl" py={8}>
-      <Stack spacing={6}>
+      <Stack gap={6}>
         {/* Back Button */}
         <Button
-          variant="link"
-          colorScheme="blue"
+          variant="plain"
+          colorPalette="blue"
           onClick={() => navigate(-1)}
           alignSelf="flex-start"
         >
@@ -107,9 +106,9 @@ function ScholarshipDetail() {
         </Box>
 
         {/* Key Info */}
-        <Card>
+        <CardRoot>
           <CardBody>
-            <Stack spacing={4}>
+            <Stack gap={4}>
               {scholarship.amount && (
                 <HStack>
                   <Text fontWeight="bold">💰 Amount:</Text>
@@ -148,67 +147,59 @@ function ScholarshipDetail() {
               )}
             </Stack>
           </CardBody>
-        </Card>
+        </CardRoot>
 
         {/* Description */}
         {scholarship.description && (
-          <Card>
+          <CardRoot>
             <CardBody>
               <Heading size="md" mb={3}>About</Heading>
               <Text whiteSpace="pre-wrap">{scholarship.description}</Text>
             </CardBody>
-          </Card>
+          </CardRoot>
         )}
 
         {/* Eligibility */}
         {scholarship.eligibility && (
-          <Card>
+          <CardRoot>
             <CardBody>
               <Heading size="md" mb={3}>Eligibility</Heading>
               <Text whiteSpace="pre-wrap">{scholarship.eligibility}</Text>
             </CardBody>
-          </Card>
+          </CardRoot>
         )}
 
         {/* Requirements */}
         {scholarship.requirements && (
-          <Card>
+          <CardRoot>
             <CardBody>
               <Heading size="md" mb={3}>Requirements</Heading>
               <Text whiteSpace="pre-wrap">{scholarship.requirements}</Text>
             </CardBody>
-          </Card>
+          </CardRoot>
         )}
 
         {/* Actions */}
-        <Stack spacing={3}>
-          <Divider />
+        <Stack gap={3}>
+          <Separator />
 
           {scholarship.application_url && (
-            <Button
-              as={ChakraLink}
-              href={scholarship.application_url}
-              isExternal
-              colorScheme="blue"
-              size="lg"
-            >
-              Apply on Website →
+            <Button asChild colorPalette="blue" size="lg">
+              <a href={scholarship.application_url} target="_blank" rel="noreferrer noopener">
+                Apply on Website →
+              </a>
             </Button>
           )}
 
           {scholarship.url && !scholarship.application_url && (
-            <Button
-              as={ChakraLink}
-              href={scholarship.url}
-              isExternal
-              colorScheme="blue"
-              size="lg"
-            >
-              Visit Website →
+            <Button asChild colorPalette="blue" size="lg">
+              <a href={scholarship.url} target="_blank" rel="noreferrer noopener">
+                Visit Website →
+              </a>
             </Button>
           )}
 
-          <HStack spacing={3}>
+          <HStack gap={3}>
             <Button
               onClick={handleSave}
               variant="outline"
@@ -218,7 +209,7 @@ function ScholarshipDetail() {
             </Button>
             <Button
               onClick={handleCreateApplication}
-              colorScheme="green"
+              colorPalette="green"
               flex="1"
             >
               Create Application

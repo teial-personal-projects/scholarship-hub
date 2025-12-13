@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import {
   Box,
-  Card,
+  CardRoot,
   CardBody,
   CardHeader,
   Heading,
@@ -9,20 +9,19 @@ import {
   Stack,
   Badge,
   Spinner,
-  Tabs,
-  TabList,
-  TabPanels,
-  Tab,
-  TabPanel,
+  TabsRoot,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
   HStack,
   Link,
   Flex,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
+  TableRoot,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableColumnHeader,
+  TableCell,
 } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
 import { apiGet } from '../services/api';
@@ -45,7 +44,7 @@ function DashboardCollaborations() {
   const [allEssays, setAllEssays] = useState<EssayResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState(0);
+  const [activeTab, setActiveTab] = useState<'recommendations' | 'essayReviews' | 'essays'>('recommendations');
 
   useEffect(() => {
     async function fetchData() {
@@ -210,24 +209,24 @@ function DashboardCollaborations() {
 
   if (loading) {
     return (
-      <Card variant="elevated" bg="white">
+      <CardRoot variant="elevated" bg="white">
         <CardBody>
           <Stack align="center" py="4">
             <Spinner size="lg" />
             <Text>Loading collaborations...</Text>
           </Stack>
         </CardBody>
-      </Card>
+      </CardRoot>
     );
   }
 
   if (error) {
     return (
-      <Card variant="elevated" bg="white">
+      <CardRoot variant="elevated" bg="white">
         <CardBody>
           <Text color="error.500">{error}</Text>
         </CardBody>
-      </Card>
+      </CardRoot>
     );
   }
 
@@ -239,7 +238,7 @@ function DashboardCollaborations() {
       : `Collaborator #${collab.collaboratorId}`;
 
     return (
-      <Tr
+      <TableRow
         key={collab.id}
         _hover={{
           bg: 'highlight.50',
@@ -247,11 +246,11 @@ function DashboardCollaborations() {
         }}
         onClick={() => navigate(`/applications/${collab.applicationId}`)}
       >
-        <Td fontWeight="medium" color="brand.700">
+        <TableCell fontWeight="medium" color="brand.700">
           {applicationName}
-        </Td>
-        <Td color="gray.600">{collaboratorName}</Td>
-        <Td>
+        </TableCell>
+        <TableCell color="gray.600">{collaboratorName}</TableCell>
+        <TableCell>
           <Badge
             colorScheme={getStatusColor(collab.status)}
             borderRadius="full"
@@ -261,13 +260,13 @@ function DashboardCollaborations() {
           >
             {collab.status}
           </Badge>
-        </Td>
-        <Td color="gray.700">
+        </TableCell>
+        <TableCell color="gray.700">
           {collab.nextActionDueDate
             ? formatDate(collab.nextActionDueDate)
             : '-'}
-        </Td>
-        <Td>
+        </TableCell>
+        <TableCell>
           <Link
             color="accent.400"
             fontWeight="semibold"
@@ -280,8 +279,8 @@ function DashboardCollaborations() {
           >
             View →
           </Link>
-        </Td>
-      </Tr>
+        </TableCell>
+      </TableRow>
     );
   };
 
@@ -302,11 +301,11 @@ function DashboardCollaborations() {
       : `Collaborator #${collab.collaboratorId}`;
 
     return (
-      <Card
+      <CardRoot
         key={collab.id}
         cursor="pointer"
         onClick={() => navigate(`/applications/${collab.applicationId}`)}
-        variant="academic"
+        variant="outline"
         bg="highlight.50"
         _hover={{
           transform: 'translateY(-2px)',
@@ -315,7 +314,7 @@ function DashboardCollaborations() {
         transition="all 0.3s"
       >
         <CardBody>
-          <Stack spacing="3">
+          <Stack gap="3">
             <Flex justify="space-between" align="start">
               <Box flex="1">
                 <Text fontWeight="bold" fontSize="md" mb="1" color="brand.700">
@@ -335,7 +334,7 @@ function DashboardCollaborations() {
                 {collab.status}
               </Badge>
             </Flex>
-            <HStack spacing="4" fontSize="sm" color="gray.600">
+            <HStack gap="4" fontSize="sm" color="gray.600">
               {collab.nextActionDueDate && (
                 <Text>
                   <Text as="span" fontWeight="semibold">Due:</Text>{' '}
@@ -345,7 +344,7 @@ function DashboardCollaborations() {
             </HStack>
           </Stack>
         </CardBody>
-      </Card>
+      </CardRoot>
     );
   };
 
@@ -354,7 +353,7 @@ function DashboardCollaborations() {
     const statusLabel = essay.status === 'not_started' ? 'Not Started' : essay.status === 'in_progress' ? 'In Progress' : 'Completed';
 
     return (
-      <Tr
+      <TableRow
         key={essay.id}
         _hover={{
           bg: 'highlight.50',
@@ -362,11 +361,11 @@ function DashboardCollaborations() {
         }}
         onClick={() => navigate(`/applications/${essay.applicationId}`)}
       >
-        <Td fontWeight="medium" color="brand.700">
+        <TableCell fontWeight="medium" color="brand.700">
           {applicationName}
-        </Td>
-        <Td color="gray.600">{essay.theme || 'Untitled Essay'}</Td>
-        <Td>
+        </TableCell>
+        <TableCell color="gray.600">{essay.theme || 'Untitled Essay'}</TableCell>
+        <TableCell>
           <Badge
             colorScheme={getStatusColor(essay.status || 'pending')}
             borderRadius="full"
@@ -376,11 +375,11 @@ function DashboardCollaborations() {
           >
             {statusLabel}
           </Badge>
-        </Td>
-        <Td color="gray.700">
+        </TableCell>
+        <TableCell color="gray.700">
           {essay.wordCount ? `${essay.wordCount} words` : '-'}
-        </Td>
-        <Td>
+        </TableCell>
+        <TableCell>
           <Link
             color="accent.400"
             fontWeight="semibold"
@@ -393,8 +392,8 @@ function DashboardCollaborations() {
           >
             View →
           </Link>
-        </Td>
-      </Tr>
+        </TableCell>
+      </TableRow>
     );
   };
 
@@ -403,11 +402,11 @@ function DashboardCollaborations() {
     const statusLabel = essay.status === 'not_started' ? 'Not Started' : essay.status === 'in_progress' ? 'In Progress' : 'Completed';
 
     return (
-      <Card
+      <CardRoot
         key={essay.id}
         cursor="pointer"
         onClick={() => navigate(`/applications/${essay.applicationId}`)}
-        variant="academic"
+        variant="outline"
         bg="highlight.50"
         _hover={{
           transform: 'translateY(-2px)',
@@ -416,7 +415,7 @@ function DashboardCollaborations() {
         transition="all 0.3s"
       >
         <CardBody>
-          <Stack spacing="3">
+          <Stack gap="3">
             <Flex justify="space-between" align="start">
               <Box flex="1">
                 <Text fontWeight="bold" fontSize="md" mb="1" color="brand.700">
@@ -436,7 +435,7 @@ function DashboardCollaborations() {
                 {statusLabel}
               </Badge>
             </Flex>
-            <HStack spacing="4" fontSize="sm" color="gray.600">
+            <HStack gap="4" fontSize="sm" color="gray.600">
               {essay.wordCount && (
                 <Text>
                   <Text as="span" fontWeight="semibold">Words:</Text>{' '}
@@ -446,12 +445,12 @@ function DashboardCollaborations() {
             </HStack>
           </Stack>
         </CardBody>
-      </Card>
+      </CardRoot>
     );
   };
 
   return (
-    <Card variant="elevated" bg="white">
+    <CardRoot variant="elevated" bg="white">
       <CardHeader
         bg="highlight.50"
         borderTopRadius="xl"
@@ -465,126 +464,124 @@ function DashboardCollaborations() {
         </Heading>
       </CardHeader>
       <CardBody>
-        <Tabs index={activeTab} onChange={setActiveTab}>
-          <TabList>
-            <Tab>
+        <TabsRoot value={activeTab} onValueChange={(details) => setActiveTab(details.value as typeof activeTab)}>
+          <TabsList>
+            <TabsTrigger value="recommendations">
               Recommendations
               {recommendations.length > 0 && (
                 <Badge ml="2" colorScheme="accent" borderRadius="full" px="2" py="0.5">
                   {recommendations.length}
                 </Badge>
               )}
-            </Tab>
-            <Tab>
+            </TabsTrigger>
+            <TabsTrigger value="essayReviews">
               Essay Reviews
               {essayCollaborations.length > 0 && (
                 <Badge ml="2" colorScheme="accent" borderRadius="full" px="2" py="0.5">
                   {essayCollaborations.length}
                 </Badge>
               )}
-            </Tab>
-            <Tab>
+            </TabsTrigger>
+            <TabsTrigger value="essays">
               Essays
               {activeEssays.length > 0 && (
                 <Badge ml="2" colorScheme="accent" borderRadius="full" px="2" py="0.5">
                   {activeEssays.length}
                 </Badge>
               )}
-            </Tab>
-          </TabList>
+            </TabsTrigger>
+          </TabsList>
 
-          <TabPanels>
-            <TabPanel px="0" pt="6">
+          <TabsContent value="recommendations" px="0" pt="6">
               {recommendations.length === 0 ? (
                 renderEmptyState('No recommendation requests yet.', '📝')
               ) : (
                 <>
                   {/* Desktop Table View */}
                   <Box overflowX="auto" display={{ base: 'none', md: 'block' }}>
-                    <Table variant="simple" size="md">
-                      <Thead>
-                        <Tr>
-                          <Th>Application</Th>
-                          <Th>Collaborator</Th>
-                          <Th>Status</Th>
-                          <Th>Due Date</Th>
-                          <Th>Actions</Th>
-                        </Tr>
-                      </Thead>
-                      <Tbody>
+                    <TableRoot size="md">
+                      <TableHeader>
+                        <TableRow>
+                          <TableColumnHeader>Application</TableColumnHeader>
+                          <TableColumnHeader>Collaborator</TableColumnHeader>
+                          <TableColumnHeader>Status</TableColumnHeader>
+                          <TableColumnHeader>Due Date</TableColumnHeader>
+                          <TableColumnHeader>Actions</TableColumnHeader>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
                         {recommendations.map(renderCollaborationRow)}
-                      </Tbody>
-                    </Table>
+                      </TableBody>
+                    </TableRoot>
                   </Box>
                   {/* Mobile Card View */}
-                  <Stack spacing="4" display={{ base: 'flex', md: 'none' }}>
+                  <Stack gap="4" display={{ base: 'flex', md: 'none' }}>
                     {recommendations.map(renderCollaborationCard)}
                   </Stack>
                 </>
               )}
-            </TabPanel>
-            <TabPanel px="0" pt="6">
+          </TabsContent>
+          <TabsContent value="essayReviews" px="0" pt="6">
               {essayCollaborations.length === 0 ? (
                 renderEmptyState('No essay review collaborations yet.', '✏️')
               ) : (
                 <>
                   {/* Desktop Table View */}
                   <Box overflowX="auto" display={{ base: 'none', md: 'block' }}>
-                    <Table variant="simple" size="md">
-                      <Thead>
-                        <Tr>
-                          <Th>Application</Th>
-                          <Th>Collaborator</Th>
-                          <Th>Status</Th>
-                          <Th>Due Date</Th>
-                          <Th>Actions</Th>
-                        </Tr>
-                      </Thead>
-                      <Tbody>
+                    <TableRoot size="md">
+                      <TableHeader>
+                        <TableRow>
+                          <TableColumnHeader>Application</TableColumnHeader>
+                          <TableColumnHeader>Collaborator</TableColumnHeader>
+                          <TableColumnHeader>Status</TableColumnHeader>
+                          <TableColumnHeader>Due Date</TableColumnHeader>
+                          <TableColumnHeader>Actions</TableColumnHeader>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
                         {essayCollaborations.map(renderCollaborationRow)}
-                      </Tbody>
-                    </Table>
+                      </TableBody>
+                    </TableRoot>
                   </Box>
                   {/* Mobile Card View */}
-                  <Stack spacing="4" display={{ base: 'flex', md: 'none' }}>
+                  <Stack gap="4" display={{ base: 'flex', md: 'none' }}>
                     {essayCollaborations.map(renderCollaborationCard)}
                   </Stack>
                 </>
               )}
-            </TabPanel>
-            <TabPanel px="0" pt="6">
+          </TabsContent>
+          <TabsContent value="essays" px="0" pt="6">
               {activeEssays.length === 0 ? (
                 renderEmptyState('No essays in progress.', '📝')
               ) : (
                 <>
                   {/* Desktop Table View */}
                   <Box overflowX="auto" display={{ base: 'none', md: 'block' }}>
-                    <Table variant="simple" size="md">
-                      <Thead>
-                        <Tr>
-                          <Th>Application</Th>
-                          <Th>Theme</Th>
-                          <Th>Status</Th>
-                          <Th>Word Count</Th>
-                          <Th>Actions</Th>
-                        </Tr>
-                      </Thead>
-                      <Tbody>
+                    <TableRoot size="md">
+                      <TableHeader>
+                        <TableRow>
+                          <TableColumnHeader>Application</TableColumnHeader>
+                          <TableColumnHeader>Theme</TableColumnHeader>
+                          <TableColumnHeader>Status</TableColumnHeader>
+                          <TableColumnHeader>Word Count</TableColumnHeader>
+                          <TableColumnHeader>Actions</TableColumnHeader>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
                         {activeEssays.map(renderEssayRow)}
-                      </Tbody>
-                    </Table>
+                      </TableBody>
+                    </TableRoot>
                   </Box>
                   {/* Mobile Card View */}
-                  <Stack spacing="4" display={{ base: 'flex', md: 'none' }}>
+                  <Stack gap="4" display={{ base: 'flex', md: 'none' }}>
                     {activeEssays.map(renderEssayCard)}
                   </Stack>
                 </>
               )}
-            </TabPanel>
-          </TabPanels>
-        </Tabs>
+          </TabsContent>
+        </TabsRoot>
       </CardBody>
-    </Card>
+    </CardRoot>
   );
 }
 

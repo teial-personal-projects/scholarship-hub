@@ -152,7 +152,7 @@ function EditCollaborationModal({
         >
           <Flex justify="space-between" align="center" flexWrap="wrap" gap="4">
             <span>Edit Collaboration</span>
-            <HStack spacing="3">
+            <HStack gap="3">
               <Button
                 colorScheme="accent"
                 size="sm"
@@ -179,7 +179,7 @@ function EditCollaborationModal({
         </DialogHeader>
         <DialogCloseTrigger disabled={updateCollaboration.isPending} />
         <DialogBody>
-          <Stack spacing="4">
+          <Stack gap="4">
             <Field.Root>
               <Field.Label>Collaboration Type</Field.Label>
               <Input
