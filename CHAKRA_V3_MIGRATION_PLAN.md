@@ -32,13 +32,13 @@ Some snippet examples use `@/components/ui/...`. If you follow that convention, 
 
 ## Phase 1: Preparation & Environment Setup
 
-### [ ] Step 1.1: Verify Node.js Version
+### [✅] Step 1.1: Verify Node.js Version
 ```bash
 node --version  # Should be 20.x or higher
 ```
 If not, install Node 20 LTS before proceeding.
 
-### [ ] Step 1.2: Create a Migration Branch
+### [✅] Step 1.2: Create a Migration Branch
 ```bash
 git checkout -b feature/chakra-v3-upgrade
 ```
