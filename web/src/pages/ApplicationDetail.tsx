@@ -26,7 +26,6 @@ import {
   TableColumnHeader,
   TableCell,
   IconButton,
-  Link as ChakraLink,
   useDisclosure,
   DialogRoot,
   DialogBackdrop,
@@ -572,26 +571,6 @@ function ApplicationDetail() {
     >
       <Container as="main" maxW="7xl" px={{ base: '4', md: '6' }}>
         <Stack gap={{ base: '4', md: '6' }}>
-        {/* Skip link for keyboard users */}
-        <ChakraLink
-          href="#main-content"
-          position="absolute"
-          left="4"
-          top="2"
-          px="3"
-          py="2"
-          bg="white"
-          borderRadius="md"
-          boxShadow="md"
-          transform="translateY(-200%)"
-          _focusVisible={{ transform: 'translateY(0)' }}
-          zIndex={1000}
-        >
-          Skip to content
-        </ChakraLink>
-
-        <Box id="main-content" tabIndex={-1} />
-
         {/* Hero summary */}
         <CardRoot
           variant="outline"
@@ -649,19 +628,6 @@ function ApplicationDetail() {
                         textTransform="none"
                       >
                         {application.targetType}
-                      </Badge>
-                    )}
-                    {application.platform && (
-                      <Badge
-                        variant="subtle"
-                        colorPalette="gray"
-                        fontSize={{ base: 'sm', md: 'md' }}
-                        px="2.5"
-                        py="1"
-                        borderRadius="full"
-                        textTransform="none"
-                      >
-                        {application.platform}
                       </Badge>
                     )}
                   </HStack>
@@ -1025,15 +991,6 @@ function ApplicationDetail() {
                 </Text>
                 <Text as="dd">{application.organization || 'Not specified'}</Text>
               </Box>
-
-              {application.platform && (
-                <Box>
-                  <Text as="dt" fontWeight="bold" color="brand.700" mb="1">
-                    Platform
-                  </Text>
-                  <Text as="dd">{application.platform}</Text>
-                </Box>
-              )}
 
               {application.theme && (
                 <Box>
