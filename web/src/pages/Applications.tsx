@@ -24,11 +24,6 @@ import {
   Input,
   NativeSelectRoot,
   NativeSelectField,
-  MenuRoot,
-  MenuTrigger,
-  MenuPositioner,
-  MenuContent,
-  MenuItem,
   DialogRoot,
   DialogBackdrop,
   DialogPositioner,
@@ -40,6 +35,7 @@ import {
   DialogCloseTrigger,
   useDisclosure,
 } from '@chakra-ui/react';
+import { LuEye, LuPencil, LuTrash2, LuHistory } from 'react-icons/lu';
 import { apiGet, apiDelete } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import type { ApplicationResponse } from '@scholarship-hub/shared';
@@ -333,36 +329,48 @@ function Applications() {
                               : '-'}
                           </TableCell>
                           <TableCell>
-                            <MenuRoot>
-                              <MenuTrigger asChild>
-                                <IconButton
-                                  variant="ghost"
-                                  size="sm"
-                                  aria-label="Actions"
-                                  onClick={(e) => e.stopPropagation()}
-                                  _hover={{ bg: 'highlight.100' }}
-                                >
-                                  <Text aria-hidden>⋮</Text>
-                                </IconButton>
-                              </MenuTrigger>
-                              <MenuPositioner>
-                                <MenuContent>
-                                  <MenuItem value="view" onClick={() => navigate(`/applications/${app.id}`)}>
-                                  View Details
-                                  </MenuItem>
-                                  <MenuItem value="edit" onClick={() => navigate(`/applications/${app.id}/edit`)}>
-                                  Edit
-                                  </MenuItem>
-                                  <MenuItem
-                                  value="delete"
-                                  color="error.500"
-                                  onClick={() => handleDeleteClick(app.id)}
-                                >
-                                  Delete
-                                  </MenuItem>
-                                </MenuContent>
-                              </MenuPositioner>
-                            </MenuRoot>
+                            <HStack gap="1" onClick={(e) => e.stopPropagation()}>
+                              <IconButton
+                                variant="ghost"
+                                size="sm"
+                                aria-label="View Details"
+                                onClick={() => navigate(`/applications/${app.id}`)}
+                                colorPalette="blue"
+                                _hover={{ bg: 'blue.50' }}
+                              >
+                                <LuEye />
+                              </IconButton>
+                              <IconButton
+                                variant="ghost"
+                                size="sm"
+                                aria-label="Edit"
+                                onClick={() => navigate(`/applications/${app.id}/edit`)}
+                                colorPalette="gray"
+                                _hover={{ bg: 'gray.50' }}
+                              >
+                                <LuPencil />
+                              </IconButton>
+                              <IconButton
+                                variant="ghost"
+                                size="sm"
+                                aria-label="View History"
+                                onClick={() => navigate(`/applications/${app.id}`)}
+                                colorPalette="purple"
+                                _hover={{ bg: 'purple.50' }}
+                              >
+                                <LuHistory />
+                              </IconButton>
+                              <IconButton
+                                variant="ghost"
+                                size="sm"
+                                aria-label="Delete"
+                                onClick={() => handleDeleteClick(app.id)}
+                                colorPalette="red"
+                                _hover={{ bg: 'red.50' }}
+                              >
+                                <LuTrash2 />
+                              </IconButton>
+                            </HStack>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -416,35 +424,44 @@ function Applications() {
                                 : '-'}
                             </Text>
                           </HStack>
-                          <MenuRoot>
-                            <MenuTrigger asChild>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                colorPalette="brand"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                Actions
-                              </Button>
-                            </MenuTrigger>
-                            <MenuPositioner>
-                              <MenuContent>
-                              <MenuItem value="view" onClick={() => navigate(`/applications/${app.id}`)}>
-                                View Details
-                              </MenuItem>
-                              <MenuItem value="edit" onClick={() => navigate(`/applications/${app.id}/edit`)}>
-                                Edit
-                              </MenuItem>
-                              <MenuItem
-                                value="delete"
-                                color="error.500"
-                                onClick={() => handleDeleteClick(app.id)}
-                              >
-                                Delete
-                              </MenuItem>
-                              </MenuContent>
-                            </MenuPositioner>
-                          </MenuRoot>
+                          <HStack gap="2" onClick={(e) => e.stopPropagation()}>
+                            <IconButton
+                              variant="outline"
+                              size="sm"
+                              aria-label="View Details"
+                              onClick={() => navigate(`/applications/${app.id}`)}
+                              colorPalette="blue"
+                            >
+                              <LuEye />
+                            </IconButton>
+                            <IconButton
+                              variant="outline"
+                              size="sm"
+                              aria-label="Edit"
+                              onClick={() => navigate(`/applications/${app.id}/edit`)}
+                              colorPalette="gray"
+                            >
+                              <LuPencil />
+                            </IconButton>
+                            <IconButton
+                              variant="outline"
+                              size="sm"
+                              aria-label="View History"
+                              onClick={() => navigate(`/applications/${app.id}`)}
+                              colorPalette="purple"
+                            >
+                              <LuHistory />
+                            </IconButton>
+                            <IconButton
+                              variant="outline"
+                              size="sm"
+                              aria-label="Delete"
+                              onClick={() => handleDeleteClick(app.id)}
+                              colorPalette="red"
+                            >
+                              <LuTrash2 />
+                            </IconButton>
+                          </HStack>
                         </Stack>
                       </CardBody>
                     </CardRoot>

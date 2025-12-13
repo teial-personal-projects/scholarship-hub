@@ -26,11 +26,6 @@ import {
   TableColumnHeader,
   TableCell,
   IconButton,
-  MenuRoot,
-  MenuTrigger,
-  MenuPositioner,
-  MenuContent,
-  MenuItem,
   Link as ChakraLink,
   useDisclosure,
   DialogRoot,
@@ -58,6 +53,7 @@ import AddCollaborationModal from '../components/AddCollaborationModal';
 import EditCollaborationModal from '../components/EditCollaborationModal';
 import { formatDateNoTimezone, formatRelativeTimestamp } from '../utils/date';
 import { useToastHelpers } from '../utils/toast';
+import { LuPencil, LuTrash2, LuExternalLink, LuHistory, LuMail, LuCheck } from 'react-icons/lu';
 
 function ApplicationDetail() {
   const { id } = useParams<{ id: string }>();
@@ -1153,31 +1149,40 @@ function ApplicationDetail() {
                           </TableCell>
                           <TableCell>{essay.wordCount || '-'}</TableCell>
                           <TableCell>
-                            <MenuRoot>
-                              <MenuTrigger asChild>
-                                <IconButton variant="ghost" size="sm" aria-label="Essay actions">
-                                  <Text aria-hidden>⋮</Text>
+                            <HStack gap="1">
+                              <IconButton
+                                variant="ghost"
+                                size="sm"
+                                aria-label="View/Edit Essay"
+                                onClick={() => handleEditEssay(essay)}
+                                colorPalette="blue"
+                                _hover={{ bg: 'blue.50' }}
+                              >
+                                <LuPencil />
+                              </IconButton>
+                              {essay.essayLink && (
+                                <IconButton
+                                  variant="ghost"
+                                  size="sm"
+                                  aria-label="Open Document"
+                                  onClick={() => window.open(essay.essayLink!, '_blank', 'noopener,noreferrer')}
+                                  colorPalette="green"
+                                  _hover={{ bg: 'green.50' }}
+                                >
+                                  <LuExternalLink />
                                 </IconButton>
-                              </MenuTrigger>
-                              <MenuPositioner>
-                                <MenuContent>
-                                  <MenuItem value="edit" onClick={() => handleEditEssay(essay)}>
-                                    View/Edit
-                                  </MenuItem>
-                                  {essay.essayLink && (
-                                    <MenuItem
-                                      value="open-doc"
-                                      onClick={() => window.open(essay.essayLink!, '_blank', 'noopener,noreferrer')}
-                                    >
-                                      Open Document <Text as="span" aria-hidden ms="1">↗</Text>
-                                    </MenuItem>
-                                  )}
-                                  <MenuItem value="delete" color="red.500" onClick={() => handleDeleteClick(essay.id)}>
-                                    Delete
-                                  </MenuItem>
-                                </MenuContent>
-                              </MenuPositioner>
-                            </MenuRoot>
+                              )}
+                              <IconButton
+                                variant="ghost"
+                                size="sm"
+                                aria-label="Delete Essay"
+                                onClick={() => handleDeleteClick(essay.id)}
+                                colorPalette="red"
+                                _hover={{ bg: 'red.50' }}
+                              >
+                                <LuTrash2 />
+                              </IconButton>
+                            </HStack>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -1208,31 +1213,37 @@ function ApplicationDetail() {
                             </HStack>
                             {/* word count shown in the row above */}
                           </Box>
-                          <MenuRoot>
-                            <MenuTrigger asChild>
-                              <IconButton variant="ghost" size="sm" aria-label="Essay actions">
-                                <Text aria-hidden>⋮</Text>
+                          <HStack gap="1">
+                            <IconButton
+                              variant="ghost"
+                              size="sm"
+                              aria-label="View/Edit Essay"
+                              onClick={() => handleEditEssay(essay)}
+                              colorPalette="blue"
+                            >
+                              <LuPencil />
+                            </IconButton>
+                            {essay.essayLink && (
+                              <IconButton
+                                variant="ghost"
+                                size="sm"
+                                aria-label="Open Document"
+                                onClick={() => window.open(essay.essayLink!, '_blank', 'noopener,noreferrer')}
+                                colorPalette="green"
+                              >
+                                <LuExternalLink />
                               </IconButton>
-                            </MenuTrigger>
-                            <MenuPositioner>
-                              <MenuContent>
-                                <MenuItem value="edit" onClick={() => handleEditEssay(essay)}>
-                                  View/Edit
-                                </MenuItem>
-                                {essay.essayLink && (
-                                  <MenuItem
-                                    value="open-doc"
-                                    onClick={() => window.open(essay.essayLink!, '_blank', 'noopener,noreferrer')}
-                                  >
-                                    Open Document <Text as="span" aria-hidden ms="1">↗</Text>
-                                  </MenuItem>
-                                )}
-                                <MenuItem value="delete" color="red.500" onClick={() => handleDeleteClick(essay.id)}>
-                                  Delete
-                                </MenuItem>
-                              </MenuContent>
-                            </MenuPositioner>
-                          </MenuRoot>
+                            )}
+                            <IconButton
+                              variant="ghost"
+                              size="sm"
+                              aria-label="Delete Essay"
+                              onClick={() => handleDeleteClick(essay.id)}
+                              colorPalette="red"
+                            >
+                              <LuTrash2 />
+                            </IconButton>
+                          </HStack>
                         </Flex>
                       </CardBody>
                     </CardRoot>
@@ -1326,45 +1337,74 @@ function ApplicationDetail() {
                                     </Text>
                                   </TableCell>
                                   <TableCell>
-                                    <MenuRoot>
-                                      <MenuTrigger asChild>
-                                        <IconButton variant="ghost" size="sm" aria-label="Collaboration actions">
-                                          <Text aria-hidden>⋮</Text>
+                                    <HStack gap="1">
+                                      <IconButton
+                                        variant="ghost"
+                                        size="sm"
+                                        aria-label="View History"
+                                        onClick={() => handleViewHistory(collab.id)}
+                                        colorPalette="purple"
+                                        _hover={{ bg: 'purple.50' }}
+                                      >
+                                        <LuHistory />
+                                      </IconButton>
+                                      <IconButton
+                                        variant="ghost"
+                                        size="sm"
+                                        aria-label="Edit"
+                                        onClick={() => handleEditCollaboration(collab)}
+                                        colorPalette="gray"
+                                        _hover={{ bg: 'gray.50' }}
+                                      >
+                                        <LuPencil />
+                                      </IconButton>
+                                      {collab.status === 'pending' && (
+                                        <IconButton
+                                          variant="ghost"
+                                          size="sm"
+                                          aria-label="Send Invite"
+                                          onClick={() => handleSendInvite(collab)}
+                                          colorPalette="blue"
+                                          _hover={{ bg: 'blue.50' }}
+                                        >
+                                          <LuMail />
                                         </IconButton>
-                                      </MenuTrigger>
-                                      <MenuPositioner>
-                                        <MenuContent>
-                                          <MenuItem value="history" onClick={() => handleViewHistory(collab.id)}>
-                                            View History
-                                          </MenuItem>
-                                          <MenuItem value="edit" onClick={() => handleEditCollaboration(collab)}>
-                                            Edit
-                                          </MenuItem>
-                                          {collab.status === 'pending' && (
-                                            <MenuItem value="send-invite" onClick={() => handleSendInvite(collab)}>
-                                              Send Invite
-                                            </MenuItem>
-                                          )}
-                                          {shouldShowResend(collab) && (
-                                            <MenuItem value="resend-invite" onClick={() => handleSendInvite(collab)}>
-                                              Resend Invite
-                                            </MenuItem>
-                                          )}
-                                          {collab.status === 'submitted' && (
-                                            <MenuItem
-                                              value="mark-completed"
-                                              color="green.500"
-                                              onClick={() => handleUpdateCollaborationStatus(collab.id, 'completed')}
-                                            >
-                                              Mark as Completed
-                                            </MenuItem>
-                                          )}
-                                          <MenuItem value="remove" color="red.500" onClick={() => handleDeleteCollaborationClick(collab.id)}>
-                                            Remove
-                                          </MenuItem>
-                                        </MenuContent>
-                                      </MenuPositioner>
-                                    </MenuRoot>
+                                      )}
+                                      {shouldShowResend(collab) && (
+                                        <IconButton
+                                          variant="ghost"
+                                          size="sm"
+                                          aria-label="Resend Invite"
+                                          onClick={() => handleSendInvite(collab)}
+                                          colorPalette="orange"
+                                          _hover={{ bg: 'orange.50' }}
+                                        >
+                                          <LuMail />
+                                        </IconButton>
+                                      )}
+                                      {collab.status === 'submitted' && (
+                                        <IconButton
+                                          variant="ghost"
+                                          size="sm"
+                                          aria-label="Mark as Completed"
+                                          onClick={() => handleUpdateCollaborationStatus(collab.id, 'completed')}
+                                          colorPalette="green"
+                                          _hover={{ bg: 'green.50' }}
+                                        >
+                                          <LuCheck />
+                                        </IconButton>
+                                      )}
+                                      <IconButton
+                                        variant="ghost"
+                                        size="sm"
+                                        aria-label="Remove"
+                                        onClick={() => handleDeleteCollaborationClick(collab.id)}
+                                        colorPalette="red"
+                                        _hover={{ bg: 'red.50' }}
+                                      >
+                                        <LuTrash2 />
+                                      </IconButton>
+                                    </HStack>
                                   </TableCell>
                                 </TableRow>
                               );
@@ -1402,36 +1442,57 @@ function ApplicationDetail() {
                                       Updated: {formatLastUpdated(collab.updatedAt)}
                                     </Text>
                                   </Box>
-                                  <MenuRoot>
-                                    <MenuTrigger asChild>
-                                      <IconButton variant="ghost" size="sm" aria-label="Collaboration actions">
-                                        <Text aria-hidden>⋮</Text>
+                                  <HStack gap="1">
+                                    <IconButton
+                                      variant="ghost"
+                                      size="sm"
+                                      aria-label="View History"
+                                      onClick={() => handleViewHistory(collab.id)}
+                                      colorPalette="purple"
+                                    >
+                                      <LuHistory />
+                                    </IconButton>
+                                    <IconButton
+                                      variant="ghost"
+                                      size="sm"
+                                      aria-label="Edit"
+                                      onClick={() => handleEditCollaboration(collab)}
+                                      colorPalette="gray"
+                                    >
+                                      <LuPencil />
+                                    </IconButton>
+                                    {collab.status === 'pending' && (
+                                      <IconButton
+                                        variant="ghost"
+                                        size="sm"
+                                        aria-label="Send Invite"
+                                        onClick={() => handleSendInvite(collab)}
+                                        colorPalette="blue"
+                                      >
+                                        <LuMail />
                                       </IconButton>
-                                    </MenuTrigger>
-                                    <MenuPositioner>
-                                      <MenuContent>
-                                        <MenuItem value="history" onClick={() => handleViewHistory(collab.id)}>
-                                          View History
-                                        </MenuItem>
-                                        <MenuItem value="edit" onClick={() => handleEditCollaboration(collab)}>
-                                          Edit
-                                        </MenuItem>
-                                        {collab.status === 'pending' && (
-                                          <MenuItem value="send-invite" onClick={() => handleSendInvite(collab)}>
-                                            Send Invite
-                                          </MenuItem>
-                                        )}
-                                        {shouldShowResend(collab) && (
-                                          <MenuItem value="resend-invite" onClick={() => handleSendInvite(collab)}>
-                                            Resend Invite
-                                          </MenuItem>
-                                        )}
-                                        <MenuItem value="remove" color="red.500" onClick={() => handleDeleteCollaborationClick(collab.id)}>
-                                          Remove
-                                        </MenuItem>
-                                      </MenuContent>
-                                    </MenuPositioner>
-                                  </MenuRoot>
+                                    )}
+                                    {shouldShowResend(collab) && (
+                                      <IconButton
+                                        variant="ghost"
+                                        size="sm"
+                                        aria-label="Resend Invite"
+                                        onClick={() => handleSendInvite(collab)}
+                                        colorPalette="orange"
+                                      >
+                                        <LuMail />
+                                      </IconButton>
+                                    )}
+                                    <IconButton
+                                      variant="ghost"
+                                      size="sm"
+                                      aria-label="Remove"
+                                      onClick={() => handleDeleteCollaborationClick(collab.id)}
+                                      colorPalette="red"
+                                    >
+                                      <LuTrash2 />
+                                    </IconButton>
+                                  </HStack>
                                 </Flex>
                               </CardBody>
                             </CardRoot>
@@ -1487,45 +1548,74 @@ function ApplicationDetail() {
                                     </Text>
                                   </TableCell>
                                   <TableCell>
-                                    <MenuRoot>
-                                      <MenuTrigger asChild>
-                                        <IconButton variant="ghost" size="sm" aria-label="Collaboration actions">
-                                          <Text aria-hidden>⋮</Text>
+                                    <HStack gap="1">
+                                      <IconButton
+                                        variant="ghost"
+                                        size="sm"
+                                        aria-label="View History"
+                                        onClick={() => handleViewHistory(collab.id)}
+                                        colorPalette="purple"
+                                        _hover={{ bg: 'purple.50' }}
+                                      >
+                                        <LuHistory />
+                                      </IconButton>
+                                      <IconButton
+                                        variant="ghost"
+                                        size="sm"
+                                        aria-label="Edit"
+                                        onClick={() => handleEditCollaboration(collab)}
+                                        colorPalette="gray"
+                                        _hover={{ bg: 'gray.50' }}
+                                      >
+                                        <LuPencil />
+                                      </IconButton>
+                                      {collab.status === 'pending' && (
+                                        <IconButton
+                                          variant="ghost"
+                                          size="sm"
+                                          aria-label="Send Invite"
+                                          onClick={() => handleSendInvite(collab)}
+                                          colorPalette="blue"
+                                          _hover={{ bg: 'blue.50' }}
+                                        >
+                                          <LuMail />
                                         </IconButton>
-                                      </MenuTrigger>
-                                      <MenuPositioner>
-                                        <MenuContent>
-                                          <MenuItem value="history" onClick={() => handleViewHistory(collab.id)}>
-                                            View History
-                                          </MenuItem>
-                                          <MenuItem value="edit" onClick={() => handleEditCollaboration(collab)}>
-                                            Edit
-                                          </MenuItem>
-                                          {collab.status === 'pending' && (
-                                            <MenuItem value="send-invite" onClick={() => handleSendInvite(collab)}>
-                                              Send Invite
-                                            </MenuItem>
-                                          )}
-                                          {shouldShowResend(collab) && (
-                                            <MenuItem value="resend-invite" onClick={() => handleSendInvite(collab)}>
-                                              Resend Invite
-                                            </MenuItem>
-                                          )}
-                                          {collab.status === 'submitted' && (
-                                            <MenuItem
-                                              value="mark-completed"
-                                              color="green.500"
-                                              onClick={() => handleUpdateCollaborationStatus(collab.id, 'completed')}
-                                            >
-                                              Mark as Completed
-                                            </MenuItem>
-                                          )}
-                                          <MenuItem value="remove" color="red.500" onClick={() => handleDeleteCollaborationClick(collab.id)}>
-                                            Remove
-                                          </MenuItem>
-                                        </MenuContent>
-                                      </MenuPositioner>
-                                    </MenuRoot>
+                                      )}
+                                      {shouldShowResend(collab) && (
+                                        <IconButton
+                                          variant="ghost"
+                                          size="sm"
+                                          aria-label="Resend Invite"
+                                          onClick={() => handleSendInvite(collab)}
+                                          colorPalette="orange"
+                                          _hover={{ bg: 'orange.50' }}
+                                        >
+                                          <LuMail />
+                                        </IconButton>
+                                      )}
+                                      {collab.status === 'submitted' && (
+                                        <IconButton
+                                          variant="ghost"
+                                          size="sm"
+                                          aria-label="Mark as Completed"
+                                          onClick={() => handleUpdateCollaborationStatus(collab.id, 'completed')}
+                                          colorPalette="green"
+                                          _hover={{ bg: 'green.50' }}
+                                        >
+                                          <LuCheck />
+                                        </IconButton>
+                                      )}
+                                      <IconButton
+                                        variant="ghost"
+                                        size="sm"
+                                        aria-label="Remove"
+                                        onClick={() => handleDeleteCollaborationClick(collab.id)}
+                                        colorPalette="red"
+                                        _hover={{ bg: 'red.50' }}
+                                      >
+                                        <LuTrash2 />
+                                      </IconButton>
+                                    </HStack>
                                   </TableCell>
                                 </TableRow>
                               );
@@ -1563,36 +1653,57 @@ function ApplicationDetail() {
                                       Updated: {formatLastUpdated(collab.updatedAt)}
                                     </Text>
                                   </Box>
-                                  <MenuRoot>
-                                    <MenuTrigger asChild>
-                                      <IconButton variant="ghost" size="sm" aria-label="Collaboration actions">
-                                        <Text aria-hidden>⋮</Text>
+                                  <HStack gap="1">
+                                    <IconButton
+                                      variant="ghost"
+                                      size="sm"
+                                      aria-label="View History"
+                                      onClick={() => handleViewHistory(collab.id)}
+                                      colorPalette="purple"
+                                    >
+                                      <LuHistory />
+                                    </IconButton>
+                                    <IconButton
+                                      variant="ghost"
+                                      size="sm"
+                                      aria-label="Edit"
+                                      onClick={() => handleEditCollaboration(collab)}
+                                      colorPalette="gray"
+                                    >
+                                      <LuPencil />
+                                    </IconButton>
+                                    {collab.status === 'pending' && (
+                                      <IconButton
+                                        variant="ghost"
+                                        size="sm"
+                                        aria-label="Send Invite"
+                                        onClick={() => handleSendInvite(collab)}
+                                        colorPalette="blue"
+                                      >
+                                        <LuMail />
                                       </IconButton>
-                                    </MenuTrigger>
-                                    <MenuPositioner>
-                                      <MenuContent>
-                                        <MenuItem value="history" onClick={() => handleViewHistory(collab.id)}>
-                                          View History
-                                        </MenuItem>
-                                        <MenuItem value="edit" onClick={() => handleEditCollaboration(collab)}>
-                                          Edit
-                                        </MenuItem>
-                                        {collab.status === 'pending' && (
-                                          <MenuItem value="send-invite" onClick={() => handleSendInvite(collab)}>
-                                            Send Invite
-                                          </MenuItem>
-                                        )}
-                                        {shouldShowResend(collab) && (
-                                          <MenuItem value="resend-invite" onClick={() => handleSendInvite(collab)}>
-                                            Resend Invite
-                                          </MenuItem>
-                                        )}
-                                        <MenuItem value="remove" color="red.500" onClick={() => handleDeleteCollaborationClick(collab.id)}>
-                                          Remove
-                                        </MenuItem>
-                                      </MenuContent>
-                                    </MenuPositioner>
-                                  </MenuRoot>
+                                    )}
+                                    {shouldShowResend(collab) && (
+                                      <IconButton
+                                        variant="ghost"
+                                        size="sm"
+                                        aria-label="Resend Invite"
+                                        onClick={() => handleSendInvite(collab)}
+                                        colorPalette="orange"
+                                      >
+                                        <LuMail />
+                                      </IconButton>
+                                    )}
+                                    <IconButton
+                                      variant="ghost"
+                                      size="sm"
+                                      aria-label="Remove"
+                                      onClick={() => handleDeleteCollaborationClick(collab.id)}
+                                      colorPalette="red"
+                                    >
+                                      <LuTrash2 />
+                                    </IconButton>
+                                  </HStack>
                                 </Flex>
                               </CardBody>
                             </CardRoot>
@@ -1648,45 +1759,74 @@ function ApplicationDetail() {
                                     </Text>
                                   </TableCell>
                                   <TableCell>
-                                    <MenuRoot>
-                                      <MenuTrigger asChild>
-                                        <IconButton variant="ghost" size="sm" aria-label="Collaboration actions">
-                                          <Text aria-hidden>⋮</Text>
+                                    <HStack gap="1">
+                                      <IconButton
+                                        variant="ghost"
+                                        size="sm"
+                                        aria-label="View History"
+                                        onClick={() => handleViewHistory(collab.id)}
+                                        colorPalette="purple"
+                                        _hover={{ bg: 'purple.50' }}
+                                      >
+                                        <LuHistory />
+                                      </IconButton>
+                                      <IconButton
+                                        variant="ghost"
+                                        size="sm"
+                                        aria-label="Edit"
+                                        onClick={() => handleEditCollaboration(collab)}
+                                        colorPalette="gray"
+                                        _hover={{ bg: 'gray.50' }}
+                                      >
+                                        <LuPencil />
+                                      </IconButton>
+                                      {collab.status === 'pending' && (
+                                        <IconButton
+                                          variant="ghost"
+                                          size="sm"
+                                          aria-label="Send Invite"
+                                          onClick={() => handleSendInvite(collab)}
+                                          colorPalette="blue"
+                                          _hover={{ bg: 'blue.50' }}
+                                        >
+                                          <LuMail />
                                         </IconButton>
-                                      </MenuTrigger>
-                                      <MenuPositioner>
-                                        <MenuContent>
-                                          <MenuItem value="history" onClick={() => handleViewHistory(collab.id)}>
-                                            View History
-                                          </MenuItem>
-                                          <MenuItem value="edit" onClick={() => handleEditCollaboration(collab)}>
-                                            Edit
-                                          </MenuItem>
-                                          {collab.status === 'pending' && (
-                                            <MenuItem value="send-invite" onClick={() => handleSendInvite(collab)}>
-                                              Send Invite
-                                            </MenuItem>
-                                          )}
-                                          {shouldShowResend(collab) && (
-                                            <MenuItem value="resend-invite" onClick={() => handleSendInvite(collab)}>
-                                              Resend Invite
-                                            </MenuItem>
-                                          )}
-                                          {collab.status === 'submitted' && (
-                                            <MenuItem
-                                              value="mark-completed"
-                                              color="green.500"
-                                              onClick={() => handleUpdateCollaborationStatus(collab.id, 'completed')}
-                                            >
-                                              Mark as Completed
-                                            </MenuItem>
-                                          )}
-                                          <MenuItem value="remove" color="red.500" onClick={() => handleDeleteCollaborationClick(collab.id)}>
-                                            Remove
-                                          </MenuItem>
-                                        </MenuContent>
-                                      </MenuPositioner>
-                                    </MenuRoot>
+                                      )}
+                                      {shouldShowResend(collab) && (
+                                        <IconButton
+                                          variant="ghost"
+                                          size="sm"
+                                          aria-label="Resend Invite"
+                                          onClick={() => handleSendInvite(collab)}
+                                          colorPalette="orange"
+                                          _hover={{ bg: 'orange.50' }}
+                                        >
+                                          <LuMail />
+                                        </IconButton>
+                                      )}
+                                      {collab.status === 'submitted' && (
+                                        <IconButton
+                                          variant="ghost"
+                                          size="sm"
+                                          aria-label="Mark as Completed"
+                                          onClick={() => handleUpdateCollaborationStatus(collab.id, 'completed')}
+                                          colorPalette="green"
+                                          _hover={{ bg: 'green.50' }}
+                                        >
+                                          <LuCheck />
+                                        </IconButton>
+                                      )}
+                                      <IconButton
+                                        variant="ghost"
+                                        size="sm"
+                                        aria-label="Remove"
+                                        onClick={() => handleDeleteCollaborationClick(collab.id)}
+                                        colorPalette="red"
+                                        _hover={{ bg: 'red.50' }}
+                                      >
+                                        <LuTrash2 />
+                                      </IconButton>
+                                    </HStack>
                                   </TableCell>
                                 </TableRow>
                               );
@@ -1724,36 +1864,57 @@ function ApplicationDetail() {
                                       Updated: {formatLastUpdated(collab.updatedAt)}
                                     </Text>
                                   </Box>
-                                  <MenuRoot>
-                                    <MenuTrigger asChild>
-                                      <IconButton variant="ghost" size="sm" aria-label="Collaboration actions">
-                                        <Text aria-hidden>⋮</Text>
+                                  <HStack gap="1">
+                                    <IconButton
+                                      variant="ghost"
+                                      size="sm"
+                                      aria-label="View History"
+                                      onClick={() => handleViewHistory(collab.id)}
+                                      colorPalette="purple"
+                                    >
+                                      <LuHistory />
+                                    </IconButton>
+                                    <IconButton
+                                      variant="ghost"
+                                      size="sm"
+                                      aria-label="Edit"
+                                      onClick={() => handleEditCollaboration(collab)}
+                                      colorPalette="gray"
+                                    >
+                                      <LuPencil />
+                                    </IconButton>
+                                    {collab.status === 'pending' && (
+                                      <IconButton
+                                        variant="ghost"
+                                        size="sm"
+                                        aria-label="Send Invite"
+                                        onClick={() => handleSendInvite(collab)}
+                                        colorPalette="blue"
+                                      >
+                                        <LuMail />
                                       </IconButton>
-                                    </MenuTrigger>
-                                    <MenuPositioner>
-                                      <MenuContent>
-                                        <MenuItem value="history" onClick={() => handleViewHistory(collab.id)}>
-                                          View History
-                                        </MenuItem>
-                                        <MenuItem value="edit" onClick={() => handleEditCollaboration(collab)}>
-                                          Edit
-                                        </MenuItem>
-                                        {collab.status === 'pending' && (
-                                          <MenuItem value="send-invite" onClick={() => handleSendInvite(collab)}>
-                                            Send Invite
-                                          </MenuItem>
-                                        )}
-                                        {shouldShowResend(collab) && (
-                                          <MenuItem value="resend-invite" onClick={() => handleSendInvite(collab)}>
-                                            Resend Invite
-                                          </MenuItem>
-                                        )}
-                                        <MenuItem value="remove" color="red.500" onClick={() => handleDeleteCollaborationClick(collab.id)}>
-                                          Remove
-                                        </MenuItem>
-                                      </MenuContent>
-                                    </MenuPositioner>
-                                  </MenuRoot>
+                                    )}
+                                    {shouldShowResend(collab) && (
+                                      <IconButton
+                                        variant="ghost"
+                                        size="sm"
+                                        aria-label="Resend Invite"
+                                        onClick={() => handleSendInvite(collab)}
+                                        colorPalette="orange"
+                                      >
+                                        <LuMail />
+                                      </IconButton>
+                                    )}
+                                    <IconButton
+                                      variant="ghost"
+                                      size="sm"
+                                      aria-label="Remove"
+                                      onClick={() => handleDeleteCollaborationClick(collab.id)}
+                                      colorPalette="red"
+                                    >
+                                      <LuTrash2 />
+                                    </IconButton>
+                                  </HStack>
                                 </Flex>
                               </CardBody>
                             </CardRoot>
