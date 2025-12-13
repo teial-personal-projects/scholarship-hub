@@ -843,3 +843,266 @@ With v3, consider:
 - Using new slot recipes for better component composition
 - Leveraging improved TypeScript support
 - Exploring new animation capabilities (no longer dependent on framer-motion)
+
+---
+
+## Appendix: Urgent Chakra v3 Fixes for Blank UI (moved from `CHAKRA_V3_URGENT_FIXES.md`)
+
+## Root Cause
+The UI is blank because **TypeScript compilation errors** are preventing components from rendering properly. Vite/React is likely failing silently due to these type errors.
+
+## Immediate Actions Required
+
+### Fix 1: DashboardReminders.tsx - Multiple Issues
+
+**File:** `web/src/components/DashboardReminders.tsx`
+
+#### Issue 1.1: Alert Component (Lines 10-13)
+```typescript
+// BEFORE (v2)
+import {
+  Alert,
+  AlertIcon,
+  AlertTitle,
+  AlertDescription,
+} from '@chakra-ui/react';
+
+<Alert status="warning">
+  <AlertIcon />
+  <AlertTitle>Title</AlertTitle>
+  <AlertDescription>Description</AlertDescription>
+</Alert>
+
+// AFTER (v3)
+// Remove AlertIcon import - doesn't exist in v3
+import {
+  Alert,
+} from '@chakra-ui/react';
+
+<Alert.Root status="warning">
+  <Alert.Indicator />
+  <Alert.Title>Title</Alert.Title>
+  <Alert.Description>Description</Alert.Description>
+</Alert.Root>
+```
+
+#### Issue 1.2: Card Component (Lines 3-5)
+```typescript
+// BEFORE (v2)
+import { Card, CardBody, CardHeader } from '@chakra-ui/react';
+
+<Card>
+  <CardHeader>Header</CardHeader>
+  <CardBody>Body</CardBody>
+</Card>
+
+// AFTER (v3)
+import { Card } from '@chakra-ui/react';
+
+<Card.Root>
+  <Card.Header>Header</Card.Header>
+  <Card.Body>Body</Card.Body>
+</Card.Root>
+```
+
+####Issue 1.3: Collapse Component (Line 16)
+```typescript
+// BEFORE (v2)
+import { Collapse } from '@chakra-ui/react';
+
+<Collapse in={isOpen}>
+  Content
+</Collapse>
+
+// AFTER (v3)
+import { Collapsible } from '@chakra-ui/react';
+
+<Collapsible.Root open={isOpen}>
+  <Collapsible.Content>
+    Content
+  </Collapsible.Content>
+</Collapsible.Root>
+```
+
+#### Issue 1.4: useDisclosure Hook (Lines 32-33)
+```typescript
+// BEFORE (v2)
+const { isOpen, onToggle } = useDisclosure({ defaultIsOpen: true });
+
+// AFTER (v3)
+const { open, onToggle } = useDisclosure({ defaultOpen: true });
+```
+
+#### Issue 1.5: Button rightIcon Prop (Lines 153, 211, 269, 330)
+```typescript
+// BEFORE (v2)
+<Button rightIcon={<ChevronDownIcon />}>
+  Text
+</Button>
+
+// AFTER (v3) - Remove rightIcon, use children
+<Button>
+  Text
+  <ChevronDownIcon />
+</Button>
+```
+
+### Fix 2: Select Component (Multiple Files)
+
+**Files:**
+- `web/src/components/AddCollaborationModal.tsx`
+- `web/src/components/AssignCollaboratorModal.tsx`
+- `web/src/components/EditCollaborationModal.tsx`
+- `web/src/components/EssayForm.tsx`
+
+```typescript
+// BEFORE (v2)
+import { Select } from '@chakra-ui/react';
+
+<Select value={value} onChange={(e) => setValue(e.target.value)}>
+  <option value="1">Option 1</option>
+  <option value="2">Option 2</option>
+</Select>
+
+// AFTER (v3) - Use NativeSelect
+import { NativeSelect } from '@chakra-ui/react';
+
+<NativeSelect.Root>
+  <NativeSelect.Field
+    value={value}
+    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setValue(e.target.value)}
+  >
+    <option value="1">Option 1</option>
+    <option value="2">Option 2</option>
+  </NativeSelect.Field>
+</NativeSelect.Root>
+```
+
+### Fix 3: NumberInput Component
+
+**File:** `web/src/components/EssayForm.tsx` (Line 157-164)
+
+```typescript
+// BEFORE (v2)
+import { NumberInput, NumberInputField } from '@chakra-ui/react';
+
+<NumberInput
+  value={wordCount}
+  onChange={(_, value) => setWordCount(isNaN(value) ? undefined : value)}
+  min={0}
+>
+  <NumberInputField placeholder="e.g., 500" />
+</NumberInput>
+
+// AFTER (v3)
+import { NumberInput } from '@chakra-ui/react';
+
+<NumberInput.Root
+  value={wordCount?.toString() || ''}
+  onValueChange={(details: { valueAsNumber: number }) =>
+    setWordCount(isNaN(details.valueAsNumber) ? undefined : details.valueAsNumber)
+  }
+  min={0}
+>
+  <NumberInput.Field placeholder="e.g., 500" />
+</NumberInput.Root>
+```
+
+### Fix 4: Input Variant in EditCollaborationModal
+
+**File:** `web/src/components/EditCollaborationModal.tsx` (Line 188)
+
+```typescript
+// BEFORE - variant="filled" is invalid
+<Input
+  value={collaboration.collaborationType}
+  isDisabled
+  variant="filled"
+/>
+
+// AFTER - remove variant or use valid one
+<Input
+  value={collaboration.collaborationType}
+  disabled
+  readOnly
+/>
+```
+
+### Fix 5: TypeScript Type Errors in useCollaborations.ts
+
+**File:** `web/src/hooks/useCollaborations.ts` (Lines 72-74, 103-105)
+
+```typescript
+// BEFORE
+if (updatedCollaboration.application_id) {
+  queryClient.invalidateQueries({
+    queryKey: collaborationKeys.byApplication(updatedCollaboration.application_id)
+  });
+}
+
+// AFTER - use camelCase
+if (updatedCollaboration.applicationId) {
+  queryClient.invalidateQueries({
+    queryKey: collaborationKeys.byApplication(updatedCollaboration.applicationId)
+  });
+}
+```
+
+## Quick Fix Script
+
+Run these commands in order:
+
+```bash
+# 1. Check current errors
+cd web
+npm run type-check 2>&1 | head -50
+
+# 2. Fix DashboardReminders first (it's loaded on Dashboard)
+# Manually edit the file or use the fixes above
+
+# 3. Fix Select components
+# Manually edit AddCollaborationModal, AssignCollaboratorModal, EditCollaborationModal, EssayForm
+
+# 4. Re-check errors
+npm run type-check
+
+# 5. Once no errors, restart dev server
+# Kill existing process and run:
+npm run dev
+```
+
+## Verification Steps
+
+1. Open browser to `http://localhost:5173`
+2. Check browser console for errors (F12)
+3. Check terminal for TypeScript/Vite errors
+4. If still blank:
+   - Check Network tab - are API calls working?
+   - Check React DevTools - are components mounting?
+   - Check for authentication redirect issues
+
+## Most Likely Issue
+
+Based on the errors, **DashboardReminders.tsx** is probably the blocker since it's imported into the Dashboard page. Fix this file first, then check if the UI appears.
+
+## Alternative Quick Workaround
+
+If you want to see the UI immediately while fixing components:
+
+1. **Comment out DashboardReminders** in Dashboard.tsx temporarily:
+```typescript
+// import DashboardReminders from '../components/DashboardReminders';
+
+// Later in the render:
+{/* <DashboardReminders /> */}
+```
+
+2. **Comment out AddCollaborationModal** temporarily if it's causing issues
+
+3. This will let you see the rest of the UI while you fix the broken components one by one.
+
+## Expected Timeline
+
+- **Immediate fix (workaround)**: 5 minutes
+- **Proper fix (all components)**: 1-2 hours
+- Focus on Dashboard-related components first for visibility
