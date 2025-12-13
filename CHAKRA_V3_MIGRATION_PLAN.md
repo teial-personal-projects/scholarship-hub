@@ -81,12 +81,12 @@ npm uninstall @emotion/styled framer-motion
 
 **Why**: Chakra UI v3 no longer depends on these packages.
 
-### [ ] Step 2.2: Update Chakra UI and Emotion
+### [✅] Step 2.2: Update Chakra UI and Emotion
 ```bash
 npm install @chakra-ui/react@latest @emotion/react@latest
 ```
 
-### [ ] Step 2.3: Install Required Snippets
+### [✅] Step 2.3: Install Required Snippets
 ```bash
 npx @chakra-ui/cli snippet add
 ```
