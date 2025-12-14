@@ -5,7 +5,7 @@ Uses checksums and fuzzy matching to prevent duplicates
 import hashlib
 from typing import Dict, Optional, Tuple
 from difflib import SequenceMatcher
-from datetime import datetime
+from datetime import datetime, UTC
 
 class DeduplicationEngine:
     def __init__(self, db_connection):
@@ -142,6 +142,6 @@ class DeduplicationEngine:
                 merged['deadline'] = new_deadline
 
         # Update last_verified timestamp
-        merged['last_verified_at'] = datetime.utcnow()
+        merged['last_verified_at'] = datetime.now(UTC)
 
         return merged

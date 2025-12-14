@@ -34,13 +34,13 @@ def test_connection():
         print("\n   5. Add it to .env.local:")
         print("      DATABASE_URL=postgresql://postgres.ljzvgcbt...")
         print("\n   Note: Replace [password] with your actual database password!")
-        return False
+        assert False, "DATABASE_URL not found"
 
     if "[YOUR-DB-PASSWORD]" in db_url:
         print("\n❌ DATABASE_URL contains placeholder password")
         print("\n📝 Please replace [YOUR-DB-PASSWORD] with your actual database password")
         print("   Get it from: Supabase Dashboard > Project Settings > Database")
-        return False
+        assert False, "DATABASE_URL contains placeholder password"
 
     print(f"\n🔗 Connecting to database...")
     print(f"   Host: {db_url.split('@')[1].split(':')[0] if '@' in db_url else 'unknown'}")
@@ -112,14 +112,15 @@ def test_connection():
             print("=" * 60)
             print("\n🎉 Your database connection is working correctly!")
             print("   You can now use the deduplication engine and other tools.")
-            return True
+            # Test passed - no return needed for pytest
+            return
 
         else:
             print("❌ Scholarships table does not exist")
             print("\n📝 Please run migrations first:")
             print("   cd /Users/teial/Tutorials/scholarship-hub")
             print("   npm run migrate:latest --workspace=api")
-            return False
+            assert False, "Scholarships table does not exist"
 
     except psycopg2.OperationalError as e:
         print(f"\n❌ Connection failed: {e}")
@@ -128,13 +129,13 @@ def test_connection():
         print("   • Database is paused (go to Supabase dashboard to resume)")
         print("   • Incorrect host or port")
         print("   • Network/firewall issues")
-        return False
+        raise
 
     except Exception as e:
         print(f"\n❌ Error during testing: {e}")
         import traceback
         traceback.print_exc()
-        return False
+        raise
 
     finally:
         if 'cursor' in locals():

@@ -71,7 +71,6 @@ def test_checksum_generation():
     print("✅ Legacy 'amount' field compatibility verified")
 
     db.close()
-    return True
 
 def test_exact_duplicate_detection():
     """Test exact duplicate detection via checksum and URL"""
@@ -122,7 +121,6 @@ def test_exact_duplicate_detection():
     print("✅ Test data cleaned up")
 
     db.close()
-    return True
 
 def test_fuzzy_matching():
     """Test fuzzy matching for similar scholarships"""
@@ -197,7 +195,6 @@ def test_fuzzy_matching():
     print("✅ Test data cleaned up")
 
     db.close()
-    return True
 
 def test_data_merging():
     """Test scholarship data merging"""
@@ -250,7 +247,6 @@ def test_data_merging():
     print("✅ Verification timestamp updated")
 
     db.close()
-    return True
 
 def main():
     """Run all deduplication tests"""

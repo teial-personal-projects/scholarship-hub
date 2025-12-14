@@ -54,7 +54,6 @@ def test_partial_dates():
             print("  ❌ Failed to normalize")
 
     print("\n✅ Partial date handling tested")
-    return True
 
 
 def test_month_year_dates():
@@ -84,7 +83,6 @@ def test_month_year_dates():
             print("  ❌ Failed to normalize")
 
     print("\n✅ Month+year date handling tested")
-    return True
 
 
 def test_full_dates():
@@ -114,7 +112,6 @@ def test_full_dates():
             print("  ❌ Failed to normalize")
 
     print("\n✅ Full date handling tested")
-    return True
 
 
 def test_expiration_logic():
@@ -143,7 +140,6 @@ def test_expiration_logic():
     assert expiration is not None, "Should calculate expiration date"
 
     print("\n✅ Expiration logic tested")
-    return True
 
 
 def test_database_integration():
@@ -155,7 +151,7 @@ def test_database_integration():
     db = DatabaseConnection()
     if not db.connect():
         print("❌ Could not connect to database")
-        return False
+        assert False, "Could not connect to database"
 
     timestamp = datetime.now().timestamp()
 
@@ -222,7 +218,6 @@ def test_database_integration():
 
     db.close()
     print("\n✅ Database integration tested")
-    return True
 
 
 def test_expired_scholarships_excluded():
@@ -234,7 +229,7 @@ def test_expired_scholarships_excluded():
     db = DatabaseConnection()
     if not db.connect():
         print("❌ Could not connect to database")
-        return False
+        assert False, "Could not connect to database"
 
     from deduplication.engine import DeduplicationEngine  # type: ignore[import-untyped]
     dedup = DeduplicationEngine(db)
@@ -279,7 +274,6 @@ def test_expired_scholarships_excluded():
     db.close()
 
     print("\n✅ Expiration exclusion logic tested")
-    return True
 
 
 def main():

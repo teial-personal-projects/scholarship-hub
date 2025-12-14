@@ -2,7 +2,7 @@
 Expiration Manager
 Automatically marks expired scholarships and archives them
 """
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from typing import Dict, List
 
 class ExpirationManager:
@@ -56,7 +56,7 @@ class ExpirationManager:
         Archive scholarships that have been expired for a long time
         This keeps the database clean
         """
-        cutoff_date = datetime.utcnow() - timedelta(days=days_old)
+        cutoff_date = datetime.now(UTC) - timedelta(days=days_old)
 
         self.db.cursor.execute("""
             UPDATE scholarships

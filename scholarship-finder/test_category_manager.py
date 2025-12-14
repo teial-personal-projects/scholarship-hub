@@ -24,7 +24,7 @@ def test_get_enabled_categories():
     db = DatabaseConnection()
     if not db.connect():
         print("❌ Failed to connect to database")
-        return False
+        assert False, "Failed to connect to database"
 
     category_manager = CategoryManager(db)
 
@@ -45,7 +45,6 @@ def test_get_enabled_categories():
     print("\n✅ Successfully loaded enabled categories")
 
     db.close()
-    return True
 
 
 def test_get_category_by_slug():
@@ -71,7 +70,7 @@ def test_get_category_by_slug():
     else:
         print("❌ STEM category not found")
         db.close()
-        return False
+        assert False, "STEM category not found"
 
     # Test non-existent category
     fake = category_manager.get_category_by_slug('nonexistent')
@@ -79,7 +78,6 @@ def test_get_category_by_slug():
     print("✅ Non-existent category correctly returns None")
 
     db.close()
-    return True
 
 
 def test_get_category_keywords():
@@ -105,7 +103,6 @@ def test_get_category_keywords():
     print(f"\n✅ Retrieved {len(keywords)} keywords for STEM category")
 
     db.close()
-    return True
 
 
 
@@ -147,7 +144,6 @@ def test_caching():
     print("✅ Cache refresh working")
 
     db.close()
-    return True
 
 
 def test_all_categories():
@@ -179,7 +175,6 @@ def test_all_categories():
     print("\n✅ Successfully retrieved all categories")
 
     db.close()
-    return True
 
 
 def main():

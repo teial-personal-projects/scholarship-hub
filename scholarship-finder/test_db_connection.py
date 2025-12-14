@@ -28,7 +28,7 @@ def test_connection():
     print("\n1. Testing connection...")
     if not db.connect():
         print("❌ Failed to connect to database")
-        return False
+        assert False, "Failed to connect to database"
 
     print("✅ Connection successful!")
 
@@ -48,11 +48,11 @@ def test_connection():
         else:
             print("❌ Scholarships table does not exist")
             db.close()
-            return False
+            assert False, "Scholarships table does not exist"
     except Exception as e:
         print(f"❌ Error checking table: {e}")
         db.close()
-        return False
+        raise
 
     # Test insert scholarship
     print("\n3. Testing insert_scholarship method...")
@@ -107,7 +107,7 @@ def test_connection():
     else:
         print("❌ Failed to insert test scholarship")
         db.close()
-        return False
+        assert False, "Failed to insert test scholarship"
 
     # Close connection
     db.close()
@@ -115,7 +115,6 @@ def test_connection():
     print("\n" + "=" * 60)
     print("✅ All tests passed!")
     print("=" * 60)
-    return True
 
 if __name__ == '__main__':
     success = test_connection()

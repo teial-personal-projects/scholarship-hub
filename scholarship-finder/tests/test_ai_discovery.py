@@ -30,7 +30,7 @@ def test_ai_discovery():
         print("   1. Get your API key from: https://platform.openai.com/api-keys")
         print("   2. Add to .env.local:")
         print("      OPENAI_API_KEY=sk-...")
-        return False
+        pytest.skip("OPENAI_API_KEY not found")
     else:
         print(f"✅ OPENAI_API_KEY found ({openai_key[:20]}...)")
 
@@ -54,14 +54,14 @@ def test_ai_discovery():
         print("✅ All imports successful")
     except ImportError as e:
         print(f"❌ Import error: {e}")
-        return False
+        raise
 
     # Test database connection
     print("\n🗄️  Testing database connection...")
     db = DatabaseConnection()
     if not db.connect():
         print("❌ Database connection failed")
-        return False
+        assert False, "Database connection failed"
 
     print("✅ Database connection successful")
 
@@ -73,7 +73,7 @@ def test_ai_discovery():
     except Exception as e:
         print(f"❌ Failed to initialize engine: {e}")
         db.close()
-        return False
+        raise
 
     # Test 1: Generate search queries
     print("\n📝 Test 1: Generating search queries...")
@@ -88,7 +88,7 @@ def test_ai_discovery():
     except Exception as e:
         print(f"❌ Failed to generate queries: {e}")
         db.close()
-        return False
+        raise
 
     # Test 2: Test scholarship verification (mock HTML)
     print("\n🔍 Test 2: Testing scholarship page verification...")
@@ -112,7 +112,7 @@ def test_ai_discovery():
     except Exception as e:
         print(f"❌ Verification test failed: {e}")
         db.close()
-        return False
+        raise
 
     # Test 3: Extract scholarship data
     print("\n📊 Test 3: Testing scholarship data extraction...")
@@ -129,7 +129,7 @@ def test_ai_discovery():
     except Exception as e:
         print(f"❌ Extraction test failed: {e}")
         db.close()
-        return False
+        raise
 
     # Clean up
     db.close()
@@ -144,7 +144,7 @@ def test_ai_discovery():
     print("   - Full discovery requires Google Custom Search API")
     print("\n🎉 The AI Discovery Engine is ready to use!")
 
-    return True
+    # Test passed - no return needed for pytest
 
 if __name__ == "__main__":
     success = test_ai_discovery()
