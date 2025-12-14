@@ -6,6 +6,12 @@
 import { beforeAll, afterEach, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import { createMockSupabaseClient } from './mocks/supabase';
+
+// Mock Supabase config module
+vi.mock('../config/supabase', () => ({
+  supabase: createMockSupabaseClient(),
+}));
 
 // Set up environment
 beforeAll(() => {
