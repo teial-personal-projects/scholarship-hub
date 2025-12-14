@@ -243,14 +243,14 @@ describe('ApplicationDetail Page', () => {
       expect(screen.getByText(mockApp.scholarshipName)).toBeInTheDocument();
     });
 
-    // Click "Add Essay" button
-    const addEssayButton = screen.getByRole('button', { name: /Add Essay/i });
+    // Click "Add Essay" button - wait for it to be available
+    const addEssayButton = await screen.findByRole('button', { name: /Add Essay/i }, { timeout: 3000 });
     await user.click(addEssayButton);
 
     // Verify essay form is displayed
     await waitFor(() => {
       expect(screen.getByTestId('essay-form')).toBeInTheDocument();
-    });
+    }, { timeout: 3000 });
   });
 
   it('should delete essay when confirmed', async () => {
@@ -283,9 +283,10 @@ describe('ApplicationDetail Page', () => {
     }, { timeout: 3000 });
 
     // Find and click the delete button (icon button) - wait for it to be available
-    const deleteButtons = await screen.findAllByRole('button', { name: /Delete Essay/i });
-    if (deleteButtons.length > 0) {
-      await user.click(deleteButtons[0]);
+    const deleteButtons = await screen.findAllByRole('button', { name: /Delete Essay/i }, { timeout: 3000 });
+    expect(deleteButtons.length).toBeGreaterThan(0);
+    
+    await user.click(deleteButtons[0]);
 
       // Confirm deletion
       await waitFor(() => {
@@ -298,8 +299,7 @@ describe('ApplicationDetail Page', () => {
       // Verify API was called
       await waitFor(() => {
         expect(api.apiDelete).toHaveBeenCalledWith(`/essays/${mockEssaysList[0].id}`);
-      });
-    }
+      }, { timeout: 3000 });
   });
 
   it('should navigate to edit page when clicking Edit Application button', async () => {
@@ -342,7 +342,7 @@ describe('ApplicationDetail Page', () => {
 
     await waitFor(() => {
       expect(screen.getByText(/Failed to load application/i)).toBeInTheDocument();
-    });
+    }, { timeout: 3000 });
   });
 
   it('should show empty state for essays when none exist', async () => {

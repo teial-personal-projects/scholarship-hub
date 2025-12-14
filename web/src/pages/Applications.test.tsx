@@ -104,12 +104,12 @@ describe('Applications Page', () => {
 
     renderWithProviders(<Applications />);
 
-    // Wait for page to load
+    // Wait for page to load - the heading should appear after loading completes
     await waitFor(() => {
-      const heading = screen.queryByRole('heading', { name: /My Scholarship Applications/i });
-      expect(heading).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /My Scholarship Applications/i })).toBeInTheDocument();
     }, { timeout: 3000 });
 
+    // Verify button is also present
     expect(screen.getByRole('button', { name: /New Application/i })).toBeInTheDocument();
   });
 
@@ -134,9 +134,9 @@ describe('Applications Page', () => {
 
     renderWithProviders(<Applications />);
 
+    // Wait for page to load
     await waitFor(() => {
-      const heading = screen.queryByRole('heading', { name: /My Scholarship Applications/i });
-      expect(heading).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /My Scholarship Applications/i })).toBeInTheDocument();
     }, { timeout: 3000 });
 
     // Wait for button to be available - it should be in the header
@@ -193,9 +193,14 @@ describe('Applications Page', () => {
       expect(screen.getAllByText(/Submitted|In Progress|Not Started/i).length).toBeGreaterThan(0);
     });
 
-    // Filter by "In Progress" - NativeSelectField might not be recognized as combobox
-    // Try to find it by looking for the select element or by its value
-    const statusSelect = await screen.findByDisplayValue(/All Statuses/i);
+    // Filter by "In Progress" - find the select element
+    // NativeSelectField renders as a select element
+    await waitFor(() => {
+      const selects = screen.queryAllByRole('combobox');
+      expect(selects.length).toBeGreaterThan(0);
+    }, { timeout: 2000 });
+    
+    const statusSelect = screen.getAllByRole('combobox')[0];
     await user.selectOptions(statusSelect, 'In Progress');
 
     await waitFor(() => {
@@ -240,14 +245,10 @@ describe('Applications Page', () => {
     });
 
     // Click delete icon button - wait for it to be available
-    await waitFor(async () => {
-      const deleteButtons = await screen.findAllByRole('button', { name: /Delete/i });
-      expect(deleteButtons.length).toBeGreaterThan(0);
-    }, { timeout: 3000 });
+    const deleteButtons = await screen.findAllByRole('button', { name: /Delete/i }, { timeout: 3000 });
+    expect(deleteButtons.length).toBeGreaterThan(0);
     
-    const deleteButtons = await screen.findAllByRole('button', { name: /Delete/i });
-    if (deleteButtons.length > 0) {
-      await user.click(deleteButtons[0]);
+    await user.click(deleteButtons[0]);
 
       // Confirm deletion in dialog
       await waitFor(() => {
@@ -260,8 +261,7 @@ describe('Applications Page', () => {
       // Verify API was called
       await waitFor(() => {
         expect(api.apiDelete).toHaveBeenCalledWith(`/applications/${mockApps[0].id}`);
-      });
-    }
+      }, { timeout: 3000 });
   });
 
   it('should cancel delete when clicking Cancel button', async () => {
@@ -276,14 +276,10 @@ describe('Applications Page', () => {
     });
 
     // Click delete icon button - wait for it to be available
-    await waitFor(async () => {
-      const deleteButtons = await screen.findAllByRole('button', { name: /Delete/i });
-      expect(deleteButtons.length).toBeGreaterThan(0);
-    }, { timeout: 3000 });
+    const deleteButtons = await screen.findAllByRole('button', { name: /Delete/i }, { timeout: 3000 });
+    expect(deleteButtons.length).toBeGreaterThan(0);
     
-    const deleteButtons = await screen.findAllByRole('button', { name: /Delete/i });
-    if (deleteButtons.length > 0) {
-      await user.click(deleteButtons[0]);
+    await user.click(deleteButtons[0]);
 
       // Cancel deletion in dialog
       await waitFor(() => {
@@ -295,7 +291,6 @@ describe('Applications Page', () => {
 
       // Verify API was not called
       expect(api.apiDelete).not.toHaveBeenCalled();
-    }
   });
 
   it('should navigate to application detail when clicking View Details', async () => {
@@ -310,12 +305,11 @@ describe('Applications Page', () => {
     });
 
     // Click view details icon button - wait for it to be available
-    const viewButtons = await screen.findAllByRole('button', { name: /View Details/i });
-    if (viewButtons.length > 0) {
-      await user.click(viewButtons[0]);
-
-      expect(mockNavigate).toHaveBeenCalledWith(`/applications/${mockApps[0].id}`);
-    }
+    const viewButtons = await screen.findAllByRole('button', { name: /View Details/i }, { timeout: 3000 });
+    expect(viewButtons.length).toBeGreaterThan(0);
+    
+    await user.click(viewButtons[0]);
+    expect(mockNavigate).toHaveBeenCalledWith(`/applications/${mockApps[0].id}`);
   });
 
   it('should handle API error gracefully', async () => {
@@ -323,9 +317,10 @@ describe('Applications Page', () => {
 
     renderWithProviders(<Applications />);
 
+    // Error is displayed as text in a CardBody
     await waitFor(() => {
       expect(screen.getByText(/Failed to load applications/i)).toBeInTheDocument();
-    });
+    }, { timeout: 3000 });
   });
 
   it('should display applications count correctly', async () => {
