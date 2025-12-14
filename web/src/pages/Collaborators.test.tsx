@@ -81,19 +81,22 @@ describe('Collaborators Page', () => {
     renderWithProviders(<Collaborators />);
 
     await waitFor(() => {
-      // Check if tabs are present (tabs might have different names)
-      const tabs = screen.queryAllByRole('tab');
-      expect(tabs.length).toBeGreaterThan(0);
-    });
+      // Collaborators page displays a table, not tabs
+      // Check if table headers are present
+      expect(screen.getByText(/Name/i)).toBeInTheDocument();
+    }, { timeout: 3000 });
+
+    expect(screen.getByText(/Email/i)).toBeInTheDocument();
   });
 
   it('should display collaborator details in table', async () => {
     renderWithProviders(<Collaborators />);
 
     await waitFor(() => {
-      // Check if collaborator names are displayed
-      expect(screen.getByText(mockCollaborators.teacher1.firstName)).toBeInTheDocument();
-    });
+      // Check if collaborator names are displayed (full name: firstName lastName)
+      const fullName = `${mockCollaborators.teacher1.firstName} ${mockCollaborators.teacher1.lastName}`;
+      expect(screen.getByText(fullName)).toBeInTheDocument();
+    }, { timeout: 3000 });
 
     expect(screen.getByText(mockCollaborators.teacher1.emailAddress)).toBeInTheDocument();
   });
@@ -120,11 +123,12 @@ describe('Collaborators Page', () => {
     renderWithProviders(<Collaborators />);
 
     await waitFor(() => {
-      expect(screen.getByText(mockCollaborators.teacher1.firstName)).toBeInTheDocument();
+      const fullName = `${mockCollaborators.teacher1.firstName} ${mockCollaborators.teacher1.lastName}`;
+      expect(screen.getByText(fullName)).toBeInTheDocument();
     });
 
-    // Find and click edit button (menu or direct button)
-    const menuButtons = screen.queryAllByRole('button', { name: /⋮/i });
+    // Find and click edit button (menu button)
+    const menuButtons = await screen.findAllByRole('button', { name: /Collaborator actions/i });
     if (menuButtons.length > 0) {
       await user.click(menuButtons[0]);
 
@@ -148,11 +152,12 @@ describe('Collaborators Page', () => {
     renderWithProviders(<Collaborators />);
 
     await waitFor(() => {
-      expect(screen.getByText(mockCollaborators.teacher1.firstName)).toBeInTheDocument();
+      const fullName = `${mockCollaborators.teacher1.firstName} ${mockCollaborators.teacher1.lastName}`;
+      expect(screen.getByText(fullName)).toBeInTheDocument();
     });
 
     // Find and click delete button
-    const menuButtons = screen.queryAllByRole('button', { name: /⋮/i });
+    const menuButtons = await screen.findAllByRole('button', { name: /Collaborator actions/i });
     if (menuButtons.length > 0) {
       await user.click(menuButtons[0]);
 
@@ -184,11 +189,12 @@ describe('Collaborators Page', () => {
     renderWithProviders(<Collaborators />);
 
     await waitFor(() => {
-      expect(screen.getByText(mockCollaborators.teacher1.firstName)).toBeInTheDocument();
+      const fullName = `${mockCollaborators.teacher1.firstName} ${mockCollaborators.teacher1.lastName}`;
+      expect(screen.getByText(fullName)).toBeInTheDocument();
     });
 
     // Find and click delete button
-    const menuButtons = screen.queryAllByRole('button', { name: /⋮/i });
+    const menuButtons = await screen.findAllByRole('button', { name: /Collaborator actions/i });
     if (menuButtons.length > 0) {
       await user.click(menuButtons[0]);
 

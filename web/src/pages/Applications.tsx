@@ -84,6 +84,7 @@ function Applications() {
   // Filter applications
   const filteredApplications = useMemo(() => {
     return applications.filter((app) => {
+      if (!app || !app.scholarshipName) return false;
       const matchesSearch = app.scholarshipName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            (app.organization?.toLowerCase() || '').includes(searchTerm.toLowerCase());
       const matchesStatus = statusFilter === 'all' || app.status === statusFilter;

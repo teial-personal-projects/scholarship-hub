@@ -38,9 +38,9 @@ describe('SendInviteDialog', () => {
       />
     );
 
-    expect(screen.getByText(/send invitation/i)).toBeInTheDocument();
-    expect(screen.getByText(new RegExp(collaboratorName, 'i'))).toBeInTheDocument();
-    expect(screen.getByText(new RegExp(applicationName, 'i'))).toBeInTheDocument();
+    expect(screen.getByText(/send collaboration invitation/i)).toBeInTheDocument();
+    expect(screen.getAllByText(new RegExp(collaboratorName, 'i')).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(new RegExp(applicationName, 'i')).length).toBeGreaterThan(0);
   });
 
   it('should send invitation when send button is clicked', async () => {
@@ -58,12 +58,12 @@ describe('SendInviteDialog', () => {
       />
     );
 
-    await user.click(screen.getByRole('button', { name: /send invitation/i }));
+    await user.click(screen.getByRole('button', { name: /send now/i }));
 
     await waitFor(() => {
       expect(api.apiPost).toHaveBeenCalledWith(
         `/collaborations/${mockCollaboration.id}/invite`,
-        expect.any(Object)
+        {}
       );
     });
 
@@ -71,34 +71,21 @@ describe('SendInviteDialog', () => {
     expect(mockOnClose).toHaveBeenCalled();
   });
 
-  it('should allow user to add optional notes', async () => {
-    const user = userEvent.setup();
-    vi.mocked(api.apiPost).mockResolvedValue({ success: true });
+  it('should display existing notes when present', async () => {
+    const collaborationWithNotes = { ...mockCollaboration, notes: 'Please submit by end of month' };
 
     renderWithProviders(
       <SendInviteDialog
         isOpen={true}
         onClose={mockOnClose}
-        collaboration={mockCollaboration}
+        collaboration={collaborationWithNotes}
         collaboratorName={collaboratorName}
         applicationName={applicationName}
         onSuccess={mockOnSuccess}
       />
     );
 
-    const notesInput = screen.getByLabelText(/notes/i);
-    await user.type(notesInput, 'Please submit by end of month');
-
-    await user.click(screen.getByRole('button', { name: /send invitation/i }));
-
-    await waitFor(() => {
-      expect(api.apiPost).toHaveBeenCalledWith(
-        `/collaborations/${mockCollaboration.id}/invite`,
-        expect.objectContaining({
-          notes: 'Please submit by end of month',
-        })
-      );
-    });
+    expect(screen.getByText('Please submit by end of month')).toBeInTheDocument();
   });
 
   it('should close dialog when cancel button is clicked', async () => {
@@ -136,7 +123,7 @@ describe('SendInviteDialog', () => {
       />
     );
 
-    await user.click(screen.getByRole('button', { name: /send invitation/i }));
+    await user.click(screen.getByRole('button', { name: /send now/i }));
 
     await waitFor(() => {
       expect(api.apiPost).toHaveBeenCalled();

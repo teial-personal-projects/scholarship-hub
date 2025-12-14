@@ -7,7 +7,6 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderWithProviders } from '../test/helpers/render';
 import Login from './Login';
-import { mockSupabaseAuth } from '../test/mocks/supabase';
 import * as AuthContext from '../contexts/AuthContext';
 
 // Mock the AuthContext
@@ -147,9 +146,7 @@ describe('Login Page', () => {
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 
-  it('should require email field', async () => {
-    const user = userEvent.setup();
-
+  it('should require email field', () => {
     renderWithProviders(<Login />);
 
     const emailInput = screen.getByLabelText(/Email/i);
@@ -158,9 +155,7 @@ describe('Login Page', () => {
     expect(emailInput).toBeRequired();
   });
 
-  it('should require password field', async () => {
-    const user = userEvent.setup();
-
+  it('should require password field', () => {
     renderWithProviders(<Login />);
 
     const passwordInput = screen.getByLabelText(/Password/i);

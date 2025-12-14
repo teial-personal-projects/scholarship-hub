@@ -115,7 +115,7 @@ export function useDeleteCollaboration() {
 
   return useMutation({
     mutationFn: (id: number) => apiDelete(`/collaborations/${id}`),
-    onSuccess: (_, deletedId) => {
+    onSuccess: () => {
       // Invalidate all collaboration queries
       queryClient.invalidateQueries({ queryKey: collaborationKeys.all });
     },

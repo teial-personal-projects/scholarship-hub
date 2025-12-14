@@ -119,9 +119,9 @@ export const mockApiService = {
     return Promise.resolve(null);
   }),
 
-  post: vi.fn(() => Promise.resolve({ success: true })),
-  patch: vi.fn(() => Promise.resolve({ success: true })),
-  delete: vi.fn(() => Promise.resolve({ success: true })),
+  post: vi.fn((_url: string, _data?: any) => Promise.resolve({ success: true })),
+  patch: vi.fn((_url: string, _data?: any) => Promise.resolve({ success: true })),
+  delete: vi.fn((_url: string) => Promise.resolve()),
 };
 
 /**
@@ -149,7 +149,7 @@ export const mockApiPatch = vi.fn(async <T,>(url: string, data?: any): Promise<T
  * Mock apiDelete function
  */
 export const mockApiDelete = vi.fn(async (url: string): Promise<void> => {
-  return mockApiService.delete(url);
+  await mockApiService.delete(url);
 });
 
 /**

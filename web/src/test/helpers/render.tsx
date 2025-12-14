@@ -7,6 +7,7 @@ import { ReactElement } from 'react';
 import { render, RenderOptions } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { ChakraProvider } from '@chakra-ui/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import system from '../../theme';
 
 /**
@@ -16,11 +17,21 @@ export function renderWithProviders(
   ui: ReactElement,
   options?: Omit<RenderOptions, 'wrapper'>
 ) {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
+
   function Wrapper({ children }: { children: React.ReactNode }) {
     return (
-      <ChakraProvider value={system}>
-        <BrowserRouter>{children}</BrowserRouter>
-      </ChakraProvider>
+      <QueryClientProvider client={queryClient}>
+        <ChakraProvider value={system}>
+          <BrowserRouter>{children}</BrowserRouter>
+        </ChakraProvider>
+      </QueryClientProvider>
     );
   }
 
@@ -59,11 +70,21 @@ export function renderWithAuth(
   // Mock user data in localStorage
   localStorage.setItem('user', JSON.stringify(mockUser));
 
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
+
   function Wrapper({ children }: { children: React.ReactNode }) {
     return (
-      <ChakraProvider value={system}>
-        <BrowserRouter>{children}</BrowserRouter>
-      </ChakraProvider>
+      <QueryClientProvider client={queryClient}>
+        <ChakraProvider value={system}>
+          <BrowserRouter>{children}</BrowserRouter>
+        </ChakraProvider>
+      </QueryClientProvider>
     );
   }
 

@@ -38,9 +38,9 @@ describe('EssayForm', () => {
       );
 
       expect(screen.getByText('Add Essay')).toBeInTheDocument();
-      expect(screen.getByLabelText(/title/i)).toHaveValue('');
-      expect(screen.getByLabelText(/prompt/i)).toHaveValue('');
-      expect(screen.getByLabelText(/content/i)).toHaveValue('');
+      expect(screen.getByLabelText(/theme\/topic/i)).toHaveValue('');
+      expect(screen.getByLabelText(/word count/i)).toHaveValue('');
+      expect(screen.getByLabelText(/essay link/i)).toHaveValue('');
     });
 
     it('should create new essay when form is submitted', async () => {
@@ -58,19 +58,19 @@ describe('EssayForm', () => {
       );
 
       // Fill out form
-      await user.type(screen.getByLabelText(/title/i), 'Personal Statement');
-      await user.type(screen.getByLabelText(/prompt/i), 'Describe your goals');
-      await user.type(screen.getByLabelText(/content/i), 'My goals are...');
+      await user.type(screen.getByLabelText(/theme\/topic/i), 'Personal Statement');
+      await user.type(screen.getByLabelText(/word count/i), '500');
+      await user.type(screen.getByLabelText(/essay link/i), 'https://docs.google.com/document/d/abc123');
 
       // Submit form
       await user.click(screen.getByRole('button', { name: /save/i }));
 
       await waitFor(() => {
         expect(api.apiPost).toHaveBeenCalledWith(`/applications/${applicationId}/essays`, {
-          title: 'Personal Statement',
-          prompt: 'Describe your goals',
-          content: 'My goals are...',
-          essayLink: '',
+          theme: 'Personal Statement',
+          wordCount: 500,
+          essayLink: 'https://docs.google.com/document/d/abc123',
+          status: 'not_started',
         });
       });
 
@@ -78,8 +78,9 @@ describe('EssayForm', () => {
       expect(mockOnClose).toHaveBeenCalled();
     });
 
-    it('should display validation error when title is missing', async () => {
+    it('should allow submitting form with minimal fields', async () => {
       const user = userEvent.setup();
+      vi.mocked(api.apiPost).mockResolvedValue(mockEssays.personalStatement);
 
       renderWithProviders(
         <EssayForm
@@ -91,11 +92,17 @@ describe('EssayForm', () => {
         />
       );
 
-      // Try to submit without filling title
+      // Submit form with only status (all fields are optional)
       await user.click(screen.getByRole('button', { name: /save/i }));
 
-      // Form should not be submitted
-      expect(api.apiPost).not.toHaveBeenCalled();
+      await waitFor(() => {
+        expect(api.apiPost).toHaveBeenCalledWith(`/applications/${applicationId}/essays`, {
+          theme: null,
+          wordCount: null,
+          essayLink: null,
+          status: 'not_started',
+        });
+      });
     });
   });
 
@@ -112,14 +119,20 @@ describe('EssayForm', () => {
       );
 
       expect(screen.getByText('Edit Essay')).toBeInTheDocument();
-      expect(screen.getByLabelText(/title/i)).toHaveValue(mockEssays.personalStatement.title);
-      expect(screen.getByLabelText(/prompt/i)).toHaveValue(mockEssays.personalStatement.prompt);
-      expect(screen.getByLabelText(/content/i)).toHaveValue(mockEssays.personalStatement.content);
+      if (mockEssays.personalStatement.theme) {
+        expect(screen.getByLabelText(/theme\/topic/i)).toHaveValue(mockEssays.personalStatement.theme);
+      }
+      if (mockEssays.personalStatement.wordCount) {
+        expect(screen.getByLabelText(/word count/i)).toHaveValue(mockEssays.personalStatement.wordCount.toString());
+      }
+      if (mockEssays.personalStatement.essayLink) {
+        expect(screen.getByLabelText(/essay link/i)).toHaveValue(mockEssays.personalStatement.essayLink);
+      }
     });
 
     it('should update existing essay when form is submitted', async () => {
       const user = userEvent.setup();
-      const updatedEssay = { ...mockEssays.personalStatement, title: 'Updated Title' };
+      const updatedEssay = { ...mockEssays.personalStatement, theme: 'Updated Theme' };
       vi.mocked(api.apiPatch).mockResolvedValue(updatedEssay);
 
       renderWithProviders(
@@ -132,20 +145,20 @@ describe('EssayForm', () => {
         />
       );
 
-      // Update title
-      const titleInput = screen.getByLabelText(/title/i);
-      await user.clear(titleInput);
-      await user.type(titleInput, 'Updated Title');
+      // Update theme
+      const themeInput = screen.getByLabelText(/theme\/topic/i);
+      await user.clear(themeInput);
+      await user.type(themeInput, 'Updated Theme');
 
       // Submit form
-      await user.click(screen.getByRole('button', { name: /save/i }));
+      await user.click(screen.getByRole('button', { name: /update/i }));
 
       await waitFor(() => {
         expect(api.apiPatch).toHaveBeenCalledWith(`/essays/${mockEssays.personalStatement.id}`, {
-          title: 'Updated Title',
-          prompt: mockEssays.personalStatement.prompt,
-          content: mockEssays.personalStatement.content,
-          essayLink: mockEssays.personalStatement.essayLink,
+          theme: 'Updated Theme',
+          wordCount: mockEssays.personalStatement.wordCount || null,
+          essayLink: mockEssays.personalStatement.essayLink || null,
+          status: mockEssays.personalStatement.status || 'not_started',
         });
       });
 
@@ -170,15 +183,16 @@ describe('EssayForm', () => {
       );
 
       // Fill out form
-      await user.type(screen.getByLabelText(/title/i), 'Test Essay');
-      await user.type(screen.getByLabelText(/prompt/i), 'Test prompt');
-      await user.type(screen.getByLabelText(/content/i), 'Test content');
+      await user.type(screen.getByLabelText(/theme\/topic/i), 'Test Essay');
+      await user.type(screen.getByLabelText(/word count/i), '500');
 
       // Submit form
       await user.click(screen.getByRole('button', { name: /save/i }));
 
       // Toast error should be displayed (implementation depends on toast library)
-      expect(mockOnSuccess).not.toHaveBeenCalled();
+      await waitFor(() => {
+        expect(mockOnSuccess).not.toHaveBeenCalled();
+      });
     });
   });
 

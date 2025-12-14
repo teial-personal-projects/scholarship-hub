@@ -544,7 +544,7 @@ function ApplicationDetail() {
 
   // Progress counts
   // Essays: treat "complete" as status === completed when present, otherwise having a document link
-  const essaysCompleteCount = essays.filter((e) => e.status === 'completed' || Boolean(e.essayLink)).length;
+  const essaysCompleteCount = essays.filter((e) => e && (e.status === 'completed' || Boolean(e.essayLink))).length;
   const essaysTotalCount = essays.length;
   // const hasIncompleteEssays = essaysTotalCount > 0 && essaysCompleteCount < essaysTotalCount;
   const essaysUncompletedCount = Math.max(essaysTotalCount - essaysCompleteCount, 0);
