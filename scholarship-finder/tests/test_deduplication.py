@@ -14,7 +14,9 @@ from pathlib import Path
 from datetime import datetime
 
 # Add src directory to path so imports work
-src_path = Path(__file__).parent / 'src'
+# Since we're in tests/, go up one level to get to scholarship-finder root
+root_path = Path(__file__).parent.parent
+src_path = root_path / 'src'
 if str(src_path) not in sys.path:
     sys.path.insert(0, str(src_path))
 
