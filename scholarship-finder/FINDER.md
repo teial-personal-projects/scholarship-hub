@@ -29,14 +29,16 @@ This guide explains how to run the scholarship finder manually and set up automa
 
 ```bash
 cd scholarship-finder
-./scripts/run-finder.sh
+./scripts/run-finder.sh --all
 ```
 
 You can also pass additional arguments:
 ```bash
-./scripts/run-finder.sh --job-type scraper
-./scripts/run-finder.sh --job-type ai_discovery
-./scripts/run-finder.sh --job-type expiration_check
+./scripts/run-finder.sh --scraper careeronestop
+./scripts/run-finder.sh --scraper collegescholarship
+./scripts/run-finder.sh --scraper ai_discovery
+./scripts/run-finder.sh --all
+./scripts/run-finder.sh --list
 ```
 
 ### Option 2: Activate Virtual Environment and Run Directly
@@ -44,29 +46,31 @@ You can also pass additional arguments:
 ```bash
 cd scholarship-finder
 source venv/bin/activate
-python finder_main.py --mode scheduled
+python main.py --all
 ```
 
-With specific job type:
+With specific scraper:
 ```bash
-python finder_main.py --mode scheduled --job-type scraper
-python finder_main.py --mode scheduled --job-type ai_discovery
-python finder_main.py --mode scheduled --job-type expiration_check
+python main.py --scraper careeronestop
+python main.py --scraper collegescholarship
+python main.py --scraper ai_discovery
 ```
 
 ### Option 3: One-liner (No Activation Needed)
 
 ```bash
-cd scholarship-finder && source venv/bin/activate && python finder_main.py --mode scheduled
+cd scholarship-finder && source venv/bin/activate && python main.py --all
 ```
 
-## Available Job Types
+## Available Commands
 
-- **`scraper`** - Run web scrapers to find scholarships
-- **`ai_discovery`** - Use AI to discover scholarships from non-traditional sources
-- **`expiration_check`** - Check and mark expired scholarships
+- **`--all`** or **`-a`** - Run all available scrapers
+- **`--scraper <name>`** or **`-s <name>`** - Run a specific scraper (e.g., `careeronestop`, `collegescholarship`, `ai_discovery`)
+- **`--list`** or **`-l`** - List all available scrapers
+- **`--setup`** - Set up local development environment and test database connection
+- **`--environment <env>`** or **`-e <env>`** - Environment to run in (default: `local`)
 
-If no job type is specified, the finder will run all available jobs.
+If no arguments are provided, the finder will show help information.
 
 ## Setting Up Automated Scheduling (Cron Job)
 
@@ -136,9 +140,9 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### "finder_main.py not found"
+### "main.py not found"
 
-Make sure you're in the `scholarship-finder` directory and that `finder_main.py` exists.
+Make sure you're in the `scholarship-finder` directory and that `main.py` exists.
 
 ### "Database connection error"
 
@@ -190,7 +194,9 @@ Before setting up the cron job, test the finder manually:
 
 ```bash
 cd scholarship-finder
-./scripts/run-finder.sh --job-type scraper
+./scripts/run-finder.sh --all
+# or for a specific scraper:
+./scripts/run-finder.sh --scraper careeronestop
 ```
 
 Check the output and logs to ensure everything works correctly.

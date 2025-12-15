@@ -30,9 +30,9 @@ else
     exit 1
 fi
 
-# Check if finder_main.py exists
-if [ ! -f "finder_main.py" ]; then
-    echo "❌ Error: finder_main.py not found"
+# Check if main.py exists
+if [ ! -f "main.py" ]; then
+    echo "❌ Error: main.py not found"
     exit 1
 fi
 
@@ -44,8 +44,8 @@ echo "🚀 Starting scholarship finder at $(date)"
 echo "================================================"
 
 # Run the finder
-# You can pass additional arguments like --job-type scraper, --job-type ai_discovery, etc.
-python finder_main.py --mode scheduled "$@"
+# You can pass additional arguments like --all, --scraper <name>, etc.
+python main.py "$@"
 
 # Capture exit code
 EXIT_CODE=$?
