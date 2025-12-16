@@ -200,6 +200,30 @@ class PostgreSQLDatabaseManager(DatabaseManager):
             scholarship.organization = (scholarship.organization or "").strip()
             scholarship.deadline = self._normalize_deadline(scholarship.deadline)
             scholarship.deadline = (scholarship.deadline or "").strip()
+
+            # Handle rolling deadlines: store as NULL date but mark deadline_type
+            deadline_type = None
+            if isinstance(scholarship.deadline, str) and scholarship.deadline.lower() == "rolling":
+                scholarship.deadline = None
+                deadline_type = "rolling"
+            # Handle vague deadlines like "First Week of January" -> use first day of that month
+            elif isinstance(scholarship.deadline, str) and "first week of" in scholarship.deadline.lower():
+                try:
+                    parts = scholarship.deadline.split()
+                    # Expect pattern: "First Week of <Month>"
+                    month_name = parts[-1]
+                    year = datetime.now().year
+                    month_dt = datetime.strptime(month_name, "%B")
+                    tentative_date = datetime(year, month_dt.month, 1).date()
+                    # If already past this year, roll to next year
+                    if tentative_date < datetime.now().date():
+                        tentative_date = datetime(year + 1, month_dt.month, 1).date()
+                    scholarship.deadline = tentative_date.isoformat()
+                    deadline_type = "approximate"
+                except Exception:
+                    # If parsing fails, drop the deadline to avoid DB errors
+                    scholarship.deadline = None
+                    deadline_type = "approximate"
             
             # Map dataclass fields to DB schema
             def _list_to_text(val):
@@ -209,9 +233,15 @@ class PostgreSQLDatabaseManager(DatabaseManager):
                     return ', '.join([str(v) for v in val if v is not None])
                 return str(val)
 
+            def _truncate(val, max_len: int):
+                if val is None:
+                    return None
+                s = str(val)
+                return s if len(s) <= max_len else s[:max_len]
+
             data = {
-                'name': scholarship.title,
-                'organization': scholarship.organization or None,
+                'name': _truncate(scholarship.title, 500),
+                'organization': _truncate(scholarship.organization or None, 300),
                 'organization_website': scholarship.org_website,
                 'description': scholarship.description,
                 'eligibility': _list_to_text(scholarship.eligibility),
@@ -223,23 +253,23 @@ class PostgreSQLDatabaseManager(DatabaseManager):
                 'apply_url': scholarship.apply_url,
                 'source_url': scholarship.source_url,
                 'deadline': scholarship.deadline or None,
-                'deadline_type': None,
+                'deadline_type': _truncate(deadline_type, 50),
                 'renewable': scholarship.renewable,
                 'category': None,
-                'target_type': scholarship.target_type,
-                'education_level': _list_to_text(scholarship.academic_level),
+                'target_type': _truncate(scholarship.target_type, 50),
+                'education_level': _truncate(_list_to_text(scholarship.academic_level), 100),
                 'field_of_study': None,
-                'ethnicity': _list_to_text(scholarship.ethnicity),
-                'gender': scholarship.gender,
+                'ethnicity': _truncate(_list_to_text(scholarship.ethnicity), 100),
+                'gender': _truncate(scholarship.gender, 50),
                 'geographic_restrictions': _list_to_text(scholarship.geographic_restrictions),
-                'country': scholarship.country or 'US',
+                'country': _truncate(scholarship.country or 'US', 50),
                 'essay_required': scholarship.essay_required,
                 'recommendation_required': scholarship.recommendation_required,
                 'checksum': None,
                 'status': 'active' if scholarship.active is not False else 'inactive',
                 'verified': False,
-                'source_type': 'scraper',
-                'source_name': scholarship.source or None,
+                'source_type': _truncate('scraper', 50),
+                'source_name': _truncate(scholarship.source or None, 100),
                 'discovered_at': datetime.now(),
                 'last_verified_at': datetime.now(),
                 'expires_at': None
