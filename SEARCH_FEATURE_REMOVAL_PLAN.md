@@ -50,16 +50,16 @@ Many scholarship search websites require authentication and explicitly prohibit 
 - [x] **Delete:** `shared/src/types/scholarship-search.types.ts`
 - [x] **Delete:** `shared/src/types/user-search-preferences.types.ts`
 
-#### 2.2 Update Existing Type Files
-- [ ] **File:** `shared/src/types/user.types.ts`
+#### 2.2 Update Existing Type Files ✅
+- [x] **File:** `shared/src/types/user.types.ts`
   - Remove `searchPreferences` field from `UserProfile` interface
 
-- [ ] **File:** `shared/src/types/scholarship-finder.types.ts`
+- [x] **File:** `shared/src/types/scholarship-finder.types.ts`
   - Remove: `UserScholarshipPreferences` interface
   - Remove: `UserScholarshipInteraction` interface
   - Remove: `MatchResult` interface
   - Keep: `ScholarshipResponse` (used by scrapers)
-  - Review: `ScholarshipSearchParams` (may be removable)
+  - Remove: `ScholarshipSearchParams` (only used in files being deleted)
 
 ---
 
