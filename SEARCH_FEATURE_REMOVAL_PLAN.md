@@ -36,9 +36,9 @@ Many scholarship search websites require authentication and explicitly prohibit 
   - Drop `user_search_preferences` table (stores search criteria)
   - Add comment explaining why scholarships table remains (for scraper use)
 
-#### 1.2 Update Mock Data
-- [ ] **Remove:** `api/src/mocks/output/user_search_preferences.sql`
-- [ ] **Review:** `api/src/mocks/output/scholarships.sql` - Keep for scraper testing
+#### 1.2 Update Mock Data ✅
+- [x] **Remove:** `api/src/mocks/output/user_search_preferences.sql`
+- [x] **Review:** `api/src/mocks/output/scholarships.sql` - Keep for scraper testing
 
 ---
 
