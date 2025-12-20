@@ -67,12 +67,12 @@ Many scholarship search websites require authentication and explicitly prohibit 
 
 **Priority: HIGH - Remove unused API endpoints**
 
-#### 3.1 Remove Entire Service Files
-- [ ] **Delete:** `api/src/services/scholarships.service.ts`
-- [ ] **Delete:** `api/src/services/scholarship-matching.service.ts`
+#### 3.1 Remove Entire Service Files ✅
+- [x] **Delete:** `api/src/services/scholarships.service.ts`
+- [x] **Delete:** `api/src/services/scholarship-matching.service.ts`
 
-#### 3.2 Remove Entire Route Files
-- [ ] **Delete:** `api/src/routes/scholarships.routes.ts`
+#### 3.2 Remove Entire Route Files ✅
+- [x] **Delete:** `api/src/routes/scholarships.routes.ts`
 
 #### 3.3 Update Users Service
 - [ ] **File:** `api/src/services/users.service.ts`
