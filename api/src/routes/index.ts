@@ -6,7 +6,6 @@ import essaysRoutes from './essays.routes.js';
 import collaboratorsRoutes from './collaborators.routes.js';
 import collaborationsRoutes from './collaborations.routes.js';
 import recommendationsRoutes from './recommendations.routes.js';
-import scholarshipsRoutes from './scholarships.routes.js';
 import webhooksRoutes from './webhooks.routes.js';
 import cronRoutes from './cron.routes.js';
 
@@ -29,6 +28,5 @@ router.use('/essays', essaysRoutes);
 router.use('/collaborators', collaboratorsRoutes);
 router.use('/collaborations', collaborationsRoutes);
 router.use('/recommendations', recommendationsRoutes);
-router.use('/scholarships', scholarshipsRoutes);
 
 export default router;
