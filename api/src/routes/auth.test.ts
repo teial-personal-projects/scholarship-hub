@@ -54,8 +54,6 @@ vi.mock('../services/users.service.js', () => ({
   getUserProfile: vi.fn(),
   updateUserProfile: vi.fn(),
   getUserRoles: vi.fn().mockResolvedValue(['student']),
-  getUserSearchPreferences: vi.fn(),
-  updateUserSearchPreferences: vi.fn(),
   getUserReminders: vi.fn(),
 }));
 

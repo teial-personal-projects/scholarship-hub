@@ -75,19 +75,19 @@ Many scholarship search websites require authentication and explicitly prohibit 
 - [x] **Delete:** `api/src/routes/scholarships.routes.ts`
 
 #### 3.3 Update Users Service
-- [ ] **File:** `api/src/services/users.service.ts`
+- [x] **File:** `api/src/services/users.service.ts`
   - Remove method: `getUserSearchPreferences()` (lines 109-121)
   - Remove method: `updateUserSearchPreferences()` (lines 126-211)
   - Update method: `getUserProfile()` (lines 18-32) - Remove search preferences from query
 
 #### 3.4 Update Users Controller
-- [ ] **File:** `api/src/controllers/users.controller.ts`
+- [x] **File:** `api/src/controllers/users.controller.ts`
   - Remove method: `getMySearchPreferences()` (lines 105-124)
   - Remove method: `updateMySearchPreferences()` (lines 130-169)
   - Update method: `getMe()` (lines 22-39) - Don't return searchPreferences
 
 #### 3.5 Update Users Routes
-- [ ] **File:** `api/src/routes/users.routes.ts`
+- [x] **File:** `api/src/routes/users.routes.ts`
   - Remove routes (lines 20-24):
     - `GET /api/users/me/search-preferences`
     - `PATCH /api/users/me/search-preferences`
@@ -173,10 +173,10 @@ Many scholarship search websites require authentication and explicitly prohibit 
   - Remove API mocks for `/scholarships/recommended`
 
 #### 6.2 Backend Tests
-- [ ] **File:** `api/src/routes/users.test.ts`
+- [x] **File:** `api/src/routes/users.test.ts`
   - Remove tests for search preferences endpoints
 
-- [ ] **File:** `api/src/services/users.service.test.ts`
+- [x] **File:** `api/src/services/users.service.test.ts`
   - Remove tests for search preferences methods
 
 #### 6.3 Test Fixtures

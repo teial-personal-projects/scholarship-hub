@@ -17,7 +17,7 @@ const updateUserProfileSchema = z.object({
 
 /**
  * GET /api/users/me
- * Get current user profile (includes search preferences)
+ * Get current user profile
  */
 export const getMe = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user) {
@@ -28,12 +28,7 @@ export const getMe = asyncHandler(async (req: Request, res: Response) => {
   const profile = await usersService.getUserProfile(req.user.userId);
 
   // Convert to camelCase for API response
-  const response = {
-    ...toCamelCase(profile),
-    searchPreferences: profile.searchPreferences
-      ? toCamelCase(profile.searchPreferences)
-      : null,
-  };
+  const response = toCamelCase(profile);
 
   res.json(response);
 });
@@ -97,76 +92,6 @@ export const getMyRoles = asyncHandler(async (req: Request, res: Response) => {
 
   res.json({ roles });
 });
-
-/**
- * GET /api/users/me/search-preferences
- * Get current user's search preferences
- */
-export const getMySearchPreferences = asyncHandler(
-  async (req: Request, res: Response) => {
-    if (!req.user) {
-      res.status(401).json({ error: 'Unauthorized' });
-      return;
-    }
-
-    const prefs = await usersService.getUserSearchPreferences(req.user.userId);
-
-    if (!prefs) {
-      res.json(null);
-      return;
-    }
-
-    // Convert to camelCase
-    const response = toCamelCase(prefs);
-
-    res.json(response);
-  }
-);
-
-/**
- * PATCH /api/users/me/search-preferences
- * Update current user's search preferences
- */
-export const updateMySearchPreferences = asyncHandler(
-  async (req: Request, res: Response) => {
-    if (!req.user) {
-      res.status(401).json({ error: 'Unauthorized' });
-      return;
-    }
-
-    const {
-      targetType,
-      subjectAreas,
-      gender,
-      ethnicity,
-      minAward,
-      geographicRestrictions,
-      essayRequired,
-      recommendationRequired,
-      academicLevel,
-    } = req.body;
-
-    const updated = await usersService.updateUserSearchPreferences(
-      req.user.userId,
-      {
-        targetType,
-        subjectAreas,
-        gender,
-        ethnicity,
-        minAward,
-        geographicRestrictions,
-        essayRequired,
-        recommendationRequired,
-        academicLevel,
-      }
-    );
-
-    // Convert to camelCase
-    const response = toCamelCase(updated);
-
-    res.json(response);
-  }
-);
 
 /**
  * GET /api/users/me/reminders

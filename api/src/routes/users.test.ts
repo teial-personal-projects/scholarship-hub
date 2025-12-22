@@ -47,8 +47,6 @@ vi.mock('../services/users.service.js', () => ({
   getUserProfile: vi.fn(),
   updateUserProfile: vi.fn(),
   getUserRoles: vi.fn().mockResolvedValue(['student']),
-  getUserSearchPreferences: vi.fn(),
-  updateUserSearchPreferences: vi.fn(),
   getUserReminders: vi.fn(),
 }));
 
@@ -192,98 +190,5 @@ describe('Users Routes', () => {
     });
   });
 
-  describe('GET /api/users/me/search-preferences', () => {
-    it('should return search preferences when authenticated as student', async () => {
-      const { supabase } = await import('../config/supabase.js');
-      const { getUserProfileByAuthId } = await import('../utils/supabase.js');
-      const usersService = await import('../services/users.service.js');
-
-      // Mock auth
-      vi.mocked(supabase.auth.getUser).mockResolvedValue(
-        mockSupabaseAuth.getUser({ id: 'auth-user-3', email: 'student3@example.com' })
-      );
-      vi.mocked(getUserProfileByAuthId).mockResolvedValue(mockUsers.withSearchPreferences);
-
-      // Mock user_roles query for role middleware
-      const mockRolesSelect = vi.fn().mockReturnValue({
-        eq: vi.fn().mockResolvedValue({
-          data: [{ role: 'student' }],
-          error: null,
-        }),
-      });
-
-      const mockFrom = vi.fn((table: string) => {
-        if (table === 'user_roles') {
-          return {
-            select: mockRolesSelect,
-          };
-        }
-        return {
-          select: mockRolesSelect,
-        };
-      });
-      vi.mocked(supabase.from).mockImplementation(mockFrom as any);
-
-      // Mock getUserSearchPreferences service
-      vi.mocked(usersService.getUserSearchPreferences).mockResolvedValue(
-        mockUsers.withSearchPreferences.search_preferences
-      );
-
-      const response = await authenticatedRequest(agent, 'valid-token').get(
-        '/api/users/me/search-preferences'
-      );
-
-      expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty('target_type'); // toCamelCase mock returns as-is
-    });
-
-    it('should return 401 when not authenticated', async () => {
-      const response = await agent.get('/api/users/me/search-preferences');
-
-      expect(response.status).toBe(401);
-    });
-
-    it('should return 403 when user is not a student', async () => {
-      const { supabase } = await import('../config/supabase.js');
-      const { getUserProfileByAuthId } = await import('../utils/supabase.js');
-      const usersService = await import('../services/users.service.js');
-
-      // Mock auth with non-student user
-      vi.mocked(supabase.auth.getUser).mockResolvedValue(
-        mockSupabaseAuth.getUser({ id: 'auth-user-1', email: 'user@example.com' })
-      );
-      vi.mocked(getUserProfileByAuthId).mockResolvedValue(mockUsers.student1);
-
-      // Mock role check to return empty array (no student role)
-      const mockRolesSelect = vi.fn().mockReturnValue({
-        eq: vi.fn().mockResolvedValue({
-          data: [], // No student role
-          error: null,
-        }),
-      });
-
-      const mockFrom = vi.fn((table: string) => {
-        if (table === 'user_roles') {
-          return {
-            select: mockRolesSelect,
-          };
-        }
-        return {
-          select: mockRolesSelect,
-        };
-      });
-      vi.mocked(supabase.from).mockImplementation(mockFrom as any);
-
-      // Mock getUserRoles to return empty array
-      vi.mocked(usersService.getUserRoles).mockResolvedValue([]);
-
-      const response = await authenticatedRequest(agent, 'valid-token').get(
-        '/api/users/me/search-preferences'
-      );
-
-      // Should return 403 if role check fails
-      expect([403, 404]).toContain(response.status);
-    });
-  });
 });
 

@@ -8,7 +8,7 @@ const router = Router();
 // All routes require authentication
 router.use(auth);
 
-// GET /api/users/me - Get current user profile (includes search preferences)
+// GET /api/users/me - Get current user profile
 router.get('/me', usersController.getMe);
 
 // PATCH /api/users/me - Update current user profile
@@ -16,12 +16,6 @@ router.patch('/me', usersController.updateMe);
 
 // GET /api/users/me/roles - Get user roles
 router.get('/me/roles', usersController.getMyRoles);
-
-// GET /api/users/me/search-preferences - Get search preferences (students only)
-router.get('/me/search-preferences', requireRole(['student']), usersController.getMySearchPreferences);
-
-// PATCH /api/users/me/search-preferences - Update search preferences (students only)
-router.patch('/me/search-preferences', requireRole(['student']), usersController.updateMySearchPreferences);
 
 // GET /api/users/me/reminders - Get dashboard reminders (students only)
 router.get('/me/reminders', requireRole(['student']), usersController.getMyReminders);

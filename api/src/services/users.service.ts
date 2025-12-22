@@ -1,9 +1,5 @@
 import { supabase } from '../config/supabase.js';
 import { getUserProfileById } from '../utils/supabase.js';
-import {
-  DB_ERROR_CODES,
-  isDbErrorCode,
-} from '../constants/db-errors.js';
 import type { DashboardReminders } from '@scholarship-hub/shared';
 import { sanitizePhoneNumber } from '@scholarship-hub/shared';
 import { AppError } from '../middleware/error-handler.js';
@@ -13,23 +9,7 @@ import { AppError } from '../middleware/error-handler.js';
  */
 export const getUserProfile = async (userId: number) => {
   const profile = await getUserProfileById(userId);
-
-  // Also fetch search preferences
-  const { data: searchPrefs, error: searchError } = await supabase
-    .from('user_search_preferences')
-    .select('*')
-    .eq('user_id', userId)
-    .single();
-
-  if (searchError && !isDbErrorCode(searchError, DB_ERROR_CODES.NO_ROWS_FOUND)) {
-    // If error is not "not found", throw it
-    throw searchError;
-  }
-
-  return {
-    ...profile,
-    searchPreferences: searchPrefs || null,
-  };
+  return profile;
 };
 
 /**
@@ -101,113 +81,6 @@ export const getUserRoles = async (userId: number) => {
   if (error) throw error;
 
   return data.map((row) => row.role);
-};
-
-/**
- * Get user search preferences
- */
-export const getUserSearchPreferences = async (userId: number) => {
-  const { data, error } = await supabase
-    .from('user_search_preferences')
-    .select('*')
-    .eq('user_id', userId)
-    .single();
-
-  if (error && !isDbErrorCode(error, DB_ERROR_CODES.NO_ROWS_FOUND)) {
-    throw error;
-  }
-
-  return data || null;
-};
-
-/**
- * Update user search preferences
- */
-export const updateUserSearchPreferences = async (
-  userId: number,
-  preferences: {
-    targetType?: string;
-    subjectAreas?: string[];
-    gender?: string;
-    ethnicity?: string;
-    minAward?: number;
-    geographicRestrictions?: string;
-    essayRequired?: boolean;
-    recommendationRequired?: boolean;
-    academicLevel?: string;
-  }
-) => {
-  // Convert camelCase to snake_case (don't include user_id in update data)
-  const dbPrefs: Record<string, unknown> = {};
-  if (preferences.targetType !== undefined) dbPrefs.target_type = preferences.targetType;
-  if (preferences.subjectAreas !== undefined) dbPrefs.subject_areas = preferences.subjectAreas;
-  if (preferences.gender !== undefined) dbPrefs.gender = preferences.gender;
-  if (preferences.ethnicity !== undefined) dbPrefs.ethnicity = preferences.ethnicity;
-  if (preferences.minAward !== undefined) dbPrefs.min_award = preferences.minAward;
-  if (preferences.geographicRestrictions !== undefined) dbPrefs.geographic_restrictions = preferences.geographicRestrictions;
-  if (preferences.essayRequired !== undefined) dbPrefs.essay_required = preferences.essayRequired;
-  if (preferences.recommendationRequired !== undefined) dbPrefs.recommendation_required = preferences.recommendationRequired;
-  if (preferences.academicLevel !== undefined) dbPrefs.academic_level = preferences.academicLevel;
-
-  // Check if preferences already exist
-  const { data: existing, error: checkError } = await supabase
-    .from('user_search_preferences')
-    .select('user_id')
-    .eq('user_id', userId)
-    .maybeSingle();
-
-  if (checkError && !isDbErrorCode(checkError, DB_ERROR_CODES.NO_ROWS_FOUND)) {
-    throw checkError;
-  }
-
-  let data;
-  let error;
-
-  if (existing) {
-    // Update existing record (don't include user_id in update)
-    const result = await supabase
-      .from('user_search_preferences')
-      .update(dbPrefs)
-      .eq('user_id', userId)
-      .select()
-      .single();
-    data = result.data;
-    error = result.error;
-  } else {
-    // Insert new record (include user_id for insert)
-    const insertData = { ...dbPrefs, user_id: userId };
-    const result = await supabase
-      .from('user_search_preferences')
-      .insert(insertData)
-      .select()
-      .single();
-    data = result.data;
-    error = result.error;
-  }
-
-  if (error) {
-    // Log error with context for troubleshooting
-    if (process.env.NODE_ENV === 'development') {
-      console.error('❌ Failed to save user search preferences:', {
-        error: error.message,
-        code: error.code,
-        details: error.details,
-        hint: error.hint,
-        userId,
-        dbPrefs,
-        existing: !!existing,
-      });
-    } else {
-      console.error('❌ Failed to save user search preferences:', {
-        error: error.message,
-        code: error.code,
-        userId,
-      });
-    }
-    throw error;
-  }
-
-  return data;
 };
 
 /**
