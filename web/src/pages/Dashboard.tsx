@@ -23,9 +23,8 @@ import { useAuth } from '../contexts/AuthContext';
 import DashboardReminders from '../components/DashboardReminders';
 import DashboardCollaborations from '../components/DashboardCollaborations';
 import DashboardPendingResponses from '../components/DashboardPendingResponses';
-import type { UserProfile, ApplicationResponse, ScholarshipResponse } from '@scholarship-hub/shared';
+import type { UserProfile, ApplicationResponse } from '@scholarship-hub/shared';
 import { useToastHelpers } from '../utils/toast';
-import { formatScholarshipAward } from '../utils/scholarship';
 
 function Dashboard() {
   const { user, loading: authLoading } = useAuth();
@@ -34,7 +33,6 @@ function Dashboard() {
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [applications, setApplications] = useState<ApplicationResponse[]>([]);
-  const [recommendedScholarships, setRecommendedScholarships] = useState<ScholarshipResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -59,15 +57,6 @@ function Dashboard() {
         // Fetch applications
         const applicationsData = await apiGet<ApplicationResponse[]>('/applications');
         setApplications(applicationsData || []);
-
-        // Fetch recommended scholarships
-        try {
-          const scholarshipsData = await apiGet<ScholarshipResponse[]>('/scholarships/recommended?limit=5');
-          setRecommendedScholarships(scholarshipsData || []);
-        } catch (scholarshipError) {
-          // Don't fail the whole dashboard if scholarships fail
-          console.error('Failed to fetch recommended scholarships:', scholarshipError);
-        }
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to load dashboard data';
         setError(errorMessage);
@@ -180,82 +169,10 @@ function Dashboard() {
             >
               New Application
             </Button>
-            <Button
-              variant="outline"
-              colorPalette="brand"
-              size={{ base: 'md', md: 'lg' }}
-              onClick={() => navigate('/search')}
-            >
-              Browse Scholarships
-            </Button>
           </HStack>
 
           {/* Summary / Reminders (move to top) */}
           <DashboardReminders />
-
-          {/* Recommended Scholarships Widget */}
-          {recommendedScholarships.length > 0 && (
-            <Card.Root variant="elevated" bg="white">
-              <Card.Header
-                bg="highlight.50"
-                borderTopRadius="xl"
-                borderBottom="1px solid"
-                borderColor="brand.200"
-                py={{ base: '3', md: '4' }}
-                px={{ base: '4', md: '6' }}
-              >
-                <Flex justify="space-between" align="center">
-                  <Heading size="sm" color="brand.700">
-                    📚 New Scholarships for You
-                  </Heading>
-                  <Button
-                    variant="plain"
-                    colorPalette="brand"
-                    onClick={() => navigate('/scholarships/search')}
-                  >
-                    Browse All →
-                  </Button>
-                </Flex>
-              </Card.Header>
-              <Card.Body>
-                <Stack gap={4}>
-                  {recommendedScholarships.map((scholarship) => {
-                    const awardText = formatScholarshipAward(scholarship);
-                    return (
-                      <Card.Root
-                        key={scholarship.id}
-                        variant="outline"
-                        _hover={{ shadow: 'sm' }}
-                        cursor="pointer"
-                        onClick={() => navigate(`/scholarships/${scholarship.id}`)}
-                      >
-                        <Card.Body>
-                          <Flex justify="space-between" align="start">
-                            <Box flex="1">
-                              <Heading size="sm" mb={1}>{scholarship.name}</Heading>
-                              {scholarship.organization && (
-                                <Text fontSize="sm" color="gray.600">{scholarship.organization}</Text>
-                              )}
-                            </Box>
-                            {awardText && (
-                              <Badge colorPalette="green" ml={2}>
-                                {awardText}
-                              </Badge>
-                            )}
-                          </Flex>
-                          {scholarship.deadline && (
-                            <Text fontSize="sm" color="gray.500" mt={2}>
-                              📅 Due: {new Date(scholarship.deadline).toLocaleDateString()}
-                            </Text>
-                          )}
-                        </Card.Body>
-                      </Card.Root>
-                    );
-                  })}
-                </Stack>
-              </Card.Body>
-            </Card.Root>
-          )}
 
           {/* Applications Section */}
         <Card.Root variant="elevated" bg="white">

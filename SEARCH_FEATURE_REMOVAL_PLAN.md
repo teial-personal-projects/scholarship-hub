@@ -93,7 +93,7 @@ Many scholarship search websites require authentication and explicitly prohibit 
     - `PATCH /api/users/me/search-preferences`
 
 #### 3.6 Update Routes Index
-- [ ] **File:** `api/src/routes/index.ts`
+- [x] **File:** `api/src/routes/index.ts`
   - Remove import: `scholarshipsRoutes` (line 9)
   - Remove route registration: `router.use('/scholarships', scholarshipsRoutes)` (line 32)
 
@@ -104,31 +104,31 @@ Many scholarship search websites require authentication and explicitly prohibit 
 **Priority: HIGH - Remove user-facing pages**
 
 #### 4.1 Remove Page Components
-- [ ] **Delete:** `web/src/pages/Search.tsx`
-- [ ] **Delete:** `web/src/pages/ScholarshipSearch.tsx`
-- [ ] **Delete:** `web/src/pages/ScholarshipDetail.tsx`
+- [x] **Delete:** `web/src/pages/Search.tsx`
+- [x] **Delete:** `web/src/pages/ScholarshipSearch.tsx`
+- [x] **Delete:** `web/src/pages/ScholarshipDetail.tsx`
 
 #### 4.2 Update App Routes
-- [ ] **File:** `web/src/App.tsx`
+- [x] **File:** `web/src/App.tsx`
   - Remove routes (lines 86-108):
     - `/search` → Search component
     - `/scholarships/search` → ScholarshipSearch component
     - `/scholarships/:id` → ScholarshipDetail component
 
 #### 4.3 Update Dashboard
-- [ ] **File:** `web/src/pages/Dashboard.tsx`
+- [x] **File:** `web/src/pages/Dashboard.tsx`
   - Remove: `recommendedScholarships` state (line 37)
   - Remove: API call to `/scholarships/recommended` (lines 64-69)
   - Remove: "New Scholarships for You" widget (lines 196-258)
   - Remove: "Browse Scholarships" button (lines 174-190)
 
 #### 4.4 Update Profile Page
-- [ ] **File:** `web/src/pages/Profile.tsx`
+- [x] **File:** `web/src/pages/Profile.tsx`
   - Remove: Entire "Search Preferences" Accordion section (lines 321-517)
   - Remove: State variables for search preferences (lines 118-128, 147-208)
 
 #### 4.5 Review Utility Files
-- [ ] **File:** `web/src/utils/scholarship.ts`
+- [x] **File:** `web/src/utils/scholarship.ts`
   - If only used by removed features, delete it
   - If used elsewhere, keep it
 

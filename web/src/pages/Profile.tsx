@@ -12,14 +12,7 @@ import {
   CardBody,
   CardHeader,
   SimpleGrid,
-  Wrap,
-  TagRoot,
-  TagLabel,
-  TagCloseTrigger,
-  NativeSelectRoot,
-  NativeSelectField,
   CheckboxRoot,
-  CheckboxLabel,
   CheckboxControl,
   CheckboxHiddenInput,
   AccordionRoot,
@@ -34,75 +27,6 @@ import { apiGet, apiPatch } from '../services/api';
 import type { UserProfile } from '@scholarship-hub/shared';
 import { useToastHelpers } from '../utils/toast';
 
-// Constants
-const TARGET_TYPES = ['Merit', 'Need', 'Both'];
-const GENDER_OPTIONS = ['Male', 'Female', 'Non-Binary'];
-const ETHNICITY_OPTIONS = [
-  'Asian/Pacific Islander',
-  'Black/African American',
-  'Hispanic/Latino',
-  'White/Caucasian',
-  'Native American/Alaska Native',
-  'Native Hawaiian/Pacific Islander',
-  'Middle Eastern/North African',
-  'South Asian',
-  'East Asian',
-  'Southeast Asian',
-  'Other',
-];
-const ACADEMIC_LEVELS = [
-  'High School',
-  'Undergraduate',
-  'Graduate',
-  'High School Junior',
-  'High School Senior',
-  'College Freshman',
-  'College Sophomore',
-  'College Junior',
-  'College Senior',
-  'Graduate Student',
-];
-const SUBJECT_AREAS = [
-  'Agriculture',
-  'Arts',
-  'Architecture',
-  'Athletics',
-  'Aviation',
-  'Biology',
-  'Business',
-  'Chemistry',
-  'Communication',
-  'Community Service',
-  'Criminal Justice',
-  'Culinary Arts',
-  'Computer Science',
-  'Dance',
-  'Dentistry',
-  'Disablity',
-  'Design',
-  'Drama',
-  'Economics',
-  'Education',
-  'Engineering',
-  'Environmental Science',
-  'Healthcare',
-  'Humanities',
-  'Journalism',
-  'Law',
-  'Mathematics',
-  'Medicine',
-  'Music',
-  'Military',
-  'Nursing',
-  'Physics',
-  'Psychology',
-  'Public Policy',
-  'Religion',
-  'Science',
-  'Social Sciences',
-  'STEM',
-  'Writing',
-];
 
 function Profile() {
   const { showSuccess, showError } = useToastHelpers();
@@ -114,18 +38,6 @@ function Profile() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
-
-  // Search preferences
-  const [targetType, setTargetType] = useState<string>('');
-  const [subjectAreas, setSubjectAreas] = useState<string[]>([]);
-  const [newSubjectArea, setNewSubjectArea] = useState('');
-  const [gender, setGender] = useState<string>('');
-  const [ethnicity, setEthnicity] = useState<string>('');
-  const [minAward, setMinAward] = useState<number | undefined>(undefined);
-  const [geographicRestrictions, setGeographicRestrictions] = useState('');
-  const [essayRequired, setEssayRequired] = useState(false);
-  const [recommendationRequired, setRecommendationRequired] = useState(false);
-  const [academicLevel, setAcademicLevel] = useState<string>('');
 
   // Notification preferences
   const [applicationRemindersEnabled, setApplicationRemindersEnabled] = useState(true);
@@ -143,20 +55,6 @@ function Profile() {
         setLastName(profileData.lastName || '');
         setPhoneNumber(profileData.phoneNumber || '');
 
-        // Set search preferences if they exist
-        if (profileData.searchPreferences) {
-          const prefs = profileData.searchPreferences;
-          setTargetType(prefs.targetType || '');
-          setSubjectAreas(prefs.subjectAreas || []);
-          setGender(prefs.gender || '');
-          setEthnicity(prefs.ethnicity || '');
-          setMinAward(prefs.minAward || undefined);
-          setGeographicRestrictions(prefs.geographicRestrictions || '');
-          setEssayRequired(prefs.essayRequired || false);
-          setRecommendationRequired(prefs.recommendationRequired || false);
-          setAcademicLevel(prefs.academicLevel || '');
-        }
-
         // Set notification preferences
         setApplicationRemindersEnabled(profileData.applicationRemindersEnabled ?? true);
         setCollaborationRemindersEnabled(profileData.collaborationRemindersEnabled ?? true);
@@ -169,17 +67,6 @@ function Profile() {
 
     fetchProfile();
   }, [showError]);
-
-  const handleAddSubjectArea = () => {
-    if (newSubjectArea && !subjectAreas.includes(newSubjectArea)) {
-      setSubjectAreas([...subjectAreas, newSubjectArea]);
-      setNewSubjectArea('');
-    }
-  };
-
-  const handleRemoveSubjectArea = (area: string) => {
-    setSubjectAreas(subjectAreas.filter((a) => a !== area));
-  };
 
   const handleSave = async () => {
     try {
@@ -194,20 +81,7 @@ function Profile() {
         collaborationRemindersEnabled,
       });
 
-      // Update search preferences
-      await apiPatch('/users/me/search-preferences', {
-        targetType: targetType || null,
-        subjectAreas: subjectAreas.length > 0 ? subjectAreas : null,
-        gender: gender || null,
-        ethnicity: ethnicity || null,
-        minAward: minAward || null,
-        geographicRestrictions: geographicRestrictions || null,
-        essayRequired: essayRequired,
-        recommendationRequired: recommendationRequired,
-        academicLevel: academicLevel || null,
-      });
-
-      showSuccess('Profile updated', 'Your profile and preferences have been saved successfully.', 3000);
+      showSuccess('Profile updated', 'Your profile has been saved successfully.', 3000);
     } catch (error) {
       showError('Error', error instanceof Error ? error.message : 'Failed to update profile');
     } finally {
@@ -239,7 +113,7 @@ function Profile() {
       <Stack gap={{ base: '4', md: '8' }}>
           <Heading size={{ base: 'md', md: 'lg' }}>Profile & Preferences</Heading>
 
-        <AccordionRoot multiple defaultValue={['personal', 'search', 'notifications']}>
+        <AccordionRoot multiple defaultValue={['personal', 'notifications']}>
           {/* Profile Information */}
           <AccordionItem value="personal" border="none" mb="4">
             <CardRoot>
@@ -311,204 +185,6 @@ function Profile() {
                   fontSize={{ base: 'md', md: 'sm' }}
                 />
               </Field.Root>
-            </Stack>
-                  </CardBody>
-                </AccordionItemBody>
-              </AccordionItemContent>
-            </CardRoot>
-          </AccordionItem>
-
-          {/* Search Preferences */}
-          <AccordionItem value="search" border="none" mb="4">
-            <CardRoot>
-              <CardHeader p="0" _hover={{ bg: 'gray.50' }}>
-                <AccordionItemTrigger
-                  px={{ base: 4, md: 6 }}
-                  py="4"
-                  display="flex"
-                  alignItems="center"
-                  justifyContent="space-between"
-                  w="full"
-                >
-                <Box flex="1" textAlign="left">
-                  <Heading size="md">Search Preferences</Heading>
-                  <Text fontSize="sm" color="gray.500" mt="1">
-                    Customize your scholarship search criteria
-                  </Text>
-                </Box>
-                <AccordionItemIndicator fontSize="2xl" color="brand.700" />
-                </AccordionItemTrigger>
-              </CardHeader>
-              <AccordionItemContent>
-                <AccordionItemBody p="0">
-                  <CardBody>
-            <Stack gap="6">
-              <SimpleGrid columns={{ base: 1, md: 2 }} gap="6">
-                <Field.Root>
-                  <Field.Label fontSize={{ base: 'lg', md: 'sm' }} fontWeight={{ base: 'semibold', md: 'normal' }}>Target Type</Field.Label>
-                  <NativeSelectRoot size={{ base: 'lg', md: 'md' }}>
-                    <NativeSelectField
-                      value={targetType}
-                      onChange={(e) => setTargetType(e.target.value)}
-                      fontSize={{ base: 'lg', md: 'sm' }}
-                      height={{ base: '48px', md: 'auto' }}
-                    >
-                      <option value="">Select target type</option>
-                      {TARGET_TYPES.map((type) => (
-                        <option key={type} value={type} style={{ fontSize: '18px', padding: '12px' }}>
-                          {type}
-                        </option>
-                      ))}
-                    </NativeSelectField>
-                  </NativeSelectRoot>
-                </Field.Root>
-
-                <Field.Root>
-                  <Field.Label fontSize={{ base: 'lg', md: 'sm' }} fontWeight={{ base: 'semibold', md: 'normal' }}>Academic Level</Field.Label>
-                  <NativeSelectRoot size={{ base: 'lg', md: 'md' }}>
-                    <NativeSelectField
-                      value={academicLevel}
-                      onChange={(e) => setAcademicLevel(e.target.value)}
-                      fontSize={{ base: 'lg', md: 'sm' }}
-                      height={{ base: '48px', md: 'auto' }}
-                    >
-                      <option value="">Select academic level</option>
-                      {ACADEMIC_LEVELS.map((level) => (
-                        <option key={level} value={level} style={{ fontSize: '18px', padding: '12px' }}>
-                          {level}
-                        </option>
-                      ))}
-                    </NativeSelectField>
-                  </NativeSelectRoot>
-                </Field.Root>
-              </SimpleGrid>
-
-              <SimpleGrid columns={{ base: 1, md: 2 }} gap="6">
-                <Field.Root>
-                  <Field.Label fontSize={{ base: 'lg', md: 'sm' }} fontWeight={{ base: 'semibold', md: 'normal' }}>Gender</Field.Label>
-                  <NativeSelectRoot size={{ base: 'lg', md: 'md' }}>
-                    <NativeSelectField
-                      value={gender}
-                      onChange={(e) => setGender(e.target.value)}
-                      fontSize={{ base: 'lg', md: 'sm' }}
-                      height={{ base: '48px', md: 'auto' }}
-                    >
-                      <option value="">Select gender</option>
-                      {GENDER_OPTIONS.map((g) => (
-                        <option key={g} value={g} style={{ fontSize: '18px', padding: '12px' }}>
-                          {g}
-                        </option>
-                      ))}
-                    </NativeSelectField>
-                  </NativeSelectRoot>
-                </Field.Root>
-
-                <Field.Root>
-                  <Field.Label fontSize={{ base: 'lg', md: 'sm' }} fontWeight={{ base: 'semibold', md: 'normal' }}>Ethnicity</Field.Label>
-                  <NativeSelectRoot size={{ base: 'lg', md: 'md' }}>
-                    <NativeSelectField
-                      value={ethnicity}
-                      onChange={(e) => setEthnicity(e.target.value)}
-                      fontSize={{ base: 'lg', md: 'sm' }}
-                      height={{ base: '48px', md: 'auto' }}
-                    >
-                      <option value="">Select ethnicity</option>
-                      {ETHNICITY_OPTIONS.map((eth) => (
-                        <option key={eth} value={eth} style={{ fontSize: '18px', padding: '12px' }}>
-                          {eth}
-                        </option>
-                      ))}
-                    </NativeSelectField>
-                  </NativeSelectRoot>
-                </Field.Root>
-              </SimpleGrid>
-
-              <Field.Root>
-                <Field.Label fontSize={{ base: 'md', md: 'sm' }}>Minimum Award Amount ($)</Field.Label>
-                <Input
-                  type="number"
-                  min={0}
-                  value={minAward ?? ''}
-                  onChange={(e) => setMinAward(e.target.value === '' ? undefined : Number(e.target.value))}
-                  placeholder="Minimum award amount"
-                  size={{ base: 'lg', md: 'md' }}
-                  fontSize={{ base: 'md', md: 'sm' }}
-                />
-              </Field.Root>
-
-              <Field.Root>
-                <Field.Label fontSize={{ base: 'md', md: 'sm' }}>Subject Areas</Field.Label>
-                <Wrap gap="2" mb="3">
-                  {subjectAreas.map((area) => (
-                    <TagRoot key={area} size={{ base: 'lg', md: 'md' }} colorPalette="blue" fontSize={{ base: 'sm', md: 'xs' }}>
-                      <TagLabel>{area}</TagLabel>
-                      <TagCloseTrigger onClick={() => handleRemoveSubjectArea(area)} />
-                    </TagRoot>
-                  ))}
-                </Wrap>
-                <Box display="flex" gap="2" flexDirection={{ base: 'column', md: 'row' }}>
-                  <NativeSelectRoot size={{ base: 'lg', md: 'md' }} flex="1">
-                    <NativeSelectField
-                      value={newSubjectArea}
-                      onChange={(e) => setNewSubjectArea(e.target.value)}
-                      fontSize={{ base: 'lg', md: 'sm' }}
-                      height={{ base: '48px', md: 'auto' }}
-                    >
-                      <option value="">Select subject area to add</option>
-                      {SUBJECT_AREAS.filter((area) => !subjectAreas.includes(area)).map((area) => (
-                        <option key={area} value={area} style={{ fontSize: '18px', padding: '12px' }}>
-                          {area}
-                        </option>
-                      ))}
-                    </NativeSelectField>
-                  </NativeSelectRoot>
-                  <Button 
-                    onClick={handleAddSubjectArea} 
-                    disabled={!newSubjectArea}
-                    size={{ base: 'lg', md: 'md' }}
-                    width={{ base: '100%', md: 'auto' }}
-                    fontSize={{ base: 'lg', md: 'md' }}
-                  >
-                    Add
-                  </Button>
-                </Box>
-              </Field.Root>
-
-              <Field.Root>
-                <Field.Label fontSize={{ base: 'md', md: 'sm' }}>Geographic Restrictions</Field.Label>
-                <Input
-                  value={geographicRestrictions}
-                  onChange={(e) => setGeographicRestrictions(e.target.value)}
-                  placeholder="e.g., United States, California only"
-                  size={{ base: 'lg', md: 'md' }}
-                  fontSize={{ base: 'md', md: 'sm' }}
-                />
-              </Field.Root>
-
-              <Stack>
-                <CheckboxRoot
-                  checked={essayRequired}
-                  onCheckedChange={(details) => setEssayRequired(Boolean(details.checked))}
-                  size={{ base: 'lg', md: 'md' }}
-                >
-                  <CheckboxHiddenInput />
-                  <CheckboxControl />
-                  <CheckboxLabel>
-                    <Text fontSize={{ base: 'md', md: 'sm' }}>Essay Required</Text>
-                  </CheckboxLabel>
-                </CheckboxRoot>
-                <CheckboxRoot
-                  checked={recommendationRequired}
-                  onCheckedChange={(details) => setRecommendationRequired(Boolean(details.checked))}
-                  size={{ base: 'lg', md: 'md' }}
-                >
-                  <CheckboxHiddenInput />
-                  <CheckboxControl />
-                  <CheckboxLabel>
-                    <Text fontSize={{ base: 'md', md: 'sm' }}>Recommendation Required</Text>
-                  </CheckboxLabel>
-                </CheckboxRoot>
-              </Stack>
             </Stack>
                   </CardBody>
                 </AccordionItemBody>
