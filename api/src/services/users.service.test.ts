@@ -27,12 +27,12 @@ describe('users.service', () => {
       const { getUserProfile } = await import('./users.service.js');
 
       // Mock getUserProfileById
-      vi.mocked(getUserProfileById).mockResolvedValue(mockUsers.withSearchPreferences);
+      vi.mocked(getUserProfileById).mockResolvedValue(mockUsers.student2);
 
-      const result = await getUserProfile(3);
+      const result = await getUserProfile(2);
 
-      expect(getUserProfileById).toHaveBeenCalledWith(3);
-      expect(result).toEqual(mockUsers.withSearchPreferences);
+      expect(getUserProfileById).toHaveBeenCalledWith(2);
+      expect(result).toEqual(mockUsers.student2);
       expect(result).not.toHaveProperty('searchPreferences');
     });
 

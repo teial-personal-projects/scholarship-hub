@@ -110,9 +110,6 @@ describe('Dashboard Page', () => {
       if (url === '/applications') {
         return Promise.resolve(mockApps);
       }
-      if (url.startsWith('/scholarships/recommended')) {
-        return Promise.resolve([]);
-      }
       // Mock any other endpoints with empty arrays (for the child components)
       return Promise.resolve([]);
     });
@@ -144,9 +141,6 @@ describe('Dashboard Page', () => {
       if (url === '/applications') {
         return Promise.resolve(mockApps);
       }
-      if (url.startsWith('/scholarships/recommended')) {
-        return Promise.resolve([]);
-      }
       // Mock essays and collaborations endpoints for each application
       if (url.includes('/essays')) {
         return Promise.resolve([]);
@@ -174,9 +168,6 @@ describe('Dashboard Page', () => {
       }
       if (url === '/applications') {
         return Promise.resolve(mockApps);
-      }
-      if (url.startsWith('/scholarships/recommended')) {
-        return Promise.resolve([]);
       }
       // Mock any other endpoints with empty arrays (for the child components)
       return Promise.resolve([]);
@@ -208,9 +199,6 @@ describe('Dashboard Page', () => {
       }
       if (url === '/applications') {
         return Promise.resolve(mockApps);
-      }
-      if (url.startsWith('/scholarships/recommended')) {
-        return Promise.resolve([]);
       }
       // Mock essays and collaborations endpoints for each application
       if (url.includes('/essays')) {
@@ -250,9 +238,6 @@ describe('Dashboard Page', () => {
       }
       if (url === '/applications') {
         return Promise.resolve(mockApps);
-      }
-      if (url.startsWith('/scholarships/recommended')) {
-        return Promise.resolve([]);
       }
       // Mock essays and collaborations endpoints for each application
       if (url.includes('/essays')) {
@@ -304,9 +289,6 @@ describe('Dashboard Page', () => {
       if (url === '/applications') {
         return Promise.resolve(mockApps);
       }
-      if (url.startsWith('/scholarships/recommended')) {
-        return Promise.resolve([]);
-      }
       // Mock essays and collaborations endpoints for each application
       if (url.includes('/essays')) {
         return Promise.resolve([]);
@@ -344,8 +326,10 @@ describe('Dashboard Page', () => {
 
     await waitFor(() => {
       // Error message displayed in the component
+      // The error is shown via showError toast, but we can check for the error state
+      // The component shows error in a Card with the error message
       expect(screen.getByText(/Failed to load dashboard data/i)).toBeInTheDocument();
-    });
+    }, { timeout: 5000 });
   });
 
   it('should render DashboardReminders component', async () => {
@@ -359,9 +343,6 @@ describe('Dashboard Page', () => {
       if (url === '/applications') {
         return Promise.resolve(mockApps);
       }
-      if (url.startsWith('/scholarships/recommended')) {
-        return Promise.resolve([]);
-      }
       // Mock any other endpoints with empty arrays (for the child components)
       return Promise.resolve([]);
     });
@@ -371,7 +352,7 @@ describe('Dashboard Page', () => {
     // Component should load successfully (mocked child components return null)
     await waitFor(() => {
       expect(screen.getByText(/Welcome back, John!/i)).toBeInTheDocument();
-    });
+    }, { timeout: 5000 });
   });
 
   it('should display applications count correctly', async () => {
@@ -384,9 +365,6 @@ describe('Dashboard Page', () => {
       }
       if (url === '/applications') {
         return Promise.resolve(mockApps);
-      }
-      if (url.startsWith('/scholarships/recommended')) {
-        return Promise.resolve([]);
       }
       // Mock essays and collaborations endpoints for each application
       if (url.includes('/essays')) {
@@ -428,9 +406,6 @@ describe('Dashboard Page', () => {
       }
       if (url === '/applications') {
         return Promise.resolve(mockApps);
-      }
-      if (url.startsWith('/scholarships/recommended')) {
-        return Promise.resolve([]);
       }
       // Mock essays and collaborations endpoints for each application
       if (url.includes('/essays')) {

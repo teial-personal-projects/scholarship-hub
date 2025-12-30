@@ -30,30 +30,6 @@ export const mockUsers = {
     collaboration_reminders_enabled: false,
     reminder_intervals: { application: [7, 3, 1], collaboration: [7, 3, 1] },
   },
-  withSearchPreferences: {
-    id: 3,
-    auth_user_id: 'auth-user-3',
-    email_address: 'student3@example.com',
-    first_name: 'Alice',
-    last_name: 'Johnson',
-    phone_number: null,
-    created_at: '2024-01-03T00:00:00Z',
-    updated_at: '2024-01-03T00:00:00Z',
-    application_reminders_enabled: true,
-    collaboration_reminders_enabled: true,
-    reminder_intervals: { application: [7, 3, 1], collaboration: [7, 3, 1] },
-    search_preferences: {
-      target_type: 'Merit',
-      subject_areas: ['Computer Science', 'Engineering'],
-      gender: 'Female',
-      ethnicity: 'Asian/Pacific Islander',
-      min_award: 1000,
-      geographic_restrictions: 'United States',
-      essay_required: false,
-      recommendation_required: true,
-      academic_level: 'Undergraduate',
-    },
-  },
 };
 
 export const createMockUser = (overrides: Partial<typeof mockUsers.student1> = {}) => ({
