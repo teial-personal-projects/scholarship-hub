@@ -338,7 +338,7 @@ Since this application uses JWT bearer tokens (not cookies), JWT-specific securi
   - ✅ Prevents multiple simultaneous refresh attempts with promise deduplication
   - ✅ Automatically redirects to login if refresh fails
   - Implementation: `web/src/services/api.ts` - `refreshAccessToken()` function and 401 handler
-  - Note: Token expiration settings should be verified in Supabase Dashboard (recommended: 1 hour for access tokens)
+  - Note: Token expiration settings should be verified in Supabase Dashboard (recommended: 1 hour for access tokens). Find under Project Settings->JWT Keys. This project is using Legacy JWT Secret
 
 - [ ] **XSS Protection** (Critical for JWT security)
   - Install and configure Helmet.js for security headers
