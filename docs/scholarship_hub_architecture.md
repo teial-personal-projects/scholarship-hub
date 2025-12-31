@@ -387,11 +387,14 @@ Prevents XSS attacks and injection vulnerabilities. Critical for JWT security to
   - ✅ Updated `collaborations.controller.ts` - All POST, PATCH endpoints use schemas, path params validated
   - ✅ All routes with IDs now validate path parameters using `idParamSchema` or specific param schemas
 
-- 5. [ ] **HTML Sanitization**
-  - Create sanitization utilities for server-side and client-side
-  - Sanitize rich text content (essays, notes) before storage
-  - Use allowed tags whitelist (b, i, em, strong, a, p, br, ul, ol, li)
-  - Create React component for safe HTML rendering
+- 5. [✅] **HTML Sanitization**
+  - ✅ Created server-side HTML sanitization utility using DOMPurify with JSDOM (`api/src/utils/sanitize-html.ts`) with three security profiles: STRICT (basic formatting), BASIC (rich text), and EXTENDED (tables/documentation)
+  - ✅ Created client-side HTML sanitization utility (`web/src/utils/sanitize-html.ts`) with identical profiles for consistent sanitization
+  - ✅ Implemented React components for safe HTML rendering: `SafeHtml`, `SafeNote`, `SafeEssay`, and `SafeDocumentation` (`web/src/components/SafeHtml.tsx`)
+  - ✅ Applied sanitization to collaboration notes field in create/update operations using `sanitizeNote()` function
+  - ✅ Whitelist approach with allowed tags per profile - STRICT: [b, i, em, strong, br]; BASIC: adds [p, hr, ul, ol, li, a, h3-h6]; EXTENDED: adds [div, span, table, blockquote, code, pre, mark, small]
+  - ✅ All links automatically get `target="_blank"` and `rel="noopener noreferrer"` for security
+  - ✅ Added HTML schemas to shared validation utilities (`htmlNoteSchema`, `htmlEssaySchema`, `htmlDocumentationSchema`)
 
 - 6. [✅] **Security Headers and Content Security Policy (CSP)**
   - ✅ Configured comprehensive security headers via Helmet.js middleware to protect against XSS, clickjacking, MIME sniffing, and code injection attacks

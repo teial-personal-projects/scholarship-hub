@@ -354,5 +354,14 @@ export const nonNegativeNumberSchema = z.number().nonnegative();
 // Date schema
 export const dateSchema = z.string().datetime().or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/));
 
+/**
+ * HTML content schemas with length limits
+ * Note: Actual HTML sanitization happens server-side and client-side
+ * These schemas just validate length and basic structure
+ */
+export const htmlNoteSchema = z.string().max(5000).transform(val => val.trim()).optional();
+export const htmlEssaySchema = z.string().max(50000).transform(val => val.trim()).optional();
+export const htmlDocumentationSchema = z.string().max(100000).transform(val => val.trim()).optional();
+
 // Placeholder for additional Zod validation schemas
 // These will be implemented as needed throughout the project

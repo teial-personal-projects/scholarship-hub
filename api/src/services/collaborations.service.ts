@@ -11,6 +11,7 @@ import {
   isDbErrorCode,
 } from '../constants/db-errors.js';
 import { sendCollaborationInvite } from './email.service.js';
+import { sanitizeNote } from '../utils/sanitize-html.js';
 
 /**
  * Verify that a collaborator belongs to the user
@@ -244,7 +245,10 @@ export const createCollaboration = async (
     // Store DATE fields as date-only (YYYY-MM-DD) to avoid timezone shifts.
     dbData.next_action_due_date = collaborationData.nextActionDueDate.split('T')[0];
   }
-  if (collaborationData.notes !== undefined) dbData.notes = collaborationData.notes;
+  if (collaborationData.notes !== undefined) {
+    // Sanitize HTML notes to prevent XSS attacks
+    dbData.notes = sanitizeNote(collaborationData.notes);
+  }
 
   // Create base collaboration
   const { data: collaboration, error } = await supabase
@@ -456,7 +460,10 @@ export const updateCollaboration = async (
     // Store DATE fields as date-only (YYYY-MM-DD) to avoid timezone shifts.
     dbUpdates.next_action_due_date = updates.nextActionDueDate.split('T')[0];
   }
-  if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
+  if (updates.notes !== undefined) {
+    // Sanitize HTML notes to prevent XSS attacks
+    dbUpdates.notes = sanitizeNote(updates.notes);
+  }
 
   // Update base collaboration
   if (Object.keys(dbUpdates).length > 0) {

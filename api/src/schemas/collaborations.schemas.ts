@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { urlSchema } from '@scholarship-hub/shared';
+import { urlSchema, htmlNoteSchema } from '@scholarship-hub/shared';
 
 /**
  * Collaboration Validation Schemas
@@ -45,7 +45,7 @@ export const createCollaborationInputSchema = z.object({
   awaitingActionType: z.string().max(255).trim().optional(),
   nextActionDescription: z.string().max(1000).trim().optional(),
   nextActionDueDate: dateSchema,
-  notes: z.string().max(5000).trim().optional(),
+  notes: htmlNoteSchema,
   // Essay review specific fields
   currentDraftVersion: z.number().int().nonnegative().optional(),
   feedbackRounds: z.number().int().nonnegative().optional(),
@@ -80,7 +80,7 @@ export const updateCollaborationInputSchema = z.object({
   awaitingActionType: z.string().max(255).trim().optional(),
   nextActionDescription: z.string().max(1000).trim().optional(),
   nextActionDueDate: dateSchema,
-  notes: z.string().max(5000).trim().optional(),
+  notes: htmlNoteSchema,
   // Essay review specific fields
   currentDraftVersion: z.number().int().nonnegative().optional(),
   feedbackRounds: z.number().int().nonnegative().optional(),
