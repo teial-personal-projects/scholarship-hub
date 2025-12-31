@@ -13,9 +13,15 @@ This document describes the architecture and structure of the Scholarship Hub ap
 5. [Backend Architecture](#backend-architecture)
 6. [Database Schema](#database-schema)
 7. [Authentication & Authorization](#authentication--authorization)
-8. [Key Features](#key-features)
-9. [API Endpoints](#api-endpoints)
-10. [Data Flow](#data-flow)
+8. [Security](#security)
+9. [Key Features](#key-features)
+10. [API Endpoints](#api-endpoints)
+11. [Data Flow](#data-flow)
+12. [Development](#development)
+13. [Testing Strategy](#testing-strategy)
+14. [Future Features and Optimizations](#future-features-and-optimizations)
+15. [Notes](#notes)
+16. [Related Documentation](#related-documentation)
 
 ---
 
@@ -68,26 +74,9 @@ scholarship-hub/
 │   ├── tsconfig.json
 │   ├── index.html
 │   └── src/
-│       ├── main.tsx            # Entry point
-│       ├── App.tsx             # Root component with routing
-│       ├── App.css
 │       ├── components/         # Reusable UI components
-│       │   ├── Navigation.tsx
-│       │   ├── ApplicationForm.tsx
-│       │   ├── ProtectedRoute.tsx
 │       │   └── ...
 │       ├── pages/              # Page components (routes)
-│       │   ├── Dashboard.tsx
-│       │   ├── Login.tsx
-│       │   ├── Register.tsx
-│       │   ├── Applications.tsx
-│       │   ├── ApplicationDetail.tsx
-│       │   ├── Collaborators.tsx
-│       │   ├── CollaboratorDashboard.tsx
-│       │   ├── CollaboratorInvite.tsx
-│       │   ├── Profile.tsx
-│       │   ├── ForgotPassword.tsx
-│       │   └── ResetPassword.tsx
 │       ├── contexts/           # React contexts
 │       │   └── AuthContext.tsx
 │       ├── services/           # API client
@@ -109,41 +98,12 @@ scholarship-hub/
 │       │   └── supabase.ts     # Supabase client
 │       ├── routes/             # Express routes
 │       │   ├── index.ts        # Route aggregator
-│       │   ├── auth.routes.ts
-│       │   ├── users.routes.ts
-│       │   ├── applications.routes.ts
-│       │   ├── collaborators.routes.ts
-│       │   ├── collaborations.routes.ts
-│       │   ├── recommendations.routes.ts
-│       │   ├── essays.routes.ts
-│       │   ├── cron.routes.ts
-│       │   └── webhooks.routes.ts
+
 │       ├── controllers/        # Request handlers
-│       │   ├── auth.controller.ts
-│       │   ├── users.controller.ts
-│       │   ├── applications.controller.ts
-│       │   ├── collaborators.controller.ts
-│       │   ├── collaborations.controller.ts
-│       │   ├── recommendations.controller.ts
-│       │   ├── essays.controller.ts
-│       │   ├── cron.controller.ts
-│       │   └── webhooks.controller.ts
 │       ├── services/           # Business logic
-│       │   ├── auth.service.ts
-│       │   ├── users.service.ts
-│       │   ├── applications.service.ts
-│       │   ├── collaborators.service.ts
-│       │   ├── collaborations.service.ts
-│       │   ├── recommendations.service.ts
-│       │   ├── essays.service.ts
-│       │   ├── email.service.ts
-│       │   ├── reminders.service.ts
-│       │   └── webhooks.service.ts
 │       ├── middleware/         # Express middleware
 │       │   ├── auth.ts         # Authentication middleware
 │       │   ├── role.ts         # Role-based access control
-│       │   ├── errorHandler.ts
-│       │   └── asyncHandler.ts
 │       ├── migrations/         # Database migrations
 │       │   ├── 001_users_profiles.sql
 │       │   ├── 002_applications.sql
@@ -294,8 +254,8 @@ Response
 - **reminders** - System-generated reminders
 - **invitations** - Collaborator invitations
 - **scholarships** - Scholarship data (for internal use, not exposed to users)
-- **scholarship_sources** - Scholarship source information (for internal use)
-- **finder_jobs** - Scraper job tracking (for internal use)
+- **scholarship_sources** - Scholarship resource websites and organizations (for planned Scholarship Resources page)
+- **finder_jobs** - Scraper job tracking (for internal use, not currently in use)
 
 See `docs/database-schema.md` for detailed schema documentation.
 
@@ -330,6 +290,44 @@ See `docs/database-schema.md` for detailed schema documentation.
 
 ---
 
+## Security
+
+### Current Security Measures
+
+- **Authentication**: Supabase Auth with JWT tokens
+- **Authorization**: Role-Based Access Control (RBAC) with middleware
+- **Database Security**: Row Level Security (RLS) policies in PostgreSQL
+- **HTTP Security**: Helmet.js middleware for security headers
+- **CORS**: Configured to restrict cross-origin requests
+
+### Security Improvements Needed
+
+1. **CSRF Protection**
+   - Implement CSRF token validation for state-changing requests
+   - Use CSRF middleware for POST, PUT, PATCH, DELETE endpoints
+   - Generate and validate tokens on form submissions
+
+2. **Input Sanitization**
+   - Sanitize all user input to prevent XSS attacks
+   - Implement input validation with Zod schemas for all endpoints
+   - Sanitize HTML content in user-generated text (essays, notes, etc.)
+   - Escape user input before database queries
+
+3. **Rate Limiting**
+   - Implement rate limiting on authentication endpoints
+   - Add rate limiting for API endpoints to prevent abuse
+   - Configure different limits for different endpoint types
+
+4. **Security Audit Tasks**
+   - Review and strengthen Row Level Security (RLS) policies in Supabase
+   - Audit API responses for sensitive data exposure
+   - Ensure HTTPS everywhere in production
+   - Review and secure environment variable usage
+   - Perform security vulnerability scanning
+   - Regular dependency updates for security patches
+
+---
+
 ## Key Features
 
 ### 1. Application Management
@@ -360,6 +358,13 @@ See `docs/database-schema.md` for detailed schema documentation.
 - **Profile Settings** - Update user information
 - **Preferences** - Manage notification preferences
 - **Account Management** - Password reset, etc.
+
+### 5. Scholarship Resources (Planned)
+
+- **Resource Display** - Page showing curated scholarship resource websites
+- **External Links** - Links to external scholarship search websites
+- **Categories** - Resources organized by category/tags
+- **Status**: ⏳ To Be Implemented
 
 ---
 
@@ -414,6 +419,9 @@ See `docs/database-schema.md` for detailed schema documentation.
 
 ### Webhooks
 - `POST /api/webhooks/*` - Webhook endpoints (internal)
+
+### Resources (Planned)
+- `GET /api/resources` - Get scholarship resources (to be implemented)
 
 ---
 
@@ -497,26 +505,142 @@ cd api
 npm run dev
 ```
 
-### Testing
-
-**Frontend Tests:**
-```bash
-cd web
-npm test
-```
-
-**Backend Tests:**
-```bash
-cd api
-npm test
-```
-
 ### Database Migrations
 
 ```bash
 cd api
 npm run migrate:latest
 ```
+
+---
+
+## Testing Strategy
+
+The application has comprehensive testing infrastructure for both backend and frontend.
+
+### Backend Testing
+
+**Framework**: Vitest with Supertest for integration tests
+
+**Test Structure:**
+- **Unit Tests** - Service layer tests (`services/*.test.ts`)
+  - Tests business logic with mocked Supabase client
+  - Covers all major service methods (users, applications, essays, collaborators, collaborations, recommendations)
+  - Tests success paths, error handling, and edge cases
+- **Integration Tests** - API endpoint tests (`routes/*.test.ts`)
+  - Tests full request/response cycle using Supertest
+  - Tests authentication, authorization, and RLS policy enforcement
+  - Tests CRUD operations and error handling (404, 401, 403, 400)
+
+**Test Utilities:**
+- Mock Supabase client with query builder chaining
+- Mock authentication middleware for injecting test users
+- Test fixtures for users, applications, essays, collaborators, collaborations
+- Helper functions for authenticated requests and assertions
+
+**Running Tests:**
+```bash
+cd api
+npm test              # Run tests in watch mode
+npm run test:ui       # Run tests with interactive UI
+npm run test:coverage # Generate coverage report
+```
+
+### Frontend Testing
+
+**Framework**: Vitest with React Testing Library
+
+**Test Structure:**
+- **Component Tests** - Reusable component tests (`components/*.test.tsx`)
+  - Tests form components, dialogs, and UI components
+  - Tests user interactions, validation, and error handling
+- **Page Tests** - Integration tests for page components (`pages/*.test.tsx`)
+  - Tests complete user flows (authentication, data fetching, CRUD operations)
+  - Tests navigation, filtering, and state management
+  - Tests loading, error, and empty states
+
+**Test Utilities:**
+- Custom render helpers with ChakraProvider and Router
+- Mock API service and Supabase client
+- Test fixtures matching backend structure
+- Helpers for authenticated rendering
+
+**Running Tests:**
+```bash
+cd web
+npm test              # Run tests in watch mode
+npm run test:ui       # Run tests with interactive UI
+npm run test:coverage # Generate coverage report
+```
+
+### Test Coverage
+
+- Backend services: Comprehensive unit tests for all service methods
+- Backend routes: Integration tests for all API endpoints
+- Frontend components: Tests for reusable UI components
+- Frontend pages: Integration tests for major user flows
+
+### Future Testing Work
+
+- End-to-End (E2E) tests with Playwright (see `IMPLEMENTATION_E2E_TESTING_PLAN.md`)
+- Continuous Integration (CI) pipeline for automated testing
+- Coverage thresholds and quality gates
+
+## Future Features and Optimizations
+
+The following items are planned for future implementation to enhance the application:
+
+### Error Handling & Validation
+
+1. **Review Error Handling**
+   - Review all API endpoints for consistent error handling
+   - Standardize error response formats across all endpoints
+   - Implement error boundaries in frontend React components
+
+2. **Input Validation**
+   - Add comprehensive input validation with Zod schemas for all endpoints
+   - Validate request bodies, query parameters, and path parameters
+   - Return clear validation error messages
+
+### Performance Optimization
+
+3. **Database Optimization**
+   - Add database indexes for commonly queried fields
+   - Optimize N+1 queries in service layer (use JOINs and nested selects)
+   - Query performance analysis and optimization
+
+4. **Frontend Performance**
+   - Code splitting for route-based lazy loading
+   - Optimize images and assets
+   - Bundle size analysis and optimization
+   - React component performance optimization (memoization, virtualization)
+
+### Deployment
+
+5. **Production Deployment**
+   - See `STAGING_DEPLOYMENT.md` for detailed deployment plan including:
+     - Frontend deployment (Vercel/Netlify/Cloudflare)
+     - Backend deployment (Railway/Render/Fly.io)
+     - Database configuration and backups
+     - Environment variables setup
+     - Pre and post-deployment checklists
+
+### New Features
+
+6. **Scholarship Resources Page**
+   - A page that displays curated resources (websites, organizations, etc.) to help users find scholarships externally
+   - Resources stored in the `scholarship_sources` table
+   
+   **Implementation Steps:**
+   - Create `GET /api/resources` endpoint that queries `scholarship_sources` table
+   - Create `web/src/pages/ScholarshipResources.tsx` page component
+   - Display resources as cards with: name, URL (clickable), description, category/tags
+   - Add route to `web/src/App.tsx`: `<Route path="/resources" element={<ScholarshipResources />} />`
+   - Add navigation menu item in `web/src/components/Navigation.tsx`
+   
+   **Database:**
+   - `scholarship_sources` table already exists (migration 012)
+   - Contains: name, URL, description, category/tags, enabled status
 
 ---
 
@@ -531,7 +655,7 @@ npm run migrate:latest
 
 ## Related Documentation
 
-- `IMPLEMENTATION_PLAN.md` - Detailed implementation roadmap
 - `docs/database-schema.md` - Complete database schema documentation
-- `SCHOLARSHIP_INTEGRATION_SUMMARY.md` - Scholarship finder overview (not in use)
+- `SCHOLARSHIP_FINDER_IMPLEMENTATION.md` - Scholarship finder/scraper details (not in use)
 - `TESTING_INVITATIONS.md` - Testing guide for invitations
+- `STAGING_DEPLOYMENT.md` - Deployment guide
