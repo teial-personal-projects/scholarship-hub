@@ -37,7 +37,7 @@ scholarship-hub/
 ├── package.json              # Root workspace config
 ├── .env.local                # Local development environment variables
 ├── .env.example              # Template for environment variables
-├── IMPLEMENTATION_PLAN.md    # Detailed implementation roadmap
+├── docs/                     # Documentation (see docs/scholarship_hub_architecture.md)
 ├── ai-context.md            # This file
 ├── CLAUDE.md                # Git workflow instructions
 ├── web/                     # React frontend
@@ -440,6 +440,87 @@ npm run test:coverage --workspace=api
 - Context for global state (Auth)
 - Props interfaces for all components
 
+## React Best Practices & Patterns Checklist
+
+**Use this as a checklist/rubric when generating or refactoring React code.**
+
+### Core React Patterns
+
+- Prefer **functional** components and Hooks; treat class components as legacy unless integrating with old code.
+- Keep components small, focused, and single‑responsibility; if a component grows beyond ~150–200 lines or handles several concerns, split it.
+- Co-locate logic with the component that owns it (state, derived data, effects, queries) instead of scattering utilities and hooks across the app.
+- Use composition over inheritance: accept children/slots instead of deeply nested prop options or config objects.
+- Use controlled components for form elements whenever you need validation, instant feedback, or complex interactions; otherwise consider uncontrolled refs for simple cases.
+
+### State and Data Fetching
+
+- Keep state as **local** as possible; lift state only when multiple components truly share it.
+- Avoid prop drilling across many levels; use Context for cross-cutting concerns and consider a lightweight state library (Zustand, Jotai, Redux Toolkit) for complex global state.
+- Store the minimal state needed; derive everything else from props or existing state instead of duplicating values.
+- Treat server as the source of truth for server data and client state as a cache or view model.
+- Use a dedicated data-fetching library (TanStack Query / React Query or SWR) instead of ad‑hoc useEffect + fetch for anything beyond trivial requests.
+- Normalize async flows: handle loading, error, empty, and success states explicitly and consistently.
+
+### React 18 Features and Concurrency
+
+- Use Suspense for data fetching and code-splitting boundaries to improve perceived loading and structure async flows.
+- Use concurrent APIs like useTransition and useDeferredValue to keep the UI responsive during expensive updates or filtering.
+- Design UI so that non‑critical parts can be deferred or streamed rather than blocking the initial render.
+
+### Performance and Rendering
+
+- Minimize unnecessary re-renders:
+  - Use React.memo for pure presentational components with stable props.
+  - Use useCallback and useMemo for expensive computations or when prop identity matters (e.g., passed to memoized children).
+- Avoid inline anonymous functions and object/array literals in hot rendering paths when they cause prop identity churn.
+- Use stable, unique keys for list items; never use array index as key when list can be reordered or filtered.
+- Virtualize large lists and tables to avoid rendering hundreds/thousands of DOM nodes.
+- Avoid overusing Context; large or frequently changing contexts can trigger expensive tree-wide re-renders—consider splitting context or using selectors/state libraries.
+- Split bundles using dynamic import and React.lazy for heavy, rarely used routes or components.
+- Regularly profile the app (React DevTools Profiler, Web Vitals, browser performance tools) and optimize based on real bottlenecks, not guesses.
+
+### Structure, Organization, and Reuse
+
+- Organize files by feature/module instead of strictly by type; keep components, hooks, and tests for a feature together.
+- Extract reusable UI patterns as shared components and shared hooks (e.g., useForm, useModal, useFetch) to avoid duplication.
+- Keep hooks pure: avoid doing non‑React side effects directly in custom hooks unless the hook is specifically about that effect, and document clearly when they occur.
+- Prefer simple, predictable naming: useFoo for hooks, PascalCase for components, clear prop names instead of abbreviations.
+- Co-locate tests, styles, and stories with their components to improve discoverability and refactoring.
+
+### TypeScript and Safety
+
+- Use TypeScript (or at least JSDoc types) for components, hooks, and utilities to catch errors at compile time and improve IDE help.
+- Prefer typed props and state over any/unknown; model domain concepts with discriminated unions instead of booleans when multiple states are possible.
+- Type external data at the boundary (e.g., API responses), and consider runtime validation for untrusted inputs.
+
+### JSX, Styling, and DOM
+
+- Keep JSX clean and readable; avoid deeply nested markup by extracting subcomponents.
+- Avoid putting complex logic directly in JSX; move it into variables or helper functions above the return.
+- Use semantic HTML tags and ARIA attributes; avoid div‑soup, especially for interactive elements.
+- Prefer CSS modules, utility CSS (like Tailwind), or well‑structured CSS‑in‑JS with attention to performance; avoid global styles that leak across features.
+- Use modern image optimizations (lazy loading, responsive images, modern formats, or framework-level image components) for performance.
+
+### Side Effects and Lifecycle
+
+- Use useEffect only for real side effects (subscriptions, event listeners, imperative APIs, syncing with non‑React systems), not for synchronous derivations that can be computed during render.
+- Carefully manage effect dependencies; prefer making effects idempotent and narrowing their scope instead of disabling lint rules.
+- Clean up subscriptions, timers, event listeners, and observers in the effect cleanup function to prevent leaks.
+- Avoid "fetch in every effect" anti‑pattern; centralize data fetching via libraries or well-designed hooks.
+
+### Error Handling, Boundaries, and UX
+
+- Use Error Boundaries around major app sections (routes, dashboards, complex widgets) to avoid full app crashes.
+- Provide meaningful fallbacks for loading and error states (skeletons/spinners + retry, not just blank or generic messages).
+- Design for progressive enhancement: render useful content early and progressively hydrate/upgrade with client interactivity.
+
+### Testing and Maintainability
+
+- Write tests for critical flows (auth, payments, core workflows) using Jest/Vitest for unit tests and React Testing Library for behavior-focused component tests.
+- Use Cypress/Playwright (or similar) for end‑to‑end tests on key user journeys.
+- Favor testing behavior and user-visible outcomes rather than implementation details or specific hook calls.
+- Keep strict ESLint + Prettier (or equivalent) configs and ensure code always passes lint/format checks.
+
 ### Service Layer (Backend)
 - Controllers handle HTTP concerns
 - Services contain business logic
@@ -478,7 +559,7 @@ Students find scholarships externally and create applications directly. Scholars
 
 ## Future Enhancements
 
-Planned for later phases (see IMPLEMENTATION_PLAN.md):
+Planned for later phases (see docs/scholarship_hub_architecture.md):
 - Scholarship discovery and search
 - Saved filter preferences
 - In-app notifications (beyond email)
@@ -514,7 +595,7 @@ git diff --stat                       # See file changes summary
 3. **RLS**: Always join through `user_profiles` to check `auth_user_id = auth.uid()`
 4. **Environment**: Uses `.env.local`, loaded based on `NODE_ENV`
 5. **Testing**: Vitest for both frontend and backend
-6. **Conventions**: See CLAUDE.md for git workflow, IMPLEMENTATION_PLAN.md for roadmap
+6. **Conventions**: See CLAUDE.md for git workflow, docs/scholarship_hub_architecture.md for architecture
 
 When I request changes:
 - Determine which files need updating
@@ -523,5 +604,6 @@ When I request changes:
 - Update all related files in one response
 - Maintain type safety across frontend/backend
 - Don't create unnecessary files
+- **For React code**: Follow the React Best Practices & Patterns Checklist above
 
 Current phase: Phase 4 (Backend Foundation)"
