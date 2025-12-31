@@ -16,12 +16,9 @@ This document describes the architecture and structure of the Scholarship Hub ap
 8. [Security](#security)
 9. [Key Features](#key-features)
 10. [API Endpoints](#api-endpoints)
-11. [Data Flow](#data-flow)
-12. [Development](#development)
-13. [Testing Strategy](#testing-strategy)
-14. [Future Features and Optimizations](#future-features-and-optimizations)
-15. [Notes](#notes)
-16. [Related Documentation](#related-documentation)
+11. [Deployment](#deployment)
+12. [Database (Supabase)](#database-supabase)
+13. [Related Documentation](#related-documentation)
 
 ---
 
@@ -207,7 +204,7 @@ Response
 
 ### Middleware
 
-- **auth** - Verifies JWT token, attaches user to request
+- **auth** - Verifies Supabase authentication token, attaches user to request
 - **requireRole** - Checks user roles (student, recommender, collaborator)
 - **asyncHandler** - Wraps async route handlers for error handling
 - **errorHandler** - Global error handler
@@ -265,10 +262,9 @@ See `docs/database-schema.md` for detailed schema documentation.
 
 ### Authentication
 
-- **Supabase Auth** - Handles user authentication
-- **JWT Tokens** - Used for API authentication
-- **Frontend** - AuthContext manages auth state
-- **Backend** - `auth` middleware verifies tokens
+- **Supabase Auth** - Handles user authentication (Supabase manages JWT tokens internally)
+- **Frontend** - AuthContext manages auth state using Supabase client
+- **Backend** - `auth` middleware verifies tokens using Supabase's `getUser()` method
 
 ### Authorization
 
@@ -294,31 +290,32 @@ See `docs/database-schema.md` for detailed schema documentation.
 
 ### Current Security Measures
 
-- **Authentication**: Supabase Auth with JWT tokens
+- **Authentication**: Supabase Auth (handles tokens internally)
 - **Authorization**: Role-Based Access Control (RBAC) with middleware
 - **Database Security**: Row Level Security (RLS) policies in PostgreSQL
 - **HTTP Security**: Helmet.js middleware for security headers
 - **CORS**: Configured to restrict cross-origin requests
 
-### Security Improvements Needed
-
-1. **CSRF Protection**
+#### TODO
+1. [ ] **CSRF Protection**
    - Implement CSRF token validation for state-changing requests
    - Use CSRF middleware for POST, PUT, PATCH, DELETE endpoints
    - Generate and validate tokens on form submissions
 
-2. **Input Sanitization**
+2. [ ] **Input Sanitization**
    - Sanitize all user input to prevent XSS attacks
    - Implement input validation with Zod schemas for all endpoints
    - Sanitize HTML content in user-generated text (essays, notes, etc.)
    - Escape user input before database queries
 
-3. **Rate Limiting**
+3. [ ] **Rate Limiting**
    - Implement rate limiting on authentication endpoints
    - Add rate limiting for API endpoints to prevent abuse
    - Configure different limits for different endpoint types
 
-4. **Security Audit Tasks**
+### Security Improvements Needed
+
+1. **Security Audit Tasks**
    - Review and strengthen Row Level Security (RLS) policies in Supabase
    - Audit API responses for sensitive data exposure
    - Ensure HTTPS everywhere in production
@@ -425,170 +422,7 @@ See `docs/database-schema.md` for detailed schema documentation.
 
 ---
 
-## Data Flow
 
-### Creating an Application
-
-```
-User fills form (ApplicationForm component)
-    ↓
-Frontend validates input
-    ↓
-POST /api/applications
-    ↓
-Auth middleware verifies user
-    ↓
-Applications Controller
-    ↓
-Applications Service
-    ↓
-Database (insert into applications table)
-    ↓
-Return application data
-    ↓
-Frontend updates UI (TanStack Query cache)
-```
-
-### Collaborator Invitation Flow
-
-```
-Student invites collaborator
-    ↓
-POST /api/collaborators (with email)
-    ↓
-System creates invitation record
-    ↓
-Email sent to collaborator
-    ↓
-Collaborator clicks invite link (/invite/:token)
-    ↓
-Collaborator accepts invitation
-    ↓
-Collaboration created
-    ↓
-Collaborator can now access their dashboard
-```
-
-### Essay Review Flow
-
-```
-Student creates essay draft
-    ↓
-Student creates collaboration with essay reviewer
-    ↓
-Collaborator receives notification
-    ↓
-Collaborator views essay in their dashboard
-    ↓
-Collaborator provides feedback
-    ↓
-Student sees feedback and updates essay
-    ↓
-Process repeats until essay is finalized
-```
-
----
-
-## Development
-
-### Running the Application
-
-**Frontend:**
-```bash
-cd web
-npm run dev
-```
-
-**Backend:**
-```bash
-cd api
-npm run dev
-```
-
-### Database Migrations
-
-```bash
-cd api
-npm run migrate:latest
-```
-
----
-
-## Testing Strategy
-
-The application has comprehensive testing infrastructure for both backend and frontend.
-
-### Backend Testing
-
-**Framework**: Vitest with Supertest for integration tests
-
-**Test Structure:**
-- **Unit Tests** - Service layer tests (`services/*.test.ts`)
-  - Tests business logic with mocked Supabase client
-  - Covers all major service methods (users, applications, essays, collaborators, collaborations, recommendations)
-  - Tests success paths, error handling, and edge cases
-- **Integration Tests** - API endpoint tests (`routes/*.test.ts`)
-  - Tests full request/response cycle using Supertest
-  - Tests authentication, authorization, and RLS policy enforcement
-  - Tests CRUD operations and error handling (404, 401, 403, 400)
-
-**Test Utilities:**
-- Mock Supabase client with query builder chaining
-- Mock authentication middleware for injecting test users
-- Test fixtures for users, applications, essays, collaborators, collaborations
-- Helper functions for authenticated requests and assertions
-
-**Running Tests:**
-```bash
-cd api
-npm test              # Run tests in watch mode
-npm run test:ui       # Run tests with interactive UI
-npm run test:coverage # Generate coverage report
-```
-
-### Frontend Testing
-
-**Framework**: Vitest with React Testing Library
-
-**Test Structure:**
-- **Component Tests** - Reusable component tests (`components/*.test.tsx`)
-  - Tests form components, dialogs, and UI components
-  - Tests user interactions, validation, and error handling
-- **Page Tests** - Integration tests for page components (`pages/*.test.tsx`)
-  - Tests complete user flows (authentication, data fetching, CRUD operations)
-  - Tests navigation, filtering, and state management
-  - Tests loading, error, and empty states
-
-**Test Utilities:**
-- Custom render helpers with ChakraProvider and Router
-- Mock API service and Supabase client
-- Test fixtures matching backend structure
-- Helpers for authenticated rendering
-
-**Running Tests:**
-```bash
-cd web
-npm test              # Run tests in watch mode
-npm run test:ui       # Run tests with interactive UI
-npm run test:coverage # Generate coverage report
-```
-
-### Test Coverage
-
-- Backend services: Comprehensive unit tests for all service methods
-- Backend routes: Integration tests for all API endpoints
-- Frontend components: Tests for reusable UI components
-- Frontend pages: Integration tests for major user flows
-
-### Future Testing Work
-
-- End-to-End (E2E) tests with Playwright (see `docs/IMPLEMENTATION_E2E_TESTING_PLAN.md`)
-- Continuous Integration (CI) pipeline for automated testing
-- Coverage thresholds and quality gates
-
-## Future Features and Optimizations
-
-The following items are planned for future implementation to enhance the application:
 
 ### Error Handling & Validation
 
@@ -615,74 +449,210 @@ The following items are planned for future implementation to enhance the applica
    - Bundle size analysis and optimization
    - React component performance optimization (memoization, virtualization)
 
-### Deployment
+## Deployment
 
-5. **Production Deployment**
+### Deployment Checklist
+#### Pre-Deployment Checklist
 
-#### Frontend Deployment
+- [ ] All tests passing
+- [ ] Environment variables configured
+- [ ] Database migrations applied
+- [ ] CORS configured correctly
+- [ ] Health check endpoint working
+- [ ] Error tracking configured (optional)
+- [ ] Backup strategy in place
+- [ ] Custom domain configured (if applicable)
+- [ ] SSL certificates active
 
-**Platform Options**:
-- Vercel (Recommended for React/Vite)
-- Netlify
-- Cloudflare Pages
+#### Post-Deployment Verification
 
-**Steps**:
-- [ ] Deploy to chosen platform (Cloudflare Pages)
-- [ ] Configure environment variables:
-  - `VITE_API_URL` - Backend API URL
-  - `VITE_SUPABASE_URL` - Supabase project URL
-  - `VITE_SUPABASE_ANON_KEY` - Supabase anonymous key
-- [ ] Set up custom domain (optional)
-- [ ] Configure build settings:
-  - Build command: `npm run build`
-  - Output directory: `dist`
-  - Node version: 18+
-- [ ] Set up automatic deployments from git branch
-- [ ] Configure preview deployments for pull requests
+- [ ] Verify all pages load correctly
+- [ ] Test authentication flow (login, register, password reset)
+- [ ] Test core features:
+  - [ ] Create/view/edit applications
+  - [ ] Add collaborators
+  - [ ] Upload essays and documents
+  - [ ] Set reminders
+- [ ] Check error tracking is receiving data (if configured)
+- [ ] Monitor initial performance metrics
+- [ ] Verify uptime monitoring is active (if configured)
 
-#### Backend Deployment
+###  Backend Deployment (Railway)
 
-**Steps**:
-- [ ] Deploy to chosen platform (Railway)
-- [ ] Configure environment variables:
-  - `DATABASE_URL` - Supabase connection string
-  - `SUPABASE_URL` - Supabase project URL
-  - `SUPABASE_SERVICE_KEY` - Supabase service role key
-  - `JWT_SECRET` - Secret for JWT token signing
-  - `NODE_ENV=production`
-  - `PORT` - Server port (usually auto-assigned)
-  - `CORS_ORIGIN` - Frontend URL for CORS
-- [ ] Set up health checks endpoint (`/health` or `/api/health`)
-- [ ] Configure start command: `npm start`
-- [ ] Set up automatic deployments from git branch
-- [ ] Configure CORS to allow frontend domain
+#### Steps
+- [ ] **Step 1:** Create Railway project
+  1. Go to https://railway.app
+  2. Click **"Start a New Project"**
+  3. Select **"Deploy from GitHub repo"**
+  4. Authorize Railway to access your GitHub account
+  5. Select your repository
+  6. Railway will auto-detect and start building
 
-#### Database
+- [ ] **Step 2:** Configure environment variables
+  - In Railway dashboard, click on your deployed service
+  - Go to **"Variables"** tab
+  - Add the following environment variables:
+    - `DATABASE_URL` - Supabase connection string
+    - `SUPABASE_URL` - Supabase project URL
+    - `SUPABASE_ANON_KEY` - Supabase 
+    - `SUPABASE_SERVICE_ROLE_KEY` - Supabase service role key
+    - `NODE_ENV=production`
+    - `PORT` - Server port (usually auto-assigned)
+    - `RESEND_API_KEY` - Email service API key
+  - Click **"Deploy"** to restart with new variables
 
+- [ ] **Step 3:** Configure health checks
+  - Go to **"Settings"** → **"Health Checks"**
+  - Set health check path: `/api/health`
+  - Set timeout: 30 seconds
+
+- [ ] **Step 4:** Enable always-on service
+  - Go to **"Settings"** → **"Service"**
+  - Ensure service is on **"Always On"** plan ($5/month)
+
+- [ ] **Step 5:** Configure resource limits (optional)
+  - Go to **"Settings"** → **"Resources"**
+  - Set memory limit: 512MB-1GB (should be sufficient)
+  - Set CPU limit: 1-2 vCPUs
+
+- [ ] **Step 6:** Set up custom domain (optional)
+  - Go to **"Settings"** → **"Domains"**
+  - Add custom domain (e.g., `api.yourdomain.com`)
+  - Update your DNS records as instructed
+
+- [ ] **Step 7:** Configure start command
+  - Set start command: `npm start`
+
+- [ ] **Step 8:** Set up automatic deployments from git branch
+
+- [ ] **Step 9:** Configure CORS to allow frontend domain
+
+- [ ] **Step 10:** Verify deployment
+  - Copy your Railway deployment URL (e.g., `https://your-app.up.railway.app`)
+  - Test the health endpoint:
+    ```bash
+    curl https://your-app.up.railway.app/api/health
+    ```
+
+### Frontend Deployment (Cloudflare Pages)
+
+1. **Update `web/.env.production` (create if doesn't exist):**
+
+```bash
+VITE_API_URL=https://your-app.up.railway.app
+```
+
+2. **Update `web/vite.config.js` for production:**
+
+```javascript
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
+  server: {
+    port: 5173,
+  },
+  build: {
+    outDir: 'dist',
+    sourcemap: false, // Disable for production
+  }
+})
+```
+
+3. **Test production build locally:**
+
+```bash
+cd web
+npm run build
+npm run preview
+```
+
+#### [ ] 5.2 Deploy to Cloudflare Pages
+
+1. Go to https://dash.cloudflare.com
+2. Navigate to **"Workers & Pages"**
+3. Click **"Create application"** → **"Pages"** → **"Connect to Git"**
+4. Authorize Cloudflare to access your GitHub account
+5. Select your `scholar_source` repository
+
+#### 5.3[ ] Configure Build Settings
+
+1. **Framework preset**: Select **"Vite"** (or None)
+2. **Build command**:
+   ```bash
+   cd web && npm install && npm run build
+   ```
+3. **Build output directory**:
+   ```
+   web/dist
+   ```
+4. **Root directory**: Leave empty (or set to `/`)
+
+#### 5.4 [ ] Add Environment Variables
+
+1. Click **"Environment variables"**
+2. Add the following:
+
+```bash
+VITE_API_URL=https://your-app.up.railway.app
+```
+
+3. Select **"Production"** environment
+4. Click **"Save"**
+
+#### [ ] 5.5 Deploy
+
+1. Click **"Save and Deploy"**
+2. Wait for build to complete (~2-5 minutes)
+3. Cloudflare will provide a temporary URL: `https://mywebsiste.pages.dev`
+
+#### [ ] 5.6 Configure Custom Domain (Optional) 
+
+1. Go to **"Custom domains"** tab
+2. Click **"Set up a custom domain"**
+3. Enter your domain (e.g., `app.yourdomain.com` or `yourdomain.com`)
+4. Follow DNS configuration instructions
+5. Wait for SSL certificate to provision (~5-10 minutes)
+
+#### [ ] 5.7 Verify Frontend Deployment
+
+1. Visit your Cloudflare Pages URL: `https://mywebsite.pages.dev`
+2. Test the form submission workflow:
+   - Fill in course information
+   - Submit the form
+   - Wait for job to complete
+   - Verify results display correctly
+3. Test copy and export buttons
+
+---
+
+## Database (Supabase)
+
+### Configuration
 **Current Setup**: Already on Supabase
 
-**Steps**:
-- [ ] Upgrade to production tier if needed (evaluate based on usage)
-- [ ] Set up automated backups:
+- [ ] **Step 1:** Upgrade to production tier if needed (evaluate based on usage)
+- [ ] **Step 2:** Set up automated backups
   - Supabase Pro includes daily backups
   - Configure backup retention policy
-- [ ] Monitor database usage:
+- [ ] **Step 3:** Monitor database usage
   - Database size
   - Connection pool usage
   - Query performance
-- [ ] Review and optimize Row Level Security (RLS) policies
-- [ ] Set up database alerts for:
+- [ ] **Step 4:** Review and optimize Row Level Security (RLS) policies
+- [ ] **Step 5:** Set up database alerts for:
   - High CPU usage
   - High disk usage
   - Connection pool exhaustion
 
-#### SSL/TLS
+#### 5.4 SSL/TLS
 
-**Frontend**: Automatic via Vercel/Netlify/Cloudflare
-**Backend**: Automatic via Railway/Render/Fly.io
-**Database**: Supabase provides SSL by default
+- [ ] **Frontend**: Verify automatic SSL via Cloudflare Pages
+- [ ] **Backend**: Verify automatic SSL via Railway
+- [ ] **Database**: Verify Supabase SSL is enabled (enabled by default)
 
-#### Environment Variables Reference
+#### 5.5 Environment Variables Reference
 
 **Frontend (.env.production)**:
 ```bash
@@ -698,70 +668,13 @@ PORT=3000
 DATABASE_URL=postgresql://...
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_KEY=your-service-key
-JWT_SECRET=your-jwt-secret
-CORS_ORIGIN=https://scholarshiphub.com
+RESEND_API_KEY=your-resend-api-key
 ```
 
-#### Deployment Workflow
 
-1. **Development** → Push to `main` branch
-2. **Automatic Build** → Platform builds and tests
-3. **Automatic Deploy** → Deploy to production
-4. **Health Checks** → Verify deployment success
-5. **Rollback** → If issues detected, rollback to previous version
-
-#### Pre-Deployment Checklist
-
-- [ ] All tests passing
-- [ ] Environment variables configured
-- [ ] Database migrations applied
-- [ ] CORS configured correctly
-- [ ] Health check endpoint working
-- [ ] Error tracking configured
-- [ ] Backup strategy in place
-- [ ] Custom domain configured (if applicable)
-- [ ] SSL certificates active
-
-#### Post-Deployment Verification
-
-- [ ] Verify all pages load correctly
-- [ ] Test authentication flow (login, register, password reset)
-- [ ] Test core features:
-  - Create/view/edit applications
-  - Add collaborators
-  - Upload essays and documents
-  - Set reminders
-- [ ] Check error tracking is receiving data
-- [ ] Monitor initial performance metrics
-- [ ] Verify uptime monitoring is active
 
 ### New Features
 
-6. **Scholarship Resources Page**
-   - A page that displays curated resources (websites, organizations, etc.) to help users find scholarships externally
-   - Resources stored in the `scholarship_sources` table
-   
-   **Implementation Steps:**
-   - Create `GET /api/resources` endpoint that queries `scholarship_sources` table
-   - Create `web/src/pages/ScholarshipResources.tsx` page component
-   - Display resources as cards with: name, URL (clickable), description, category/tags
-   - Add route to `web/src/App.tsx`: `<Route path="/resources" element={<ScholarshipResources />} />`
-   - Add navigation menu item in `web/src/components/Navigation.tsx`
-   
-   **Database:**
-   - `scholarship_sources` table already exists (migration 012)
-   - Contains: name, URL, description, category/tags, enabled status
-
----
-
-## Notes
-
-- The application does **not** include scholarship search or recommendation features
-- Scholarship finder/scraper infrastructure exists but is **not currently in use**
-- All scholarship data is for internal/research purposes only
-- Users manually add their own scholarship applications to track
-
----
 
 ## Related Documentation
 
