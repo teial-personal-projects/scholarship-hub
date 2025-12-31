@@ -42,7 +42,7 @@ Scholarship Hub is a scholarship application tracking system that helps students
 - **Axios** - HTTP client
 
 ### Backend
-- **Node.js** - Runtime environment
+- **Node.js 24.12+** - Runtime environment
 - **Express** - Web framework
 - **TypeScript** - Type safety
 - **Supabase** - PostgreSQL database and authentication
@@ -296,32 +296,230 @@ See `docs/database-schema.md` for detailed schema documentation.
 - **HTTP Security**: Helmet.js middleware for security headers
 - **CORS**: Configured to restrict cross-origin requests
 
-#### TODO
-1. [ ] **CSRF Protection**
-   - Implement CSRF token validation for state-changing requests
-   - Use CSRF middleware for POST, PUT, PATCH, DELETE endpoints
-   - Generate and validate tokens on form submissions
+### Security Architecture Decisions
 
-2. [ ] **Input Sanitization**
-   - Sanitize all user input to prevent XSS attacks
-   - Implement input validation with Zod schemas for all endpoints
-   - Sanitize HTML content in user-generated text (essays, notes, etc.)
-   - Escape user input before database queries
+#### CSRF Protection
 
-3. [ ] **Rate Limiting**
-   - Implement rate limiting on authentication endpoints
-   - Add rate limiting for API endpoints to prevent abuse
-   - Configure different limits for different endpoint types
+**Status**: ✅ **NOT REQUIRED FOR THIS APPLICATION**
 
-### Security Improvements Needed
+**Rationale**:
+This application uses **stateless JWT bearer token authentication** and does NOT need CSRF protection because:
+- JWT bearer tokens are stored client-side (managed by Supabase SDK)
+- Tokens are sent via `Authorization: Bearer {token}` headers, not cookies
+- No session cookies or automatically-sent credentials
+- Browsers do not automatically include Authorization headers in cross-origin requests
 
-1. **Security Audit Tasks**
-   - Review and strengthen Row Level Security (RLS) policies in Supabase
-   - Audit API responses for sensitive data exposure
-   - Ensure HTTPS everywhere in production
-   - Review and secure environment variable usage
-   - Perform security vulnerability scanning
-   - Regular dependency updates for security patches
+According to OWASP: *"You only need CSRF protection if the browser automatically sends credentials (cookies, HTTP authentication, client certificates)."*
+
+Since JavaScript from malicious sites cannot access tokens stored by our application (due to Same-Origin Policy), classic CSRF attacks cannot work with our JWT bearer token architecture.
+
+#### Input Validation and Sanitization
+
+**Chosen**: `Zod` for validation, `DOMPurify` for HTML sanitization
+
+**Rationale**:
+- **Zod**: TypeScript-first schema validation with excellent type inference, runtime validation prevents invalid data from reaching the database, composable schemas for complex validation logic, and clear error messages
+- **DOMPurify**: Industry-standard HTML sanitization to prevent XSS attacks, works both client-side and server-side (via isomorphic-dompurify)
+
+**Security Benefits**:
+- Prevents XSS attacks through HTML sanitization
+- Blocks SQL injection through strict input validation
+- Validates data types, formats, and constraints at API boundaries
+- Provides clear, user-friendly validation error messages
+
+#### Rate Limiting
+
+**Chosen**: `express-rate-limit` with optional Redis integration
+
+**Rationale**:
+- De facto standard for Express applications
+- Simple, flexible configuration
+- Supports Redis for distributed rate limiting across multiple server instances
+- Well-maintained and battle-tested
+
+**Implementation Strategy**:
+- Different rate limits for different endpoint types:
+  - **Authentication endpoints**: 5 requests per 15 minutes (prevents brute-force)
+  - **Password reset**: 3 requests per hour (prevents abuse)
+  - **Write operations**: 20 requests per minute (prevents spam)
+  - **Read operations**: 60 requests per minute (balanced protection)
+  - **General API**: 100 requests per 15 minutes (baseline protection)
+- Redis integration for production deployments with multiple servers
+- Rate limit headers expose remaining quota to clients
+
+### JWT Security Implementation
+
+**Priority**: HIGH
+
+Since this application uses JWT bearer tokens (not cookies), JWT-specific security is critical:
+
+- [ ] **Secure Token Storage**
+  - Review Supabase token storage (uses localStorage by default)
+  - Consider switching to sessionStorage for better security
+  - Trade-off: sessionStorage is more secure but requires re-login on new tabs
+
+- [ ] **Token Expiration and Refresh**
+  - Verify token expiration settings in Supabase (recommended: 1 hour for access tokens)
+  - Implement automatic token refresh error handling
+  - Add 401 response interceptor to trigger refresh or redirect to login
+
+- [ ] **XSS Protection** (Critical for JWT security)
+  - Install and configure Helmet.js for security headers
+  - Implement Content Security Policy (CSP)
+  - Ensure input sanitization (see below) to prevent token theft
+
+- [ ] **CORS Configuration**
+  - Verify CORS restricts origins to frontend domain
+  - Set `credentials: false` (we don't use cookies)
+  - Expose rate limit headers for client consumption
+
+- [ ] **Token Revocation**
+  - Implement server-side logout endpoint that revokes refresh tokens
+  - Invalidate sessions on password change
+  - Validate JWT claims (e.g., email verification status)
+
+### Input Sanitization Implementation
+
+**Priority**: CRITICAL
+
+Prevents XSS attacks and injection vulnerabilities:
+
+- [ ] **Install Dependencies**
+  - `zod` - Schema validation
+  - `dompurify` and `isomorphic-dompurify` - HTML sanitization
+
+- [ ] **Create Validation Schemas**
+  - Create `api/src/schemas/` directory
+  - Define Zod schemas for all entities (users, applications, essays, collaborators, etc.)
+  - Include field-level validation rules (length, format, regex patterns)
+
+- [ ] **Create Validation Middleware**
+  - `validate()` - Request body validation
+  - `validateQuery()` - Query parameter validation
+  - `validateParams()` - Path parameter validation
+  - Return clear validation error messages (400 status)
+
+- [ ] **Apply Validation to All Routes**
+  - Start with authentication endpoints
+  - Apply to all POST, PUT, PATCH endpoints
+  - Validate path parameters on all routes with IDs
+
+- [ ] **HTML Sanitization**
+  - Create sanitization utilities for server-side and client-side
+  - Sanitize rich text content (essays, notes) before storage
+  - Use allowed tags whitelist (b, i, em, strong, a, p, br, ul, ol, li)
+  - Create React component for safe HTML rendering
+
+### Rate Limiting Implementation
+
+**Priority**: HIGH
+
+Prevents brute-force attacks, abuse, and resource exhaustion:
+
+- [ ] **Install Dependencies**
+  - `express-rate-limit` - Core rate limiting
+  - `rate-limit-redis` and `ioredis` - For distributed deployments (optional)
+
+- [ ] **Create Rate Limiter Configurations**
+  - `authLimiter` - 5 requests per 15 min (login, register)
+  - `passwordResetLimiter` - 3 requests per hour
+  - `apiLimiter` - 100 requests per 15 min (global baseline)
+  - `writeLimiter` - 20 requests per minute (POST, PUT, PATCH, DELETE)
+  - `readLimiter` - 60 requests per minute (GET)
+
+- [ ] **Apply Rate Limiters**
+  - Apply global `apiLimiter` to all `/api` routes
+  - Apply specific limiters to authentication routes
+  - Apply operation-specific limiters to other routes
+
+- [ ] **Redis Integration** (for production)
+  - Set up Redis connection
+  - Configure rate limiters to use Redis store
+  - Enables rate limiting across multiple server instances
+
+- [ ] **Frontend Error Handling**
+  - Handle 429 (Too Many Requests) responses
+  - Display rate limit information from headers
+  - Show clear error messages to users
+
+### Security Audit and Maintenance
+
+**Ongoing Security Tasks**:
+
+- [ ] **Database Security**
+  - Review and strengthen Row Level Security (RLS) policies in Supabase
+  - Ensure users can only access their own data
+  - Verify collaborators can only access assigned collaborations
+
+- [ ] **API Security Audit**
+  - Audit API responses for sensitive data exposure
+  - Ensure error messages don't leak implementation details
+  - Verify authentication/authorization on all protected endpoints
+
+- [ ] **Infrastructure Security**
+  - Ensure HTTPS everywhere in production (required for JWT security)
+  - Review and secure environment variable usage
+  - Enable automatic security updates for dependencies
+
+- [ ] **Security Testing**
+  - Run automated security scanners (OWASP ZAP, npm audit)
+  - Perform manual penetration testing
+  - Test XSS attack scenarios (should be blocked by sanitization)
+  - Test SQL injection attempts (should be blocked by validation)
+  - Test brute-force attacks (should be rate limited)
+
+- [ ] **Monitoring and Alerts**
+  - Monitor rate limit violations
+  - Track validation error rates
+  - Set up alerts for suspicious activity
+  - Review logs for attack attempts
+
+### Security Testing Strategy
+
+**Unit Tests**:
+- Validation schemas with valid/invalid input
+- Sanitization functions with malicious input
+- Rate limiter configurations
+- JWT token refresh logic
+
+**Integration Tests**:
+- API endpoints reject invalid input
+- API endpoints enforce rate limits
+- Token expiration and refresh flow
+- Logout functionality
+
+**Security Tests**:
+- XSS attack attempts (blocked by sanitization)
+- SQL injection attempts (blocked by validation)
+- Token theft via XSS (mitigated by CSP)
+- Brute-force login (rate limited)
+- Automated security scanning
+
+### Implementation Priority
+
+Follow this order for security implementation:
+
+**Phase 1: Input Sanitization (CRITICAL)**
+1. Install Zod and DOMPurify
+2. Create validation schemas for all entities
+3. Create validation middleware
+4. Apply validation to all routes
+5. Implement HTML sanitization
+
+**Phase 2: JWT Security (HIGH)**
+1. Configure secure token storage
+2. Implement token refresh error handling
+3. Install and configure Helmet.js
+4. Verify CORS configuration
+5. Implement server-side logout
+6. Add JWT claims validation
+
+**Phase 3: Rate Limiting (HIGH)**
+1. Install express-rate-limit
+2. Create rate limit configurations
+3. Apply rate limiters to routes
+4. Configure Redis (if needed)
+5. Add frontend error handling
 
 ---
 
@@ -451,6 +649,8 @@ See `docs/database-schema.md` for detailed schema documentation.
 
 ## Deployment
 
+**Node.js Version**: 24.12+ (specified in `.nvmrc` and `package.json` engines field)
+
 ### Deployment Checklist
 #### Pre-Deployment Checklist
 
@@ -488,46 +688,51 @@ See `docs/database-schema.md` for detailed schema documentation.
   5. Select your repository
   6. Railway will auto-detect and start building
 
-- [ ] **Step 2:** Configure environment variables
+- [ ] **Step 2:** Configure Node.js version
+  - Railway should auto-detect Node.js from `.nvmrc` or `package.json` engines field
+  - Verify Node.js 24.12+ is being used in deployment logs
+  - If needed, set `NODE_VERSION=24.12.0` in environment variables
+
+- [ ] **Step 3:** Configure environment variables
   - In Railway dashboard, click on your deployed service
   - Go to **"Variables"** tab
   - Add the following environment variables:
     - `DATABASE_URL` - Supabase connection string
     - `SUPABASE_URL` - Supabase project URL
-    - `SUPABASE_ANON_KEY` - Supabase 
+    - `SUPABASE_ANON_KEY` - Supabase anonymous key
     - `SUPABASE_SERVICE_ROLE_KEY` - Supabase service role key
     - `NODE_ENV=production`
     - `PORT` - Server port (usually auto-assigned)
     - `RESEND_API_KEY` - Email service API key
   - Click **"Deploy"** to restart with new variables
 
-- [ ] **Step 3:** Configure health checks
+- [ ] **Step 4:** Configure health checks
   - Go to **"Settings"** → **"Health Checks"**
   - Set health check path: `/api/health`
   - Set timeout: 30 seconds
 
-- [ ] **Step 4:** Enable always-on service
+- [ ] **Step 5:** Enable always-on service
   - Go to **"Settings"** → **"Service"**
   - Ensure service is on **"Always On"** plan ($5/month)
 
-- [ ] **Step 5:** Configure resource limits (optional)
+- [ ] **Step 6:** Configure resource limits (optional)
   - Go to **"Settings"** → **"Resources"**
   - Set memory limit: 512MB-1GB (should be sufficient)
   - Set CPU limit: 1-2 vCPUs
 
-- [ ] **Step 6:** Set up custom domain (optional)
+- [ ] **Step 7:** Set up custom domain (optional)
   - Go to **"Settings"** → **"Domains"**
   - Add custom domain (e.g., `api.yourdomain.com`)
   - Update your DNS records as instructed
 
-- [ ] **Step 7:** Configure start command
+- [ ] **Step 8:** Configure start command
   - Set start command: `npm start`
 
-- [ ] **Step 8:** Set up automatic deployments from git branch
+- [ ] **Step 9:** Set up automatic deployments from git branch
 
-- [ ] **Step 9:** Configure CORS to allow frontend domain
+- [ ] **Step 10:** Configure CORS to allow frontend domain
 
-- [ ] **Step 10:** Verify deployment
+- [ ] **Step 11:** Verify deployment
   - Copy your Railway deployment URL (e.g., `https://your-app.up.railway.app`)
   - Test the health endpoint:
     ```bash
@@ -579,15 +784,16 @@ npm run preview
 #### 5.3[ ] Configure Build Settings
 
 1. **Framework preset**: Select **"Vite"** (or None)
-2. **Build command**:
+2. **Node version**: 24.12 (or use `.nvmrc` file)
+3. **Build command**:
    ```bash
    cd web && npm install && npm run build
    ```
-3. **Build output directory**:
+4. **Build output directory**:
    ```
    web/dist
    ```
-4. **Root directory**: Leave empty (or set to `/`)
+5. **Root directory**: Leave empty (or set to `/`)
 
 #### 5.4 [ ] Add Environment Variables
 
@@ -678,6 +884,6 @@ RESEND_API_KEY=your-resend-api-key
 
 ## Related Documentation
 
-- `docs/database-schema.md` - Complete database schema documentation
-- `docs/SCHOLARSHIP_FINDER_IMPLEMENTATION.md` - Scholarship finder/scraper details (not in use)
-- `docs/TESTING_INVITATIONS.md` - Testing guide for invitations
+- [docs/database-schema.md](database-schema.md) - Complete database schema documentation
+- [docs/SCHOLARSHIP_FINDER_IMPLEMENTATION.md](SCHOLARSHIP_FINDER_IMPLEMENTATION.md) - Scholarship finder/scraper details (not in use)
+- [docs/TESTING_INVITATIONS.md](TESTING_INVITATIONS.md) - Testing guide for invitations
