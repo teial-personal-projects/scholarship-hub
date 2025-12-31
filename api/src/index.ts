@@ -6,13 +6,28 @@ import { config } from './config/index.js';
 import { errorHandler } from './middleware/error-handler.js';
 import { testSupabaseConnection } from './config/supabase.js';
 import apiRoutes from './routes/index.js';
+import { securityHeadersConfig, additionalSecurityHeaders } from './config/security-headers.js';
 
 const app = express();
 
-// Middleware
-app.use(helmet());
+// Security headers middleware
+app.use(helmet(securityHeadersConfig));
+
+// Additional security headers not covered by Helmet
+app.use((_req, res, next) => {
+  Object.entries(additionalSecurityHeaders).forEach(([header, value]) => {
+    res.setHeader(header, value);
+  });
+  next();
+});
+
+// CORS middleware
 app.use(cors());
+
+// Request logging
 app.use(morgan('dev'));
+
+// Body parsing
 app.use(express.json());
 
 // Health check
