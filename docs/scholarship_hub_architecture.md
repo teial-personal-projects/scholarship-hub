@@ -320,6 +320,39 @@ According to OWASP: *"You only need CSRF protection if the browser automatically
 
 Since our authentication relies on explicit `Authorization` headers that are not automatically sent by browsers, CSRF attacks are not possible with our architecture.
 
+#### JWT Security Implementation
+
+**Priority**: HIGH
+
+Since this application uses JWT bearer tokens (not cookies), JWT-specific security is critical:
+
+- [x] **Secure Token Storage** ✅ IMPLEMENTED
+  - ✅ Reviewed Supabase token storage configuration
+  - ✅ Configured to use sessionStorage for better security
+  - ✅ Documented trade-off: sessionStorage is more secure but requires re-login on new tabs
+  - Implementation: `web/src/config/supabase.ts` - configured with `storage: window.sessionStorage`
+
+- [ ] **Token Expiration and Refresh**
+  - Verify token expiration settings in Supabase (recommended: 1 hour for access tokens)
+  - Implement automatic token refresh error handling
+  - Add 401 response interceptor to trigger refresh or redirect to login
+
+- [ ] **XSS Protection** (Critical for JWT security)
+  - Install and configure Helmet.js for security headers
+  - Implement Content Security Policy (CSP)
+  - Ensure input sanitization (see below) to prevent token theft
+
+- [ ] **CORS Configuration**
+  - Verify CORS restricts origins to frontend domain
+  - Set `credentials: false` (we don't use cookies)
+  - Expose rate limit headers for client consumption
+
+- [ ] **Token Revocation**
+  - Implement server-side logout endpoint that revokes refresh tokens
+  - Invalidate sessions on password change
+  - Validate JWT claims (e.g., email verification status)
+
+
 #### Input Validation and Sanitization
 
 **Chosen**: `Zod` for validation, `DOMPurify` for HTML sanitization
@@ -353,37 +386,6 @@ Since our authentication relies on explicit `Authorization` headers that are not
   - **General API**: 100 requests per 15 minutes (baseline protection)
 - Redis integration for production deployments with multiple servers
 - Rate limit headers expose remaining quota to clients
-
-### JWT Security Implementation
-
-**Priority**: HIGH
-
-Since this application uses JWT bearer tokens (not cookies), JWT-specific security is critical:
-
-- [ ] **Secure Token Storage**
-  - Review Supabase token storage (uses localStorage by default)
-  - Consider switching to sessionStorage for better security
-  - Trade-off: sessionStorage is more secure but requires re-login on new tabs
-
-- [ ] **Token Expiration and Refresh**
-  - Verify token expiration settings in Supabase (recommended: 1 hour for access tokens)
-  - Implement automatic token refresh error handling
-  - Add 401 response interceptor to trigger refresh or redirect to login
-
-- [ ] **XSS Protection** (Critical for JWT security)
-  - Install and configure Helmet.js for security headers
-  - Implement Content Security Policy (CSP)
-  - Ensure input sanitization (see below) to prevent token theft
-
-- [ ] **CORS Configuration**
-  - Verify CORS restricts origins to frontend domain
-  - Set `credentials: false` (we don't use cookies)
-  - Expose rate limit headers for client consumption
-
-- [ ] **Token Revocation**
-  - Implement server-side logout endpoint that revokes refresh tokens
-  - Invalidate sessions on password change
-  - Validate JWT claims (e.g., email verification status)
 
 ### Input Sanitization Implementation
 
