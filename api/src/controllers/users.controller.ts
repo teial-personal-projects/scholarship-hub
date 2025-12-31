@@ -1,19 +1,9 @@
 import { Request, Response } from 'express';
-import { z } from 'zod';
 import * as usersService from '../services/users.service.js';
 import { asyncHandler } from '../middleware/error-handler.js';
 import { toCamelCase } from '@scholarship-hub/shared';
-import { nameSchema, phoneSchema } from '@scholarship-hub/shared';
-
-// Validation schemas
-const updateUserProfileSchema = z.object({
-  firstName: nameSchema.optional(),
-  lastName: nameSchema.optional(),
-  // Default to US so typical "555-123-4567" inputs validate/normalize.
-  phoneNumber: phoneSchema('US').optional(),
-  applicationRemindersEnabled: z.boolean().optional(),
-  collaborationRemindersEnabled: z.boolean().optional(),
-});
+import { updateUserProfileInputSchema } from '../schemas/users.schemas.js';
+import { httpResponse } from '../utils/http-response.js';
 
 /**
  * GET /api/users/me
@@ -21,7 +11,7 @@ const updateUserProfileSchema = z.object({
  */
 export const getMe = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user) {
-    res.status(401).json({ error: 'Unauthorized' });
+    httpResponse.unauthorized(res);
     return;
   }
 
@@ -39,18 +29,18 @@ export const getMe = asyncHandler(async (req: Request, res: Response) => {
  */
 export const updateMe = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user) {
-    res.status(401).json({ error: 'Unauthorized' });
+    httpResponse.unauthorized(res);
     return;
   }
 
   // Validate request body
-  const validationResult = updateUserProfileSchema.safeParse(req.body);
+  const validationResult = updateUserProfileInputSchema.safeParse(req.body);
   
   if (!validationResult.success) {
-    res.status(400).json({
-      error: 'Validation Error',
-      message: validationResult.error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', '),
-    });
+    httpResponse.validationError(
+      res,
+      validationResult.error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ')
+    );
     return;
   }
 
@@ -84,7 +74,7 @@ export const updateMe = asyncHandler(async (req: Request, res: Response) => {
  */
 export const getMyRoles = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user) {
-    res.status(401).json({ error: 'Unauthorized' });
+    httpResponse.unauthorized(res);
     return;
   }
 
@@ -99,7 +89,7 @@ export const getMyRoles = asyncHandler(async (req: Request, res: Response) => {
  */
 export const getMyReminders = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user) {
-    res.status(401).json({ error: 'Unauthorized' });
+    httpResponse.unauthorized(res);
     return;
   }
 

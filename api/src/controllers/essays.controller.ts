@@ -7,6 +7,12 @@ import { Request, Response } from 'express';
 import * as essaysService from '../services/essays.service.js';
 import { asyncHandler } from '../middleware/error-handler.js';
 import { toCamelCase } from '@scholarship-hub/shared';
+import {
+  createEssayInputSchema,
+  updateEssayInputSchema,
+} from '../schemas/essays.schemas.js';
+import { idParamSchema, applicationIdParamSchema } from '../schemas/common.js';
+import { httpResponse } from '../utils/http-response.js';
 
 /**
  * GET /api/applications/:applicationId/essays
@@ -14,16 +20,18 @@ import { toCamelCase } from '@scholarship-hub/shared';
  */
 export const getEssaysByApplication = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user) {
-    res.status(401).json({ error: 'Unauthorized' });
+    httpResponse.unauthorized(res);
     return;
   }
 
-  const applicationId = parseInt(req.params.applicationId || '', 10);
-
-  if (isNaN(applicationId)) {
-    res.status(400).json({ error: 'Invalid application ID' });
+  // Validate route parameter
+  const paramResult = applicationIdParamSchema.safeParse(req.params);
+    if (!paramResult.success) {
+    httpResponse.validationError(res, 'Invalid application ID');
     return;
   }
+
+  const applicationId = paramResult.data.applicationId;
 
   const essays = await essaysService.getEssaysByApplicationId(applicationId, req.user.userId);
   const response = essays.map(essay => toCamelCase(essay));
@@ -37,29 +45,35 @@ export const getEssaysByApplication = asyncHandler(async (req: Request, res: Res
  */
 export const createEssay = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user) {
-    res.status(401).json({ error: 'Unauthorized' });
+    httpResponse.unauthorized(res);
     return;
   }
 
-  const applicationId = parseInt(req.params.applicationId || '', 10);
-
-  if (isNaN(applicationId)) {
-    res.status(400).json({ error: 'Invalid application ID' });
+  // Validate route parameter
+  const paramResult = applicationIdParamSchema.safeParse(req.params);
+    if (!paramResult.success) {
+    httpResponse.validationError(res, 'Invalid application ID');
     return;
   }
 
-  const { theme, units, essayLink, wordCount } = req.body;
+  const applicationId = paramResult.data.applicationId;
 
-  const essay = await essaysService.createEssay(applicationId, req.user.userId, {
-    theme,
-    units,
-    essayLink,
-    wordCount,
-  });
+  // Validate request body
+  const validationResult = createEssayInputSchema.safeParse(req.body);
+  
+  if (!validationResult.success) {
+    httpResponse.validationError(
+      res,
+      validationResult.error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ')
+    );
+    return;
+  }
+
+  const essay = await essaysService.createEssay(applicationId, req.user.userId, validationResult.data);
 
   const response = toCamelCase(essay);
 
-  res.status(201).json(response);
+  httpResponse.created(res, response);
 });
 
 /**
@@ -68,16 +82,18 @@ export const createEssay = asyncHandler(async (req: Request, res: Response) => {
  */
 export const getEssay = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user) {
-    res.status(401).json({ error: 'Unauthorized' });
+    httpResponse.unauthorized(res);
     return;
   }
 
-  const essayId = parseInt(req.params.id || '', 10);
-
-  if (isNaN(essayId)) {
-    res.status(400).json({ error: 'Invalid essay ID' });
+  // Validate route parameter
+  const paramResult = idParamSchema.safeParse(req.params);
+  if (!paramResult.success) {
+    httpResponse.validationError(res, 'Invalid essay ID');
     return;
   }
+
+  const essayId = paramResult.data.id;
 
   const essay = await essaysService.getEssayById(essayId, req.user.userId);
   const response = toCamelCase(essay);
@@ -91,25 +107,31 @@ export const getEssay = asyncHandler(async (req: Request, res: Response) => {
  */
 export const updateEssay = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user) {
-    res.status(401).json({ error: 'Unauthorized' });
+    httpResponse.unauthorized(res);
     return;
   }
 
-  const essayId = parseInt(req.params.id || '', 10);
-
-  if (isNaN(essayId)) {
-    res.status(400).json({ error: 'Invalid essay ID' });
+  // Validate route parameter
+  const paramResult = idParamSchema.safeParse(req.params);
+  if (!paramResult.success) {
+    httpResponse.validationError(res, 'Invalid essay ID');
     return;
   }
 
-  const { theme, units, essayLink, wordCount } = req.body;
+  const essayId = paramResult.data.id;
 
-  const essay = await essaysService.updateEssay(essayId, req.user.userId, {
-    theme,
-    units,
-    essayLink,
-    wordCount,
-  });
+  // Validate request body
+  const validationResult = updateEssayInputSchema.safeParse(req.body);
+  
+  if (!validationResult.success) {
+    httpResponse.validationError(
+      res,
+      validationResult.error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ')
+    );
+    return;
+  }
+
+  const essay = await essaysService.updateEssay(essayId, req.user.userId, validationResult.data);
 
   const response = toCamelCase(essay);
 
@@ -122,18 +144,20 @@ export const updateEssay = asyncHandler(async (req: Request, res: Response) => {
  */
 export const deleteEssay = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user) {
-    res.status(401).json({ error: 'Unauthorized' });
+    httpResponse.unauthorized(res);
     return;
   }
 
-  const essayId = parseInt(req.params.id || '', 10);
-
-  if (isNaN(essayId)) {
-    res.status(400).json({ error: 'Invalid essay ID' });
+  // Validate route parameter
+  const paramResult = idParamSchema.safeParse(req.params);
+  if (!paramResult.success) {
+    httpResponse.validationError(res, 'Invalid essay ID');
     return;
   }
+
+  const essayId = paramResult.data.id;
 
   await essaysService.deleteEssay(essayId, req.user.userId);
 
-  res.status(204).send();
+  httpResponse.noContent(res);
 });

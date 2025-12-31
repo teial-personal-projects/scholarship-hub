@@ -2,222 +2,381 @@
 
 **Last Updated**: 2025-12-30
 
-This document provides a detailed implementation plan for the three critical security features identified in the application architecture: CSRF Protection, Input Sanitization, and Rate Limiting.
+This document provides a detailed implementation plan for the critical security features identified in the application architecture: JWT Security, Input Sanitization, and Rate Limiting.
 
 ---
 
 ## Table of Contents
 
-1. [CSRF Protection](#1-csrf-protection)
-2. [Input Sanitization](#2-input-sanitization)
-3. [Rate Limiting](#3-rate-limiting)
-4. [Implementation Order](#implementation-order)
-5. [Testing Strategy](#testing-strategy)
-6. [Deployment Checklist](#deployment-checklist)
+1. [CSRF Protection Analysis](#1-csrf-protection-analysis)
+2. [JWT Security Best Practices](#2-jwt-security-best-practices)
+3. [Input Sanitization](#3-input-sanitization)
+4. [Rate Limiting](#4-rate-limiting)
+5. [Implementation Order](#implementation-order)
+6. [Testing Strategy](#testing-strategy)
+7. [Deployment Checklist](#deployment-checklist)
 
 ---
 
-## 1. CSRF Protection
+## 1. CSRF Protection Analysis
+
+**Status**: ✅ **NOT REQUIRED FOR THIS APPLICATION**
+
+### Why CSRF Protection is NOT Needed
+
+This application uses **stateless JWT bearer token authentication** and does NOT need CSRF protection. Here's why:
+
+### Authentication Architecture Analysis
+
+**Current Implementation:**
+- ✅ **JWT Bearer Tokens** stored client-side (managed by Supabase SDK)
+- ✅ **Stateless authentication** - no server-side sessions
+- ✅ **Authorization headers** - tokens sent via `Authorization: Bearer {token}`
+- ✅ **NO cookies** used for authentication
+- ✅ **NO automatically-sent credentials** by the browser
+
+**Code Evidence:**
+
+Frontend ([web/src/services/api.ts:73-78](web/src/services/api.ts#L73-L78)):
+```typescript
+const headers = {
+  'Content-Type': 'application/json',
+  Authorization: `Bearer ${token}`,  // ← Manually added by JavaScript
+  ...options.headers,
+};
+```
+
+Backend ([api/src/middleware/auth.ts:15-21](api/src/middleware/auth.ts#L15-L21)):
+```typescript
+const authHeader = req.headers.authorization;
+
+if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  // Reject requests without proper Authorization header
+  return res.status(401).json({ error: 'Unauthorized' });
+}
+
+const token = authHeader.substring(7); // Extract JWT from 'Bearer {token}'
+```
+
+### OWASP Guidance on CSRF and SPAs
+
+According to the [OWASP CSRF Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html):
+
+> **"You only need CSRF protection if the browser automatically sends credentials (cookies, HTTP authentication, client certificates)."**
+>
+> **"If you use strictly bearer tokens in Authorization headers from SPAs (no cookies, no auto-sent credentials), classic CSRF attacks do not work and a CSRF library may be unnecessary."**
+
+### Why CSRF Attacks Cannot Work Here
+
+**How CSRF Attacks Work:**
+1. Victim is authenticated to `legitimate-site.com` (has session cookie)
+2. Victim visits `attacker-site.com`
+3. Attacker site makes request to `legitimate-site.com`
+4. **Browser automatically includes the session cookie**
+5. Server sees valid cookie and processes malicious request
+
+**Why It Doesn't Work With JWT Bearer Tokens:**
+1. Victim is authenticated (has JWT token in memory/localStorage)
+2. Victim visits `attacker-site.com`
+3. Attacker site tries to make request to our API
+4. **Browser DOES NOT automatically include Authorization headers**
+5. Server sees no `Authorization: Bearer {token}` header → request rejected with 401
+
+**Key Point:** JavaScript from `attacker-site.com` cannot access tokens stored by `legitimate-site.com` due to Same-Origin Policy.
+
+### What We Do Instead: JWT Security
+
+Since we don't need CSRF protection, we focus on **JWT-specific security** (see Section 2 below).
+
+### When You WOULD Need CSRF Protection
+
+CSRF protection would be required if:
+- ❌ Using session cookies for authentication
+- ❌ Using `credentials: 'include'` with cookies
+- ❌ Using HTTP Basic Authentication
+- ❌ Using client certificates
+- ❌ Any authentication mechanism where browsers auto-send credentials
+
+### References
+
+- [OWASP CSRF Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html)
+- [OWASP SPA Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/HTML5_Security_Cheat_Sheet.html#local-storage)
+- [Auth0: SPA + API Architecture](https://auth0.com/docs/get-started/authentication-and-authorization-flow/implicit-flow-with-form-post)
+
+---
+
+## 2. JWT Security Best Practices
 
 **Priority**: HIGH
-**Estimated Time**: 4-6 hours
-**Risk Level**: HIGH (without this, application is vulnerable to CSRF attacks)
+**Estimated Time**: 6-8 hours
+**Risk Level**: HIGH (without proper JWT security, tokens can be compromised)
 
-### What is CSRF?
+### What is JWT Security?
 
-Cross-Site Request Forgery (CSRF) is an attack that tricks authenticated users into executing unwanted actions on a web application. Without CSRF protection, an attacker could craft malicious requests that appear to come from legitimate users.
+Since this application uses JWT bearer tokens instead of sessions, we need to implement JWT-specific security measures to prevent token theft, XSS attacks, and token replay attacks.
 
 ### Implementation Steps
 
-#### 1.1 Install CSRF Middleware
+#### 2.1 Secure Token Storage (Frontend)
 
-- [ ] Install the `csurf` package (or `csrf` for newer implementations)
+**Current Status:** Supabase SDK handles token storage automatically, but we should verify best practices.
 
-```bash
-cd api
-npm install csurf cookie-parser
-```
+- [ ] Review Supabase token storage implementation
 
-**Alternative** (for newer Node versions):
-```bash
-npm install @edge-csrf/core @edge-csrf/express
-```
+**Best Practices:**
+- ✅ **Memory Storage (Best)**: Store tokens in JavaScript memory (variables/state) - Lost on refresh but most secure
+- ⚠️ **SessionStorage (Good)**: Tokens cleared when tab closes - Better than localStorage
+- ❌ **LocalStorage (Risky)**: Vulnerable to XSS - Avoid if possible
 
-#### 1.2 Configure CSRF Middleware in Express
+**Supabase Default:** Uses localStorage by default. Consider switching to sessionStorage for better security.
 
-- [ ] Create CSRF configuration file: `api/src/middleware/csrf.ts`
+- [ ] Update Supabase client configuration: `web/src/config/supabase.ts`
 
 ```typescript
-import csrf from 'csurf';
-import cookieParser from 'cookie-parser';
+import { createClient } from '@supabase/supabase-js';
 
-// CSRF protection middleware
-export const csrfProtection = csrf({
-  cookie: {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production', // HTTPS only in production
-    sameSite: 'strict',
-    maxAge: 3600000, // 1 hour
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    storage: window.sessionStorage, // Use sessionStorage instead of localStorage
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true,
   },
 });
-
-// Alternative using @edge-csrf (recommended for modern apps):
-// import { createCsrfProtect } from '@edge-csrf/express';
-//
-// export const csrfProtection = createCsrfProtect({
-//   cookie: {
-//     name: '__Host-csrf',
-//     httpOnly: true,
-//     secure: true,
-//     sameSite: 'strict',
-//   },
-// });
 ```
 
-#### 1.3 Add CSRF Middleware to Express App
+**Trade-offs:**
+- sessionStorage: More secure, but users must re-login on new tabs
+- localStorage: Less secure, but better UX (persists across tabs/refreshes)
 
-- [ ] Update `api/src/index.ts` to include CSRF middleware
+Choose based on your security requirements vs. user experience needs.
 
-```typescript
-import express from 'express';
-import cookieParser from 'cookie-parser';
-import { csrfProtection } from './middleware/csrf';
+#### 2.2 Token Expiration and Refresh
 
-const app = express();
+**Current Status:** Supabase handles automatic token refresh.
 
-// Add cookie parser before CSRF
-app.use(cookieParser());
+- [ ] Verify token expiration settings are secure
 
-// Apply CSRF protection to state-changing routes
-// Exclude it from public routes (login, register) initially
-app.use(csrfProtection);
+**Recommended Token Lifetimes:**
+- **Access Token**: 1 hour (3600 seconds)
+- **Refresh Token**: 7-30 days
 
-// ... rest of your middleware
-```
+- [ ] Check Supabase project settings for token expiration (in Supabase Dashboard → Authentication → Settings)
 
-#### 1.4 Create CSRF Token Endpoint
-
-- [ ] Add endpoint to get CSRF token: `api/src/routes/csrf.routes.ts`
+- [ ] Implement token refresh error handling: `web/src/services/api.ts`
 
 ```typescript
-import { Router, Request, Response } from 'express';
+import { supabase } from '../config/supabase';
 
-const router = Router();
-
-// GET /api/csrf-token
-router.get('/csrf-token', (req: Request, res: Response) => {
-  res.json({ csrfToken: req.csrfToken() });
-});
-
-export default router;
-```
-
-- [ ] Register the route in `api/src/routes/index.ts`
-
-```typescript
-import csrfRoutes from './csrf.routes';
-
-router.use('/', csrfRoutes);
-```
-
-#### 1.5 Update Frontend to Handle CSRF Tokens
-
-- [ ] Update API service to fetch and include CSRF token: `web/src/services/api.ts`
-
-```typescript
-import axios from 'axios';
-
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
-  withCredentials: true, // Important: enables cookies
-});
-
-// Fetch CSRF token on app initialization
-let csrfToken: string | null = null;
-
-export const initializeCsrf = async () => {
-  try {
-    const response = await api.get('/api/csrf-token');
-    csrfToken = response.data.csrfToken;
-
-    // Add CSRF token to all state-changing requests
-    api.interceptors.request.use((config) => {
-      if (['post', 'put', 'patch', 'delete'].includes(config.method?.toLowerCase() || '')) {
-        if (csrfToken) {
-          config.headers['X-CSRF-Token'] = csrfToken;
-        }
-      }
-      return config;
-    });
-  } catch (error) {
-    console.error('Failed to initialize CSRF protection:', error);
-  }
-};
-
-// Call this when the app loads
-export default api;
-```
-
-- [ ] Initialize CSRF in `web/src/main.tsx` or `web/src/App.tsx`
-
-```typescript
-import { initializeCsrf } from './services/api';
-
-// In App component or main.tsx
-useEffect(() => {
-  initializeCsrf();
-}, []);
-```
-
-#### 1.6 Handle CSRF Token Expiration
-
-- [ ] Add error handling for expired CSRF tokens
-
-```typescript
-// In api.ts interceptor
+// Add to API interceptor
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    if (error.response?.status === 403 && error.response?.data?.code === 'EBADCSRFTOKEN') {
-      // Token expired, refresh it
-      await initializeCsrf();
-      // Retry the original request
+    // If we get a 401, try to refresh the token
+    if (error.response?.status === 401) {
+      const { data, error: refreshError } = await supabase.auth.refreshSession();
+
+      if (refreshError || !data.session) {
+        // Refresh failed, redirect to login
+        await supabase.auth.signOut();
+        window.location.href = '/login';
+        return Promise.reject(error);
+      }
+
+      // Retry the original request with new token
+      const newToken = data.session.access_token;
+      error.config.headers.Authorization = `Bearer ${newToken}`;
       return api.request(error.config);
     }
+
     return Promise.reject(error);
   }
 );
 ```
 
-#### 1.7 Exclude Public Endpoints from CSRF
+#### 2.3 XSS Protection (Critical for JWT Security)
 
-- [ ] Configure CSRF to skip public authentication endpoints
+Since JWTs are stored client-side, they're vulnerable to XSS attacks. Implement these protections:
+
+- [ ] Install security headers middleware: `helmet`
+
+```bash
+cd api
+npm install helmet
+```
+
+- [ ] Add Helmet middleware to Express: `api/src/index.ts`
 
 ```typescript
-// In api/src/index.ts
-import { csrfProtection } from './middleware/csrf';
+import helmet from 'helmet';
 
-// Skip CSRF for public routes
-const csrfExemptRoutes = ['/api/auth/login', '/api/auth/register', '/api/auth/forgot-password'];
+const app = express();
 
-app.use((req, res, next) => {
-  if (csrfExemptRoutes.includes(req.path)) {
-    return next();
+// Add security headers
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"], // Remove 'unsafe-inline' in production
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'", process.env.SUPABASE_URL],
+      fontSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'"],
+      frameSrc: ["'none'"],
+    },
+  },
+  crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+}));
+```
+
+- [ ] Implement Content Security Policy (CSP) in frontend: `web/index.html`
+
+```html
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'self';
+               script-src 'self' 'unsafe-inline';
+               style-src 'self' 'unsafe-inline';
+               img-src 'self' data: https:;
+               connect-src 'self' https://*.supabase.co;">
+```
+
+**Note:** Input sanitization (Section 3) is the primary defense against XSS.
+
+#### 2.4 CORS Configuration
+
+- [ ] Verify CORS is properly configured: `api/src/index.ts`
+
+```typescript
+import cors from 'cors';
+
+const app = express();
+
+const corsOptions = {
+  origin: process.env.NODE_ENV === 'production'
+    ? process.env.FRONTEND_URL // e.g., 'https://yourapp.com'
+    : 'http://localhost:5173', // Vite dev server
+  credentials: false, // We don't use cookies, so this should be false
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['RateLimit-Limit', 'RateLimit-Remaining', 'RateLimit-Reset'],
+  maxAge: 86400, // 24 hours
+};
+
+app.use(cors(corsOptions));
+```
+
+**Important:** `credentials: false` since we don't use cookies for authentication.
+
+#### 2.5 Token Validation on Backend
+
+**Current Status:** Already implemented via Supabase auth middleware.
+
+- [ ] Verify auth middleware validates tokens properly: `api/src/middleware/auth.ts`
+
+Ensure it checks:
+- ✅ Token is present
+- ✅ Token format is valid (Bearer scheme)
+- ✅ Token signature is valid (Supabase validates this)
+- ✅ Token is not expired (Supabase validates this)
+- ✅ User exists in Supabase
+
+#### 2.6 Implement Token Revocation Strategy
+
+**Current Implementation:** Tokens are revoked when user logs out via Supabase.
+
+- [ ] Add server-side logout endpoint: `api/src/routes/auth.routes.ts`
+
+```typescript
+import { supabase } from '../config/supabase';
+
+router.post('/logout', auth, async (req, res) => {
+  try {
+    // Extract token from request
+    const token = req.headers.authorization?.substring(7);
+
+    if (token) {
+      // Sign out the user on Supabase (revokes refresh token)
+      const { error } = await supabase.auth.admin.signOut(token);
+
+      if (error) {
+        console.error('Logout error:', error);
+      }
+    }
+
+    res.json({ message: 'Logged out successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Logout failed' });
   }
-  csrfProtection(req, res, next);
 });
 ```
 
-### Testing CSRF Protection
+- [ ] Implement session invalidation on password change
 
-- [ ] Test that requests without CSRF token are rejected
-- [ ] Test that requests with valid CSRF token succeed
-- [ ] Test that token refresh works on expiration
-- [ ] Test that public routes work without CSRF token
+```typescript
+// In user password change endpoint
+router.post('/change-password', auth, async (req, res) => {
+  // ... validate new password ...
+
+  // Update password in Supabase (this invalidates all existing sessions)
+  const { error } = await supabase.auth.admin.updateUserById(
+    req.user.id,
+    { password: newPassword }
+  );
+
+  // ... handle response ...
+});
+```
+
+#### 2.7 Implement JWT Claims Validation
+
+- [ ] Add custom claims validation if needed: `api/src/middleware/auth.ts`
+
+```typescript
+export const auth = async (req: Request, res: Response, next: NextFunction) => {
+  // ... existing token extraction ...
+
+  const { data: { user }, error } = await supabase.auth.getUser(token);
+
+  if (error || !user) {
+    return res.status(401).json({ error: 'Invalid token' });
+  }
+
+  // Validate custom claims (if any)
+  const userMetadata = user.user_metadata;
+
+  // Example: Check if user email is verified
+  if (!user.email_confirmed_at) {
+    return res.status(403).json({
+      error: 'Email not verified',
+      message: 'Please verify your email before accessing this resource'
+    });
+  }
+
+  // Attach user to request
+  req.user = user;
+  next();
+};
+```
+
+### Testing JWT Security
+
+- [ ] Test token expiration and refresh flow
+- [ ] Test that expired tokens are rejected
+- [ ] Test that invalid tokens are rejected
+- [ ] Test that logout revokes tokens
+- [ ] Test CORS configuration prevents unauthorized origins
+- [ ] Test that XSS payloads cannot steal tokens (via input sanitization)
+- [ ] Test password change invalidates old sessions
 
 ---
 
-## 2. Input Sanitization
+## 3. Input Sanitization
 
 **Priority**: CRITICAL
 **Estimated Time**: 8-12 hours
@@ -229,7 +388,7 @@ Input sanitization prevents malicious code injection by validating and cleaning 
 
 ### Implementation Steps
 
-#### 2.1 Install Validation and Sanitization Libraries
+#### 3.1 Install Validation and Sanitization Libraries
 
 - [ ] Install Zod for schema validation and DOMPurify for HTML sanitization
 
@@ -242,7 +401,7 @@ npm install dompurify
 npm install --save-dev @types/dompurify
 ```
 
-#### 2.2 Create Validation Schemas for All Endpoints
+#### 3.2 Create Validation Schemas for All Endpoints
 
 - [ ] Create validation schemas directory: `api/src/schemas/`
 
@@ -314,7 +473,7 @@ export const createApplicationSchema = z.object({
 export type CreateApplicationInput = z.infer<typeof createApplicationSchema>;
 ```
 
-#### 2.3 Create Validation Middleware
+#### 3.3 Create Validation Middleware
 
 - [ ] Create validation middleware: `api/src/middleware/validate.ts`
 
@@ -395,7 +554,7 @@ export const validateParams = (schema: z.ZodSchema) => {
 };
 ```
 
-#### 2.4 Apply Validation to All Routes
+#### 3.4 Apply Validation to All Routes
 
 - [ ] Update routes to use validation middleware
 
@@ -454,7 +613,7 @@ router.patch(
 export default router;
 ```
 
-#### 2.5 Sanitize HTML Content
+#### 3.5 Sanitize HTML Content
 
 - [ ] Create HTML sanitization utility: `api/src/utils/sanitize.ts`
 
@@ -502,7 +661,7 @@ cd api
 npm install isomorphic-dompurify
 ```
 
-#### 2.6 Apply Sanitization in Services
+#### 3.6 Apply Sanitization in Services
 
 - [ ] Update service methods to sanitize HTML content
 
@@ -520,7 +679,7 @@ export const createEssay = async (essayData: CreateEssayInput) => {
 };
 ```
 
-#### 2.7 Frontend Input Sanitization
+#### 3.7 Frontend Input Sanitization
 
 - [ ] Create sanitization utility: `web/src/utils/sanitize.ts`
 
@@ -545,7 +704,7 @@ export const SafeHtml: React.FC<{ html: string }> = ({ html }) => {
 };
 ```
 
-#### 2.8 Create All Required Schemas
+#### 3.8 Create All Required Schemas
 
 - [ ] Create schemas for all entities:
   - [ ] `user.schema.ts` - User profile updates
@@ -568,7 +727,7 @@ export const SafeHtml: React.FC<{ html: string }> = ({ html }) => {
 
 ---
 
-## 3. Rate Limiting
+## 4. Rate Limiting
 
 **Priority**: HIGH
 **Estimated Time**: 3-4 hours
@@ -580,7 +739,7 @@ Rate limiting restricts the number of requests a client can make within a time w
 
 ### Implementation Steps
 
-#### 3.1 Install Rate Limiting Package
+#### 4.1 Install Rate Limiting Package
 
 - [ ] Install express-rate-limit
 
@@ -589,7 +748,7 @@ cd api
 npm install express-rate-limit
 ```
 
-#### 3.2 Create Rate Limiting Configuration
+#### 4.2 Create Rate Limiting Configuration
 
 - [ ] Create rate limit configuration: `api/src/middleware/rateLimiter.ts`
 
@@ -678,7 +837,7 @@ export const sensitiveLimiter = rateLimit({
 });
 ```
 
-#### 3.3 Apply Rate Limiters to Routes
+#### 4.3 Apply Rate Limiters to Routes
 
 - [ ] Apply global API rate limiter in `api/src/index.ts`
 
@@ -713,7 +872,7 @@ router.patch('/:id', writeLimiter, updateApplication);
 router.delete('/:id', writeLimiter, deleteApplication);
 ```
 
-#### 3.4 Configure Redis for Distributed Rate Limiting (Optional)
+#### 4.4 Configure Redis for Distributed Rate Limiting (Optional)
 
 For production environments with multiple server instances, use Redis for shared rate limiting state.
 
@@ -757,7 +916,7 @@ export const authLimiter = rateLimit({
 });
 ```
 
-#### 3.5 Add Rate Limit Headers to Frontend
+#### 4.5 Add Rate Limit Headers to Frontend
 
 - [ ] Display rate limit information to users
 
@@ -787,7 +946,7 @@ api.interceptors.response.use(
 );
 ```
 
-#### 3.6 Create Rate Limit Bypass for Trusted IPs (Optional)
+#### 4.6 Create Rate Limit Bypass for Trusted IPs (Optional)
 
 - [ ] Add IP whitelist configuration
 
@@ -821,7 +980,7 @@ export const createLimiter = (options: any) => {
 
 Follow this order to maximize security improvements:
 
-### Phase 1: Input Sanitization (Week 1)
+### Phase 1: Input Sanitization
 **Priority**: CRITICAL - Prevents XSS and injection attacks
 
 1. [ ] Install dependencies (Zod, DOMPurify)
@@ -832,18 +991,18 @@ Follow this order to maximize security improvements:
 6. [ ] Apply sanitization in services
 7. [ ] Test thoroughly
 
-### Phase 2: CSRF Protection (Week 2)
-**Priority**: HIGH - Prevents cross-site request forgery
+### Phase 2: JWT Security
+**Priority**: HIGH - Secures token-based authentication
 
-1. [ ] Install CSRF middleware
-2. [ ] Configure CSRF in Express
-3. [ ] Create CSRF token endpoint
-4. [ ] Update frontend to handle CSRF tokens
-5. [ ] Handle token expiration
-6. [ ] Exclude public endpoints
+1. [ ] Review and configure secure token storage (sessionStorage vs localStorage)
+2. [ ] Implement token refresh error handling
+3. [ ] Install and configure Helmet for security headers
+4. [ ] Verify and update CORS configuration
+5. [ ] Implement server-side logout endpoint
+6. [ ] Add JWT claims validation (email verification)
 7. [ ] Test thoroughly
 
-### Phase 3: Rate Limiting (Week 2)
+### Phase 3: Rate Limiting
 **Priority**: HIGH - Prevents brute-force and DoS
 
 1. [ ] Install rate limiting package
@@ -863,30 +1022,34 @@ Follow this order to maximize security improvements:
 - [ ] Test validation schemas with valid/invalid input
 - [ ] Test sanitization functions with malicious input
 - [ ] Test rate limiter configurations
+- [ ] Test JWT token refresh logic
 
 ### Integration Tests
 
 - [ ] Test API endpoints reject invalid input
-- [ ] Test API endpoints reject requests without CSRF token
 - [ ] Test API endpoints enforce rate limits
 - [ ] Test error responses are user-friendly
 - [ ] Test that valid requests still work
+- [ ] Test token expiration and refresh flow
+- [ ] Test logout functionality
 
 ### Security Tests
 
-- [ ] Attempt XSS attacks (should be blocked)
-- [ ] Attempt SQL injection (should be blocked)
-- [ ] Attempt CSRF attacks (should be blocked)
+- [ ] Attempt XSS attacks (should be blocked by input sanitization)
+- [ ] Attempt SQL injection (should be blocked by input validation)
+- [ ] Attempt token theft via XSS (should be mitigated by CSP headers)
 - [ ] Attempt brute-force login (should be rate limited)
 - [ ] Test with automated security scanner (e.g., OWASP ZAP)
+- [ ] Verify CORS policy blocks unauthorized origins
 
 ### Manual Testing
 
 - [ ] Test all forms with invalid data
 - [ ] Test all forms with valid data
 - [ ] Test rate limiting by making rapid requests
-- [ ] Test CSRF token refresh
+- [ ] Test token refresh when access token expires
 - [ ] Test error messages are clear and helpful
+- [ ] Test logout clears tokens and invalidates session
 
 ---
 
@@ -896,7 +1059,8 @@ Follow this order to maximize security improvements:
 
 - [ ] All validation schemas implemented
 - [ ] All routes have validation middleware
-- [ ] CSRF protection enabled for all state-changing endpoints
+- [ ] JWT security measures implemented (token refresh, logout, claims validation)
+- [ ] Security headers configured (Helmet with CSP)
 - [ ] Rate limiting configured for all endpoint types
 - [ ] All tests passing
 - [ ] Security scan completed (no critical issues)
@@ -904,20 +1068,23 @@ Follow this order to maximize security improvements:
 
 ### Production Configuration
 
-- [ ] CSRF secure cookies enabled (`secure: true`)
+- [ ] Token storage strategy chosen (sessionStorage vs localStorage)
 - [ ] Rate limiting using Redis (for distributed systems)
 - [ ] Environment variables properly configured
-- [ ] HTTPS enforced
-- [ ] Security headers configured (Helmet.js)
+- [ ] HTTPS enforced (required for secure token transmission)
+- [ ] Security headers configured (Helmet.js with strict CSP)
+- [ ] CORS properly configured (credentials: false, specific origins)
 - [ ] Error messages don't expose sensitive information
+- [ ] Supabase token expiration settings verified (1 hour for access tokens)
 
 ### Post-Deployment
 
 - [ ] Monitor rate limit metrics
-- [ ] Monitor CSRF token failures
+- [ ] Monitor JWT token expiration and refresh patterns
 - [ ] Monitor validation error rates
-- [ ] Set up alerts for suspicious activity
+- [ ] Set up alerts for suspicious activity (failed logins, rate limit hits)
 - [ ] Review logs for attack attempts
+- [ ] Monitor Supabase auth logs for anomalies
 - [ ] Conduct penetration testing
 
 ---
@@ -932,13 +1099,17 @@ Follow this order to maximize security improvements:
 - ✅ Do use strict type checking
 - ✅ Do sanitize HTML content before storing
 
-### CSRF Protection
-- ❌ Don't use GET requests for state-changing operations
-- ❌ Don't expose CSRF tokens in URLs
-- ❌ Don't disable CSRF for convenience
-- ✅ Do use secure, httpOnly cookies
-- ✅ Do implement token rotation
-- ✅ Do test with actual CSRF attack scenarios
+### JWT Security
+- ❌ Don't store tokens in localStorage without understanding XSS risks
+- ❌ Don't send tokens in URL query parameters (use Authorization headers)
+- ❌ Don't skip HTTPS in production (tokens transmitted in clear text)
+- ❌ Don't use long-lived access tokens (keep under 1 hour)
+- ❌ Don't trust JWT payload without verification (always validate server-side)
+- ✅ Do use sessionStorage or memory for more secure token storage
+- ✅ Do implement automatic token refresh
+- ✅ Do invalidate sessions on password change
+- ✅ Do use HTTPS everywhere in production
+- ✅ Do validate all JWT claims on the backend
 
 ### Rate Limiting
 - ❌ Don't use the same limits for all endpoints
@@ -956,8 +1127,11 @@ Follow this order to maximize security improvements:
 - [Zod Documentation](https://zod.dev/)
 - [DOMPurify Documentation](https://github.com/cure53/DOMPurify)
 - [express-rate-limit Documentation](https://github.com/express-rate-limit/express-rate-limit)
-- [CSRF Protection Guide](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html)
+- [Helmet.js Documentation](https://helmetjs.github.io/)
+- [Supabase Auth Documentation](https://supabase.com/docs/guides/auth)
 - [OWASP Input Validation](https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html)
+- [OWASP JWT Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_for_Java_Cheat_Sheet.html)
+- [OWASP CSRF Prevention](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html)
 
 ### Security Testing Tools
 - [OWASP ZAP](https://www.zaproxy.org/) - Security scanner
@@ -968,22 +1142,45 @@ Follow this order to maximize security improvements:
 
 ## Questions & Answers
 
-**Q: Should we implement all three at once?**
-A: No. Follow the implementation order above. Start with Input Sanitization (most critical), then CSRF, then Rate Limiting.
+**Q: Do we really not need CSRF protection?**
+A: Correct! Since we use JWT bearer tokens in Authorization headers (not cookies), browsers don't automatically send credentials cross-origin. CSRF attacks cannot work in this architecture. See Section 1 for detailed explanation.
+
+**Q: Should we implement all security features at once?**
+A: No. Follow the implementation order above. Start with Input Sanitization (most critical for preventing XSS), then JWT Security, then Rate Limiting.
 
 **Q: Will this slow down the application?**
-A: Minimal impact. Validation adds ~1-5ms per request. Rate limiting adds ~1ms. CSRF adds ~2ms. The security benefits far outweigh the negligible performance cost.
+A: Minimal impact. Validation adds ~1-5ms per request. Rate limiting adds ~1ms. JWT validation adds ~2-5ms. Security headers add negligible overhead. The security benefits far outweigh the performance cost.
 
 **Q: Do we need Redis for rate limiting?**
 A: Only if you have multiple server instances. For a single server, in-memory storage is fine.
 
-**Q: What if we have mobile apps?**
-A: Mobile apps need special CSRF handling (token-based instead of cookie-based). Rate limiting works the same.
+**Q: Should we use localStorage or sessionStorage for tokens?**
+A: **sessionStorage is more secure** (tokens cleared when tab closes, reducing XSS risk window), but **localStorage has better UX** (persists across tabs/refreshes). Choose based on your security vs. UX priorities. The most secure option is memory-only storage, but requires re-login on every page refresh.
+
+**Q: What if we add mobile apps later?**
+A: The same JWT bearer token approach works perfectly for mobile apps. Mobile apps should store tokens in secure storage (Keychain on iOS, Keystore on Android) and send them in Authorization headers just like the web app.
 
 **Q: How do we test security features?**
-A: Use the testing strategy above, including automated security scanners and manual penetration testing.
+A: Use the testing strategy above, including automated security scanners (OWASP ZAP), manual penetration testing, and attempting actual attacks (XSS, SQL injection, brute-force) in a test environment.
+
+**Q: What about refresh token security?**
+A: Supabase handles refresh token rotation automatically. Refresh tokens are longer-lived but can only be used to get new access tokens, not to access resources directly. Implement server-side logout to revoke refresh tokens when needed.
 
 ---
 
 **Last Updated**: 2025-12-30
-**Next Review**: After Phase 1 completion
+**Next Review**: After Phase 1 (Input Sanitization) completion
+
+---
+
+## Summary of Changes from Original Plan
+
+**Key Change**: CSRF Protection has been replaced with JWT Security best practices.
+
+**Reason**: This application uses stateless JWT bearer token authentication (via Supabase), not session cookies. According to OWASP guidelines, CSRF protection is not needed when credentials are not automatically sent by the browser. JWT tokens in Authorization headers must be manually added by JavaScript, making CSRF attacks impossible.
+
+**What was removed**: All CSRF middleware, token endpoints, and frontend CSRF handling code.
+
+**What was added**: JWT-specific security measures including secure token storage strategies, token refresh handling, security headers (Helmet/CSP), CORS configuration, server-side logout, and JWT claims validation.
+
+This provides better security tailored to the actual authentication architecture of the application.

@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { asyncHandler } from '../middleware/error-handler.js';
 import { AppError } from '../middleware/error-handler.js';
 import * as remindersService from '../services/reminders.service.js';
+import { httpResponse } from '../utils/http-response.js';
 
 /**
  * Middleware to verify cron secret token
@@ -14,13 +15,13 @@ const verifyCronSecret = (req: Request, res: Response, next: () => void) => {
   // Check if CRON_SECRET is configured
   if (!cronSecret) {
     console.error('[cron.controller] CRON_SECRET not configured in environment variables');
-    res.status(500).json({ error: 'Server configuration error' });
+    httpResponse.serverError(res, 'Server configuration error');
     return;
   }
 
   // Check if authorization header is present
   if (!authHeader) {
-    res.status(401).json({ error: 'Missing authorization header' });
+    httpResponse.unauthorized(res, 'Missing authorization header');
     return;
   }
 
@@ -31,7 +32,7 @@ const verifyCronSecret = (req: Request, res: Response, next: () => void) => {
 
   // Verify token matches secret
   if (token !== cronSecret) {
-    res.status(403).json({ error: 'Invalid cron secret' });
+    httpResponse.forbidden(res, 'Invalid cron secret');
     return;
   }
 
@@ -60,7 +61,7 @@ export const sendReminders = asyncHandler(async (req: Request, res: Response) =>
       console.log('[cron.controller] Reminder job completed:', result);
 
       // Return success response with stats
-      res.status(200).json({
+      httpResponse.ok(res, {
         success: true,
         timestamp: new Date().toISOString(),
         stats: result,
@@ -71,11 +72,7 @@ export const sendReminders = asyncHandler(async (req: Request, res: Response) =>
         return;
       }
       console.error('[cron.controller] Error processing reminders:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to process reminders',
-        timestamp: new Date().toISOString(),
-      });
+      httpResponse.serverError(res, 'Failed to process reminders');
     }
   });
 });

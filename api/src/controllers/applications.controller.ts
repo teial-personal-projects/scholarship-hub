@@ -2,6 +2,12 @@ import { Request, Response } from 'express';
 import * as applicationsService from '../services/applications.service.js';
 import { asyncHandler } from '../middleware/error-handler.js';
 import { toCamelCase } from '@scholarship-hub/shared';
+import {
+  createApplicationInputSchema,
+  updateApplicationInputSchema,
+} from '../schemas/applications.schemas.js';
+import { idParamSchema } from '../schemas/common.js';
+import { httpResponse } from '../utils/http-response.js';
 
 /**
  * GET /api/applications
@@ -9,7 +15,7 @@ import { toCamelCase } from '@scholarship-hub/shared';
  */
 export const getApplications = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user) {
-    res.status(401).json({ error: 'Unauthorized' });
+    httpResponse.unauthorized(res);
     return;
   }
 
@@ -27,16 +33,18 @@ export const getApplications = asyncHandler(async (req: Request, res: Response) 
  */
 export const getApplication = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user) {
-    res.status(401).json({ error: 'Unauthorized' });
+    httpResponse.unauthorized(res);
     return;
   }
 
-  const applicationId = parseInt(req.params.id || '', 10);
-
-  if (isNaN(applicationId)) {
-    res.status(400).json({ error: 'Invalid application ID' });
+  // Validate route parameter
+  const paramResult = idParamSchema.safeParse(req.params);
+  if (!paramResult.success) {
+    httpResponse.validationError(res, 'Invalid application ID');
     return;
   }
+
+  const applicationId = paramResult.data.id;
 
   const application = await applicationsService.getApplicationById(
     applicationId,
@@ -55,65 +63,27 @@ export const getApplication = asyncHandler(async (req: Request, res: Response) =
  */
 export const createApplication = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user) {
-    res.status(401).json({ error: 'Unauthorized' });
+    httpResponse.unauthorized(res);
     return;
   }
 
-  const {
-    scholarshipName,
-    targetType,
-    organization,
-    orgWebsite,
-    platform,
-    applicationLink,
-    theme,
-    minAward,
-    maxAward,
-    requirements,
-    renewable,
-    renewableTerms,
-    documentInfoLink,
-    currentAction,
-    status,
-    submissionDate,
-    openDate,
-    dueDate,
-  } = req.body;
-
-  // Validate required fields
-  if (!scholarshipName || !dueDate) {
-    res.status(400).json({
-      error: 'Validation Error',
-      message: 'scholarshipName and dueDate are required',
-    });
+  // Validate request body
+  const validationResult = createApplicationInputSchema.safeParse(req.body);
+  
+  if (!validationResult.success) {
+    httpResponse.validationError(
+      res,
+      validationResult.error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ')
+    );
     return;
   }
 
-  const application = await applicationsService.createApplication(req.user.userId, {
-    scholarshipName,
-    targetType,
-    organization,
-    orgWebsite,
-    platform,
-    applicationLink,
-    theme,
-    minAward,
-    maxAward,
-    requirements,
-    renewable,
-    renewableTerms,
-    documentInfoLink,
-    currentAction,
-    status,
-    submissionDate,
-    openDate,
-    dueDate,
-  });
+  const application = await applicationsService.createApplication(req.user.userId, validationResult.data);
 
   // Convert to camelCase
   const response = toCamelCase(application);
 
-  res.status(201).json(response);
+  httpResponse.created(res, response);
 });
 
 /**
@@ -122,61 +92,34 @@ export const createApplication = asyncHandler(async (req: Request, res: Response
  */
 export const updateApplication = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user) {
-    res.status(401).json({ error: 'Unauthorized' });
+    httpResponse.unauthorized(res);
     return;
   }
 
-  const applicationId = parseInt(req.params.id || '', 10);
-
-  if (isNaN(applicationId)) {
-    res.status(400).json({ error: 'Invalid application ID' });
+  // Validate route parameter
+  const paramResult = idParamSchema.safeParse(req.params);
+  if (!paramResult.success) {
+    httpResponse.validationError(res, 'Invalid application ID');
     return;
   }
 
-  const {
-    scholarshipName,
-    targetType,
-    organization,
-    orgWebsite,
-    platform,
-    applicationLink,
-    theme,
-    minAward,
-    maxAward,
-    requirements,
-    renewable,
-    renewableTerms,
-    documentInfoLink,
-    currentAction,
-    status,
-    submissionDate,
-    openDate,
-    dueDate,
-  } = req.body;
+  const applicationId = paramResult.data.id;
+
+  // Validate request body
+  const validationResult = updateApplicationInputSchema.safeParse(req.body);
+  
+  if (!validationResult.success) {
+    httpResponse.validationError(
+      res,
+      validationResult.error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ')
+    );
+    return;
+  }
 
   const application = await applicationsService.updateApplication(
     applicationId,
     req.user.userId,
-    {
-      scholarshipName,
-      targetType,
-      organization,
-      orgWebsite,
-      platform,
-      applicationLink,
-      theme,
-      minAward,
-      maxAward,
-      requirements,
-      renewable,
-      renewableTerms,
-      documentInfoLink,
-      currentAction,
-      status,
-      submissionDate,
-      openDate,
-      dueDate,
-    }
+    validationResult.data
   );
 
   // Convert to camelCase
@@ -191,18 +134,20 @@ export const updateApplication = asyncHandler(async (req: Request, res: Response
  */
 export const deleteApplication = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user) {
-    res.status(401).json({ error: 'Unauthorized' });
+    httpResponse.unauthorized(res);
     return;
   }
 
-  const applicationId = parseInt(req.params.id || '', 10);
-
-  if (isNaN(applicationId)) {
-    res.status(400).json({ error: 'Invalid application ID' });
+  // Validate route parameter
+  const paramResult = idParamSchema.safeParse(req.params);
+  if (!paramResult.success) {
+    httpResponse.validationError(res, 'Invalid application ID');
     return;
   }
+
+  const applicationId = paramResult.data.id;
 
   await applicationsService.deleteApplication(applicationId, req.user.userId);
 
-  res.status(204).send();
+  httpResponse.noContent(res);
 });

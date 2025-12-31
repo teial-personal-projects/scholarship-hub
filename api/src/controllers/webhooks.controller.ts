@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { asyncHandler } from '../middleware/error-handler.js';
 import { AppError } from '../middleware/error-handler.js';
 import * as webhooksService from '../services/webhooks.service.js';
+import { httpResponse } from '../utils/http-response.js';
 
 /**
  * POST /api/webhooks/resend
@@ -20,14 +21,14 @@ export const handleResendWebhook = asyncHandler(async (req: Request, res: Respon
   const svixId = req.headers['svix-id'] as string;
 
   if (!signature || !timestamp || !svixId) {
-    res.status(401).json({ error: 'Missing webhook signature headers' });
+    httpResponse.unauthorized(res, 'Missing webhook signature headers');
     return;
   }
 
   // req.body is a Buffer from express.raw()
   const rawBody = req.body as Buffer;
   if (!rawBody) {
-    res.status(400).json({ error: 'Missing request body' });
+    httpResponse.badRequest(res, 'Missing request body');
     return;
   }
 
@@ -40,14 +41,14 @@ export const handleResendWebhook = asyncHandler(async (req: Request, res: Respon
     });
 
     // Return 200 OK to acknowledge receipt
-    res.status(200).json({ received: true });
+    httpResponse.ok(res, { received: true });
   } catch (error) {
     if (error instanceof AppError) {
       res.status(error.statusCode).json({ error: error.message });
       return;
     }
     console.error('[webhooks.controller] Error processing webhook:', error);
-    res.status(500).json({ error: 'Failed to process webhook' });
+    httpResponse.serverError(res, 'Failed to process webhook');
   }
 });
 

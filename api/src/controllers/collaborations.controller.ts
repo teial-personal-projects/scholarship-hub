@@ -7,6 +7,12 @@ import { Request, Response } from 'express';
 import * as collaborationsService from '../services/collaborations.service.js';
 import { asyncHandler } from '../middleware/error-handler.js';
 import { toCamelCase } from '@scholarship-hub/shared';
+import {
+  createCollaborationInputSchema,
+  updateCollaborationInputSchema,
+} from '../schemas/collaborations.schemas.js';
+import { idParamSchema, applicationIdParamSchema } from '../schemas/common.js';
+import { httpResponse } from '../utils/http-response.js';
 
 /**
  * GET /api/applications/:applicationId/collaborations
@@ -15,16 +21,18 @@ import { toCamelCase } from '@scholarship-hub/shared';
 export const getCollaborationsByApplication = asyncHandler(
   async (req: Request, res: Response) => {
     if (!req.user) {
-      res.status(401).json({ error: 'Unauthorized' });
+      httpResponse.unauthorized(res);
       return;
     }
 
-    const applicationId = parseInt(req.params.applicationId || '', 10);
-
-    if (isNaN(applicationId)) {
-      res.status(400).json({ error: 'Invalid application ID' });
+    // Validate route parameter
+    const paramResult = applicationIdParamSchema.safeParse(req.params);
+    if (!paramResult.success) {
+      httpResponse.validationError(res, 'Invalid application ID');
       return;
     }
+
+    const applicationId = paramResult.data.applicationId;
 
     const collaborations = await collaborationsService.getCollaborationsByApplicationId(
       applicationId,
@@ -43,10 +51,7 @@ export const getCollaborationsByApplication = asyncHandler(
  * Deprecated: essay review collaborations no longer link to a specific essay.
  */
 export const getCollaborationsByEssay = asyncHandler(async (_req: Request, res: Response) => {
-  res.status(410).json({
-    error: 'Gone',
-    message: 'Essay-specific collaborations are no longer supported (essayReview no longer stores essayId).',
-  });
+  httpResponse.gone(res, 'Essay-specific collaborations are no longer supported (essayReview no longer stores essayId).');
 });
 
 /**
@@ -55,79 +60,27 @@ export const getCollaborationsByEssay = asyncHandler(async (_req: Request, res: 
  */
 export const createCollaboration = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user) {
-    res.status(401).json({ error: 'Unauthorized' });
+    httpResponse.unauthorized(res);
     return;
   }
 
-  const {
-    collaboratorId,
-    applicationId,
-    collaborationType,
-    status,
-    awaitingActionFrom,
-    awaitingActionType,
-    nextActionDescription,
-    nextActionDueDate,
-    notes,
-    currentDraftVersion,
-    feedbackRounds,
-    lastFeedbackAt,
-    portalUrl,
-    sessionType,
-    meetingUrl,
-    scheduledFor,
-  } = req.body;
-
-  // Validate required fields
-  if (!collaboratorId || !applicationId || !collaborationType) {
-    res.status(400).json({
-      error: 'Validation Error',
-      message: 'collaboratorId, applicationId, and collaborationType are required',
-    });
+  // Validate request body
+  const validationResult = createCollaborationInputSchema.safeParse(req.body);
+  
+  if (!validationResult.success) {
+    httpResponse.validationError(
+      res,
+      validationResult.error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ')
+    );
     return;
   }
 
-  // Validate collaboration type
-  if (!['recommendation', 'essayReview', 'guidance'].includes(collaborationType)) {
-    res.status(400).json({
-      error: 'Validation Error',
-      message: 'collaborationType must be one of: recommendation, essayReview, guidance',
-    });
-    return;
-  }
-
-  // Validate recommendation requires nextActionDueDate
-  if (collaborationType === 'recommendation' && !nextActionDueDate) {
-    res.status(400).json({
-      error: 'Validation Error',
-      message: 'nextActionDueDate is required for recommendation collaborations',
-    });
-    return;
-  }
-
-  const collaboration = await collaborationsService.createCollaboration(req.user.userId, {
-    collaboratorId,
-    applicationId,
-    collaborationType,
-    status,
-    awaitingActionFrom,
-    awaitingActionType,
-    nextActionDescription,
-    nextActionDueDate,
-    notes,
-    currentDraftVersion,
-    feedbackRounds,
-    lastFeedbackAt,
-    portalUrl,
-    sessionType,
-    meetingUrl,
-    scheduledFor,
-  });
+  const collaboration = await collaborationsService.createCollaboration(req.user.userId, validationResult.data);
 
   // Convert to camelCase
   const response = toCamelCase(collaboration);
 
-  res.status(201).json(response);
+  httpResponse.created(res, response);
 });
 
 /**
@@ -136,16 +89,18 @@ export const createCollaboration = asyncHandler(async (req: Request, res: Respon
  */
 export const getCollaboration = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user) {
-    res.status(401).json({ error: 'Unauthorized' });
+    httpResponse.unauthorized(res);
     return;
   }
 
-  const collaborationId = parseInt(req.params.id || '', 10);
-
-  if (isNaN(collaborationId)) {
-    res.status(400).json({ error: 'Invalid collaboration ID' });
+  // Validate route parameter
+  const paramResult = idParamSchema.safeParse(req.params);
+  if (!paramResult.success) {
+    httpResponse.validationError(res, 'Invalid collaboration ID');
     return;
   }
+
+  const collaborationId = paramResult.data.id;
 
   const collaboration = await collaborationsService.getCollaborationById(
     collaborationId,
@@ -164,54 +119,34 @@ export const getCollaboration = asyncHandler(async (req: Request, res: Response)
  */
 export const updateCollaboration = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user) {
-    res.status(401).json({ error: 'Unauthorized' });
+    httpResponse.unauthorized(res);
     return;
   }
 
-  const collaborationId = parseInt(req.params.id || '', 10);
-
-  if (isNaN(collaborationId)) {
-    res.status(400).json({ error: 'Invalid collaboration ID' });
+  // Validate route parameter
+  const paramResult = idParamSchema.safeParse(req.params);
+  if (!paramResult.success) {
+    httpResponse.validationError(res, 'Invalid collaboration ID');
     return;
   }
 
-  const {
-    status,
-    awaitingActionFrom,
-    awaitingActionType,
-    nextActionDescription,
-    nextActionDueDate,
-    notes,
-    // Essay review tracking (optional)
-    currentDraftVersion,
-    feedbackRounds,
-    lastFeedbackAt,
-    portalUrl,
-    questionnaireCompleted,
-    sessionType,
-    meetingUrl,
-    scheduledFor,
-  } = req.body;
+  const collaborationId = paramResult.data.id;
+
+  // Validate request body
+  const validationResult = updateCollaborationInputSchema.safeParse(req.body);
+  
+  if (!validationResult.success) {
+    httpResponse.validationError(
+      res,
+      validationResult.error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ')
+    );
+    return;
+  }
 
   const collaboration = await collaborationsService.updateCollaboration(
     collaborationId,
     req.user.userId,
-    {
-      status,
-      awaitingActionFrom,
-      awaitingActionType,
-      nextActionDescription,
-      nextActionDueDate,
-      notes,
-      currentDraftVersion,
-      feedbackRounds,
-      lastFeedbackAt,
-      portalUrl,
-      questionnaireCompleted,
-      sessionType,
-      meetingUrl,
-      scheduledFor,
-    }
+    validationResult.data
   );
 
   // Convert to camelCase
@@ -226,20 +161,22 @@ export const updateCollaboration = asyncHandler(async (req: Request, res: Respon
  */
 export const deleteCollaboration = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user) {
-    res.status(401).json({ error: 'Unauthorized' });
+    httpResponse.unauthorized(res);
     return;
   }
 
-  const collaborationId = parseInt(req.params.id || '', 10);
-
-  if (isNaN(collaborationId)) {
-    res.status(400).json({ error: 'Invalid collaboration ID' });
+  // Validate route parameter
+  const paramResult = idParamSchema.safeParse(req.params);
+  if (!paramResult.success) {
+    httpResponse.validationError(res, 'Invalid collaboration ID');
     return;
   }
+
+  const collaborationId = paramResult.data.id;
 
   await collaborationsService.deleteCollaboration(collaborationId, req.user.userId);
 
-  res.status(204).send();
+  httpResponse.noContent(res);
 });
 
 /**
@@ -248,24 +185,23 @@ export const deleteCollaboration = asyncHandler(async (req: Request, res: Respon
  */
 export const addCollaborationHistory = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user) {
-    res.status(401).json({ error: 'Unauthorized' });
+    httpResponse.unauthorized(res);
     return;
   }
 
-  const collaborationId = parseInt(req.params.id || '', 10);
-
-  if (isNaN(collaborationId)) {
-    res.status(400).json({ error: 'Invalid collaboration ID' });
+  // Validate route parameter
+  const paramResult = idParamSchema.safeParse(req.params);
+  if (!paramResult.success) {
+    httpResponse.validationError(res, 'Invalid collaboration ID');
     return;
   }
+
+  const collaborationId = paramResult.data.id;
 
   const { action, details } = req.body;
 
   if (!action) {
-    res.status(400).json({
-      error: 'Validation Error',
-      message: 'action is required',
-    });
+    httpResponse.validationError(res, 'action is required');
     return;
   }
 
@@ -281,7 +217,7 @@ export const addCollaborationHistory = asyncHandler(async (req: Request, res: Re
   // Convert to camelCase
   const response = toCamelCase(historyEntry);
 
-  res.status(201).json(response);
+  httpResponse.created(res, response);
 });
 
 /**
@@ -290,16 +226,18 @@ export const addCollaborationHistory = asyncHandler(async (req: Request, res: Re
  */
 export const getCollaborationHistory = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user) {
-    res.status(401).json({ error: 'Unauthorized' });
+    httpResponse.unauthorized(res);
     return;
   }
 
-  const collaborationId = parseInt(req.params.id || '', 10);
-
-  if (isNaN(collaborationId)) {
-    res.status(400).json({ error: 'Invalid collaboration ID' });
+  // Validate route parameter
+  const paramResult = idParamSchema.safeParse(req.params);
+  if (!paramResult.success) {
+    httpResponse.validationError(res, 'Invalid collaboration ID');
     return;
   }
+
+  const collaborationId = paramResult.data.id;
 
   const history = await collaborationsService.getCollaborationHistory(
     collaborationId,
@@ -318,16 +256,18 @@ export const getCollaborationHistory = asyncHandler(async (req: Request, res: Re
  */
 export const sendInvite = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user) {
-    res.status(401).json({ error: 'Unauthorized' });
+    httpResponse.unauthorized(res);
     return;
   }
 
-  const collaborationId = parseInt(req.params.id || '', 10);
-
-  if (isNaN(collaborationId)) {
-    res.status(400).json({ error: 'Invalid collaboration ID' });
+  // Validate route parameter
+  const paramResult = idParamSchema.safeParse(req.params);
+  if (!paramResult.success) {
+    httpResponse.validationError(res, 'Invalid collaboration ID');
     return;
   }
+
+  const collaborationId = paramResult.data.id;
 
   const invite = await collaborationsService.sendCollaborationInvitation(
     collaborationId,
@@ -337,7 +277,7 @@ export const sendInvite = asyncHandler(async (req: Request, res: Response) => {
   // Convert to camelCase
   const response = toCamelCase(invite);
 
-  res.status(201).json(response);
+  httpResponse.created(res, response);
 });
 
 /**
@@ -346,34 +286,36 @@ export const sendInvite = asyncHandler(async (req: Request, res: Response) => {
  */
 export const scheduleInvite = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user) {
-    res.status(401).json({ error: 'Unauthorized' });
+    httpResponse.unauthorized(res);
     return;
   }
 
-  const collaborationId = parseInt(req.params.id || '', 10);
-
-  if (isNaN(collaborationId)) {
-    res.status(400).json({ error: 'Invalid collaboration ID' });
+  // Validate route parameter
+  const paramResult = idParamSchema.safeParse(req.params);
+  if (!paramResult.success) {
+    httpResponse.validationError(res, 'Invalid collaboration ID');
     return;
   }
+
+  const collaborationId = paramResult.data.id;
 
   const { scheduledFor } = req.body;
 
   if (!scheduledFor) {
-    res.status(400).json({ error: 'scheduledFor is required' });
+    httpResponse.badRequest(res, 'scheduledFor is required');
     return;
   }
 
   // Validate date
   const scheduledDate = new Date(scheduledFor);
   if (isNaN(scheduledDate.getTime())) {
-    res.status(400).json({ error: 'Invalid scheduledFor date' });
+    httpResponse.badRequest(res, 'Invalid scheduledFor date');
     return;
   }
 
   // Check if scheduled date is in the future
   if (scheduledDate < new Date()) {
-    res.status(400).json({ error: 'scheduledFor must be in the future' });
+    httpResponse.badRequest(res, 'scheduledFor must be in the future');
     return;
   }
 
@@ -386,7 +328,7 @@ export const scheduleInvite = asyncHandler(async (req: Request, res: Response) =
   // Convert to camelCase
   const response = toCamelCase(invite);
 
-  res.status(201).json(response);
+  httpResponse.created(res, response);
 });
 
 /**
@@ -395,16 +337,18 @@ export const scheduleInvite = asyncHandler(async (req: Request, res: Response) =
  */
 export const resendInvite = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user) {
-    res.status(401).json({ error: 'Unauthorized' });
+    httpResponse.unauthorized(res);
     return;
   }
 
-  const collaborationId = parseInt(req.params.id || '', 10);
-
-  if (isNaN(collaborationId)) {
-    res.status(400).json({ error: 'Invalid collaboration ID' });
+  // Validate route parameter
+  const paramResult = idParamSchema.safeParse(req.params);
+  if (!paramResult.success) {
+    httpResponse.validationError(res, 'Invalid collaboration ID');
     return;
   }
+
+  const collaborationId = paramResult.data.id;
 
   const invite = await collaborationsService.resendCollaborationInvitation(
     collaborationId,

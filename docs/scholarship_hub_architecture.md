@@ -340,11 +340,6 @@ Since this application uses JWT bearer tokens (not cookies), JWT-specific securi
   - Implementation: `web/src/services/api.ts` - `refreshAccessToken()` function and 401 handler
   - Note: Token expiration settings should be verified in Supabase Dashboard (recommended: 1 hour for access tokens). Find under Project Settings->JWT Keys. This project is using Legacy JWT Secret
 
-- [ ] **XSS Protection** (Critical for JWT security)
-  - Install and configure Helmet.js for security headers
-  - Implement Content Security Policy (CSP)
-  - Ensure input sanitization (see below) to prevent token theft
-
 - [ ] **CORS Configuration**
   - Verify CORS restricts origins to frontend domain
   - Set `credentials: false` (we don't use cookies)
@@ -355,6 +350,54 @@ Since this application uses JWT bearer tokens (not cookies), JWT-specific securi
   - Invalidate sessions on password change
   - Validate JWT claims (e.g., email verification status)
 
+### XSS Protection and Input Sanitization Implementation
+
+**Priority**: CRITICAL
+
+Prevents XSS attacks and injection vulnerabilities. Critical for JWT security to prevent token theft.
+
+- 1. [✅] **Install Dependencies**
+  - ✅ `zod` - Schema validation (installed in API: ^3.22.0)
+  - ✅ `dompurify` - HTML sanitization (installed in web: ^3.3.1)
+  - ✅ `isomorphic-dompurify` - HTML sanitization (installed in API: ^2.35.0)
+  - ✅ `helmet` - Security headers including Content Security Policy (CSP) (installed in API: ^7.1.0)
+
+- 2. [✅] **Create Validation Schemas**
+  - ✅ Created `api/src/schemas/` directory structure
+  - ✅ Created common schemas (`common.ts`) for ID/UUID params
+  - ✅ Created user schemas (`users.schemas.ts`) with separate input/output schemas using `.strict()`
+  - ✅ Created collaborator schemas (`collaborators.schemas.ts`) with separate input/output schemas using `.strict()`
+  - ✅ Applied best practices: separate input/output schemas, `.strict()` on inputs, type exports
+  - ⏳ Remaining: Define schemas for other entities (applications, essays, recommendations, etc.)
+
+- 3. [✅] **Create Validation Middleware**
+  - ✅ Updated `validate()` - Uses `safeParseAsync` for controlled error handling
+  - ✅ Updated `validateBody()` - Uses `safeParseAsync` for controlled error handling
+  - ✅ Updated `validateQuery()` - Uses `safeParseAsync` for controlled error handling
+  - ✅ Added `validateParams()` - Path parameter validation using `safeParseAsync`
+  - ✅ Returns clear validation error messages (400 status)
+
+- 4. [✅] **Apply Validation to All Routes**
+  - ✅ Updated `auth.controller.ts` - All auth endpoints (register, login, refresh) use schemas
+  - ✅ Updated `users.controller.ts` to use new schemas
+  - ✅ Updated `collaborators.controller.ts` to use new schemas with route param validation
+  - ✅ Updated `applications.controller.ts` - All POST, PATCH endpoints use schemas, path params validated
+  - ✅ Updated `essays.controller.ts` - All POST, PATCH endpoints use schemas, path params validated
+  - ✅ Updated `recommendations.controller.ts` - All POST, PATCH endpoints use schemas, path params validated
+  - ✅ Updated `collaborations.controller.ts` - All POST, PATCH endpoints use schemas, path params validated
+  - ✅ All routes with IDs now validate path parameters using `idParamSchema` or specific param schemas
+
+- 5. [ ] **HTML Sanitization**
+  - Create sanitization utilities for server-side and client-side
+  - Sanitize rich text content (essays, notes) before storage
+  - Use allowed tags whitelist (b, i, em, strong, a, p, br, ul, ol, li)
+  - Create React component for safe HTML rendering
+
+- 6. [ ] **Security Headers and Content Security Policy (CSP)**
+  - Install and configure Helmet.js middleware
+  - Implement Content Security Policy to prevent XSS token theft
+  - Configure security headers (X-Content-Type-Options, X-Frame-Options, etc.)
+  - Ensure CSP allows necessary resources while blocking inline scripts
 
 #### Input Validation and Sanitization
 
@@ -390,37 +433,6 @@ Since this application uses JWT bearer tokens (not cookies), JWT-specific securi
 - Redis integration for production deployments with multiple servers
 - Rate limit headers expose remaining quota to clients
 
-### Input Sanitization Implementation
-
-**Priority**: CRITICAL
-
-Prevents XSS attacks and injection vulnerabilities:
-
-- [ ] **Install Dependencies**
-  - `zod` - Schema validation
-  - `dompurify` and `isomorphic-dompurify` - HTML sanitization
-
-- [ ] **Create Validation Schemas**
-  - Create `api/src/schemas/` directory
-  - Define Zod schemas for all entities (users, applications, essays, collaborators, etc.)
-  - Include field-level validation rules (length, format, regex patterns)
-
-- [ ] **Create Validation Middleware**
-  - `validate()` - Request body validation
-  - `validateQuery()` - Query parameter validation
-  - `validateParams()` - Path parameter validation
-  - Return clear validation error messages (400 status)
-
-- [ ] **Apply Validation to All Routes**
-  - Start with authentication endpoints
-  - Apply to all POST, PUT, PATCH endpoints
-  - Validate path parameters on all routes with IDs
-
-- [ ] **HTML Sanitization**
-  - Create sanitization utilities for server-side and client-side
-  - Sanitize rich text content (essays, notes) before storage
-  - Use allowed tags whitelist (b, i, em, strong, a, p, br, ul, ol, li)
-  - Create React component for safe HTML rendering
 
 ### Rate Limiting Implementation
 

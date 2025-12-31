@@ -2,6 +2,12 @@ import { Request, Response } from 'express';
 import * as authService from '../services/auth.service.js';
 import { asyncHandler } from '../middleware/error-handler.js';
 import { AppError } from '../middleware/error-handler.js';
+import {
+  registerInputSchema,
+  loginInputSchema,
+  refreshTokenInputSchema,
+} from '../schemas/auth.schemas.js';
+import { httpResponse } from '../utils/http-response.js';
 
 /**
  * POST /api/auth/register
@@ -9,23 +15,17 @@ import { AppError } from '../middleware/error-handler.js';
  * Creates user in Supabase Auth, creates profile, and assigns default 'student' role
  */
 export const register = asyncHandler(async (req: Request, res: Response) => {
-  const { email, password, firstName, lastName } = req.body;
-
-  // Validate required fields
-  if (!email || !password) {
-    throw new AppError('Email and password are required', 400);
+  // Validate request body
+  const validationResult = registerInputSchema.safeParse(req.body);
+  
+  if (!validationResult.success) {
+    throw new AppError(
+      validationResult.error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', '),
+      400
+    );
   }
 
-  // Validate email format (basic)
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
-    throw new AppError('Invalid email format', 400);
-  }
-
-  // Validate password length
-  if (password.length < 6) {
-    throw new AppError('Password must be at least 6 characters', 400);
-  }
+  const { email, password, firstName, lastName } = validationResult.data;
 
   try {
     const result = await authService.register({
@@ -36,7 +36,7 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
     });
 
     // Return user data and session
-    res.status(201).json({
+    httpResponse.created(res, {
       user: {
         id: result.user.id,
         email: result.user.email,
@@ -89,11 +89,17 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
  * This endpoint is provided for backend-to-backend auth scenarios
  */
 export const login = asyncHandler(async (req: Request, res: Response) => {
-  const { email, password } = req.body;
-
-  if (!email || !password) {
-    throw new AppError('Email and password are required', 400);
+  // Validate request body
+  const validationResult = loginInputSchema.safeParse(req.body);
+  
+  if (!validationResult.success) {
+    throw new AppError(
+      validationResult.error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', '),
+      400
+    );
   }
+
+  const { email, password } = validationResult.data;
 
   try {
     const result = await authService.login({ email, password });
@@ -160,11 +166,17 @@ export const logout = asyncHandler(async (req: Request, res: Response) => {
  * Gets a new access token using the refresh token
  */
 export const refresh = asyncHandler(async (req: Request, res: Response) => {
-  const { refreshToken } = req.body;
-
-  if (!refreshToken) {
-    throw new AppError('Refresh token is required', 400);
+  // Validate request body
+  const validationResult = refreshTokenInputSchema.safeParse(req.body);
+  
+  if (!validationResult.success) {
+    throw new AppError(
+      validationResult.error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', '),
+      400
+    );
   }
+
+  const { refreshToken } = validationResult.data;
 
   try {
     const result = await authService.refreshSession(refreshToken);

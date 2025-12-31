@@ -4,11 +4,15 @@
  */
 
 import { Request, Response } from 'express';
-import { z } from 'zod';
 import * as collaboratorsService from '../services/collaborators.service.js';
 import { asyncHandler } from '../middleware/error-handler.js';
 import { toCamelCase } from '@scholarship-hub/shared';
-import { emailSchema, nameSchema } from '@scholarship-hub/shared';
+import {
+  createCollaboratorInputSchema,
+  updateCollaboratorInputSchema,
+} from '../schemas/collaborators.schemas.js';
+import { idParamSchema } from '../schemas/common.js';
+import { httpResponse } from '../utils/http-response.js';
 
 /**
  * GET /api/collaborators
@@ -16,7 +20,7 @@ import { emailSchema, nameSchema } from '@scholarship-hub/shared';
  */
 export const getCollaborators = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user) {
-    res.status(401).json({ error: 'Unauthorized' });
+    httpResponse.unauthorized(res);
     return;
   }
 
@@ -34,16 +38,18 @@ export const getCollaborators = asyncHandler(async (req: Request, res: Response)
  */
 export const getCollaborator = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user) {
-    res.status(401).json({ error: 'Unauthorized' });
+    httpResponse.unauthorized(res);
     return;
   }
 
-  const collaboratorId = parseInt(req.params.id || '', 10);
-
-  if (isNaN(collaboratorId)) {
-    res.status(400).json({ error: 'Invalid collaborator ID' });
+  // Validate route parameter
+  const paramResult = idParamSchema.safeParse(req.params);
+  if (!paramResult.success) {
+    httpResponse.validationError(res, 'Invalid collaborator ID');
     return;
   }
+
+  const collaboratorId = paramResult.data.id;
 
   const collaborator = await collaboratorsService.getCollaboratorById(
     collaboratorId,
@@ -56,42 +62,18 @@ export const getCollaborator = asyncHandler(async (req: Request, res: Response) 
   res.json(response);
 });
 
-// Validation schemas
-// NOTE: Collaborator phone numbers are optional and frequently entered as placeholders
-// (e.g. (555) 555-5555) during development. We accept any trimmed string here and let
-// the service normalize to E.164 when possible.
-const collaboratorPhoneSchema = z
-  .union([z.string().trim().max(50), z.null()])
-  .optional();
-
-const createCollaboratorSchema = z.object({
-  firstName: nameSchema,
-  lastName: nameSchema,
-  emailAddress: emailSchema,
-  relationship: z.string().max(100).trim().optional(),
-  phoneNumber: collaboratorPhoneSchema,
-});
-
-const updateCollaboratorSchema = z.object({
-  firstName: nameSchema.optional(),
-  lastName: nameSchema.optional(),
-  emailAddress: emailSchema.optional(),
-  relationship: z.string().max(100).trim().optional(),
-  phoneNumber: collaboratorPhoneSchema,
-});
-
 /**
  * POST /api/collaborators
  * Create new collaborator
  */
 export const createCollaborator = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user) {
-    res.status(401).json({ error: 'Unauthorized' });
+    httpResponse.unauthorized(res);
     return;
   }
 
   // Validate request body
-  const validationResult = createCollaboratorSchema.safeParse(req.body);
+  const validationResult = createCollaboratorInputSchema.safeParse(req.body);
   
   if (!validationResult.success) {
     if (process.env.NODE_ENV !== 'production') {
@@ -100,10 +82,10 @@ export const createCollaborator = asyncHandler(async (req: Request, res: Respons
         issues: validationResult.error.issues,
       });
     }
-    res.status(400).json({
-      error: 'Validation Error',
-      message: validationResult.error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', '),
-    });
+    httpResponse.validationError(
+      res,
+      validationResult.error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ')
+    );
     return;
   }
 
@@ -120,7 +102,7 @@ export const createCollaborator = asyncHandler(async (req: Request, res: Respons
   // Convert to camelCase
   const response = toCamelCase(collaborator);
 
-  res.status(201).json(response);
+  httpResponse.created(res, response);
 });
 
 /**
@@ -129,19 +111,21 @@ export const createCollaborator = asyncHandler(async (req: Request, res: Respons
  */
 export const updateCollaborator = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user) {
-    res.status(401).json({ error: 'Unauthorized' });
+    httpResponse.unauthorized(res);
     return;
   }
 
-  const collaboratorId = parseInt(req.params.id || '', 10);
-
-  if (isNaN(collaboratorId)) {
-    res.status(400).json({ error: 'Invalid collaborator ID' });
+  // Validate route parameter
+  const paramResult = idParamSchema.safeParse(req.params);
+  if (!paramResult.success) {
+    httpResponse.validationError(res, 'Invalid collaborator ID');
     return;
   }
+
+  const collaboratorId = paramResult.data.id;
 
   // Validate request body
-  const validationResult = updateCollaboratorSchema.safeParse(req.body);
+  const validationResult = updateCollaboratorInputSchema.safeParse(req.body);
   
   if (!validationResult.success) {
     if (process.env.NODE_ENV !== 'production') {
@@ -150,10 +134,10 @@ export const updateCollaborator = asyncHandler(async (req: Request, res: Respons
         issues: validationResult.error.issues,
       });
     }
-    res.status(400).json({
-      error: 'Validation Error',
-      message: validationResult.error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', '),
-    });
+    httpResponse.validationError(
+      res,
+      validationResult.error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ')
+    );
     return;
   }
 
@@ -191,19 +175,21 @@ export const updateCollaborator = asyncHandler(async (req: Request, res: Respons
  */
 export const deleteCollaborator = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user) {
-    res.status(401).json({ error: 'Unauthorized' });
+    httpResponse.unauthorized(res);
     return;
   }
 
-  const collaboratorId = parseInt(req.params.id || '', 10);
-
-  if (isNaN(collaboratorId)) {
-    res.status(400).json({ error: 'Invalid collaborator ID' });
+  // Validate route parameter
+  const paramResult = idParamSchema.safeParse(req.params);
+  if (!paramResult.success) {
+    httpResponse.validationError(res, 'Invalid collaborator ID');
     return;
   }
+
+  const collaboratorId = paramResult.data.id;
 
   await collaboratorsService.deleteCollaborator(collaboratorId, req.user.userId);
 
-  res.status(204).send();
+  httpResponse.noContent(res);
 });
 
