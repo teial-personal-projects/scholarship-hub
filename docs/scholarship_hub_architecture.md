@@ -692,7 +692,7 @@ Follow this order for security implementation:
 ###  Backend Deployment (Railway)
 
 #### Steps
-- [ ] **Step 1:** Create Railway project
+- [✅] **Step 1:** Create Railway project
   1. Go to https://railway.app
   2. Click **"Start a New Project"**
   3. Select **"Deploy from GitHub repo"**
@@ -700,16 +700,15 @@ Follow this order for security implementation:
   5. Select your repository
   6. Railway will auto-detect and start building
 
-- [ ] **Step 2:** Configure Node.js version
+- [✅] **Step 2:** Configure Node.js version
   - Railway should auto-detect Node.js from `.nvmrc` or `package.json` engines field
   - Verify Node.js 24.12+ is being used in deployment logs
   - If needed, set `NODE_VERSION=24.12.0` in environment variables
 
-- [ ] **Step 3:** Configure environment variables
+- [✅] **Step 3:** Configure environment variables
   - In Railway dashboard, click on your deployed service
   - Go to **"Variables"** tab
   - Add the following environment variables:
-    - `DATABASE_URL` - Supabase connection string
     - `SUPABASE_URL` - Supabase project URL
     - `SUPABASE_ANON_KEY` - Supabase anonymous key
     - `SUPABASE_SERVICE_ROLE_KEY` - Supabase service role key
@@ -723,13 +722,14 @@ Follow this order for security implementation:
   - Set health check path: `/api/health`
   - Set timeout: 30 seconds
 
-- [ ] **Step 5:** Enable always-on service
+- [✅] **Step 5:** Enable always-on service (Service-level setting)
+  - In your Railway project, select the **service** (not the project)
   - Go to **"Settings"** → **"Service"**
   - Ensure service is on **"Always On"** plan ($5/month)
 
-- [ ] **Step 6:** Configure resource limits (optional)
+- [✅] **Step 6:** Configure resource limits (optional)
   - Go to **"Settings"** → **"Resources"**
-  - Set memory limit: 512MB-1GB (should be sufficient)
+  - Set memory limit: 512MB-1GB (should be sufficient). Can't get more on the free version.
   - Set CPU limit: 1-2 vCPUs
 
 - [ ] **Step 7:** Set up custom domain (optional)
@@ -738,14 +738,12 @@ Follow this order for security implementation:
   - Update your DNS records as instructed
 
 - [ ] **Step 8:** Configure start command
-  - Set start command: `npm start`
-
-- [ ] **Step 9:** Set up automatic deployments from git branch
+  - Set start command: `node api/dist/index.js`
 
 - [ ] **Step 10:** Configure CORS to allow frontend domain
 
 - [ ] **Step 11:** Verify deployment
-  - Copy your Railway deployment URL (e.g., `https://your-app.up.railway.app`)
+  - Copy your Railway deployment URL (e.g., `https://scholarship-hub-dev.up.railway.app`)
   - Test the health endpoint:
     ```bash
     curl https://your-app.up.railway.app/api/health
@@ -756,7 +754,7 @@ Follow this order for security implementation:
 1. **Update `web/.env.production` (create if doesn't exist):**
 
 ```bash
-VITE_API_URL=https://your-app.up.railway.app
+VITE_API_URL=https://scholarship-hub-dev.up.railway.app
 ```
 
 2. **Update `web/vite.config.js` for production:**
@@ -813,7 +811,7 @@ npm run preview
 2. Add the following:
 
 ```bash
-VITE_API_URL=https://your-app.up.railway.app
+VITE_API_URL=https://scholarship-hub-dev.up.railway.app
 ```
 
 3. Select **"Production"** environment
