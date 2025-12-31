@@ -141,6 +141,8 @@ export function Navigation() {
             <Box w="1px" h="6" bg="white" opacity="0.3" />
             <NavLink to="/collaborators">COLLABORATORS</NavLink>
             <Box w="1px" h="6" bg="white" opacity="0.3" />
+            <NavLink to="/resources">RESOURCES</NavLink>
+            <Box w="1px" h="6" bg="white" opacity="0.3" />
             <NavLink to="/profile">PROFILE</NavLink>
           </HStack>
 
@@ -195,6 +197,7 @@ export function Navigation() {
               <VStack gap="2" align="stretch" mt="4">
                 <NavLink to="/dashboard" onClick={onDrawerClose}>DASHBOARD</NavLink>
                 <NavLink to="/collaborators" onClick={onDrawerClose}>COLLABORATORS</NavLink>
+                <NavLink to="/resources" onClick={onDrawerClose}>RESOURCES</NavLink>
                 <NavLink to="/profile" onClick={onDrawerClose}>PROFILE</NavLink>
                 <Separator borderColor="whiteAlpha.300" my="2" />
                 <Box

@@ -627,7 +627,7 @@ The following items are planned for future implementation to enhance the applica
 - Cloudflare Pages
 
 **Steps**:
-- [ ] Deploy to chosen platform (Vercel/Netlify/Cloudflare Pages)
+- [ ] Deploy to chosen platform (Cloudflare Pages)
 - [ ] Configure environment variables:
   - `VITE_API_URL` - Backend API URL
   - `VITE_SUPABASE_URL` - Supabase project URL
@@ -642,13 +642,8 @@ The following items are planned for future implementation to enhance the applica
 
 #### Backend Deployment
 
-**Platform Options**:
-- Railway (Recommended - simple PostgreSQL integration)
-- Render
-- Fly.io
-
 **Steps**:
-- [ ] Deploy to chosen platform (Railway/Render/Fly.io)
+- [ ] Deploy to chosen platform (Railway)
 - [ ] Configure environment variables:
   - `DATABASE_URL` - Supabase connection string
   - `SUPABASE_URL` - Supabase project URL

@@ -11,6 +11,7 @@ import CollaboratorInvite from './pages/CollaboratorInvite';
 import Profile from './pages/Profile';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import ScholarshipResources from './pages/ScholarshipResources';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Navigation } from './components/Navigation';
 import './App.css';
@@ -84,6 +85,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/resources"
+            element={
+              <ProtectedRoute>
+                <ScholarshipResources />
               </ProtectedRoute>
             }
           />
