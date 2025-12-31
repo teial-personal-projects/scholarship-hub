@@ -1,311 +1,178 @@
-# Scholarship Search Integration - Quick Start Guide
+# Scholarship Resources Integration - Quick Start Guide
 
-This document provides a high-level overview of integrating scholarship search into your scholarship-hub app.
+This document provides a high-level overview of scholarship resources in your scholarship-hub app.
 
 ## 📁 Documentation
 
 - **SCHOLARSHIP_FINDER_IMPLEMENTATION.md** - Backend data pipeline (Python)
-- **SCHOLARSHIP_SEARCH_IMPLEMENTATION.md** - User-facing search features (Node.js/React)
 
 ## 🎯 Overview
 
-### Two Main Components
-
-1. **Scholarship Finder** (Python Service)
-   - Discovers scholarships from multiple sources
-   - Runs on a schedule (every 6 hours)
-   - Uses AI to find non-traditional sources
-   - Prevents duplicates with checksums
-   - Marks expired scholarships
-
-2. **Scholarship Search** (Node.js API + React Frontend)
-   - Users search scholarships
-   - Personalized recommendations
-   - Save scholarships
-   - Track viewed scholarships
-   - Convert to applications
+### Scholarship Resources Page
+A page that displays curated resources (websites, organizations, etc.) to help users find scholarships. The resources are stored in the `scholarship_sources` table and displayed in a user-friendly format on the "Scholarship Resources" page accessible from the main navigation.
 
 ## 🏗️ Architecture
 
 ```
 ┌─────────────────────────┐
-│  Python Service         │
-│  (Scholarship Finder)   │
-│  - Scrapes websites     │
-│  - AI discovery         │
-│  - Deduplication        │
+│  React Frontend         │
+│  - Scholarship Resources│
+│    page (menu option)   │
 └───────────┬─────────────┘
-            │ Writes to DB
+            │ Reads from DB
             ▼
     ┌───────────────┐
     │   PostgreSQL  │
-    │   (Shared)    │
-    └───────┬───────┘
-            │ Reads from DB
+    │   (Supabase)  │
+    │               │
+    │  - scholarship_sources│
+    │    (resource list)    │
+    └───────────────┘
+            │
             ▼
 ┌─────────────────────────┐
 │  Node.js API            │
-│  - Search endpoint      │
-│  - Recommendations      │
-│  - User interactions    │
-└───────────┬─────────────┘
-            │
-            ▼
-    ┌───────────────┐
-    │  React Web    │
-    │  - Search UI  │
-    │  - Detail     │
-    │  - Dashboard  │
-    └───────────────┘
+│  - GET /api/resources   │
+│    (or similar)         │
+└─────────────────────────┘
 ```
 
 ## 📊 Database Tables
 
-### New Tables to Add
+1. ✅ **scholarship_sources** - Curated list of scholarship resource websites and organizations
+   - Used by the Scholarship Resources page to display resources to users
+   - Contains: name, URL, description, category/tags, etc.
 
-1. **scholarships** - Main scholarship data
-2. **scholarship_sources** - Websites to scrape
-3. **finder_jobs** - Job execution tracking
-4. **user_scholarships** - User interactions (viewed, saved, dismissed)
+## 🚀 Implementation Status
 
-## 🚀 Implementation Order
+### Phase 1: Database Setup ✅
+- ✅ `scholarship_sources` table exists (migration 012)
+- ✅ Table structure supports displaying resources to users
 
-### Phase 1: Database Setup (Day 1)
-- Create database migrations
-- Add new tables
-- Test migrations
-
-### Phase 2: Scholarship Finder (Days 2-5)
-- Move Python scraper to `scholarship-finder/` directory
-- Update database connections to use PostgreSQL
-- Implement deduplication engine
-- Test AI discovery with one category
-- Set up basic scheduler (cron)
-
-### Phase 3: Backend API (Days 6-8)
-- Create scholarship service
-- Add search endpoints
-- Implement recommendations
-- Add save/dismiss functionality
-- Write tests
-
-### Phase 4: Frontend UI (Days 9-12)
-- Create search page
-- Create detail page
-- Add dashboard widget
-- Implement preferences form
-- Write tests
-
-### Phase 5: Integration & Testing (Days 13-14)
-- End-to-end testing
-- Performance optimization
-- Deploy and monitor
+### Phase 2: Scholarship Resources Page ⏳ **To Be Implemented**
+- [ ] Create Scholarship Resources page component
+- [ ] Add route in React Router
+- [ ] Add navigation menu item
+- [ ] Create API endpoint to fetch resources from `scholarship_sources` table
+- [ ] Display resources as cards with name, URL, description, category/tags
 
 ## 💰 Cost Estimate
 
 ### Development
-- ~2-3 weeks full-time
-- Can be done incrementally
+- ~1-2 days to implement the Scholarship Resources page
+- Simple CRUD operations on existing table
 
 ### Monthly Operating Costs
-- **Hosting**: $0-10 (run locally or cheap VPS)
 - **Database**: $0 (Supabase free tier)
-- **OpenAI API**: $10-20 (GPT-3.5-turbo is cheap)
-- **Google Custom Search**: $0-5 (100 free queries/day)
-- **Total**: ~$15-30/month
-
-### Scaling
-- Start small: 2-3 categories, every 6 hours
-- Scale up: More categories, more frequent
-- Production: ~$30-50/month with full coverage
+- **Total**: $0/month (no additional costs)
 
 ## 🔑 Key Decisions Made
 
 ### 1. Tech Stack
-**Decision**: Keep Python for scraping, Node.js for API
+**Decision**: Use existing React frontend + Node.js API
 **Why**:
-- Python better for scraping/AI
-- Already have working Python scraper
-- Node.js better for API/web
-- Share same database = simple integration
+- Consistent with rest of application
+- Simple read-only display of resources
+- No new infrastructure needed
 
 ### 2. Database
-**Decision**: Use existing PostgreSQL (Supabase)
+**Decision**: Use existing `scholarship_sources` table in PostgreSQL (Supabase)
 **Why**:
-- No new infrastructure
-- Consistent with rest of app
-- Free tier sufficient to start
+- Table already exists from previous implementation
+- Contains all necessary fields for displaying resources
+- No schema changes needed
 
-### 3. Scheduling
-**Decision**: Start with cron, optionally move to Node.js scheduler
-**Why**:
-- Cron is free and simple
-- Can integrate with Node later if needed
-- Flexible deployment
-
-### 4. AI Usage
-**Decision**: Use OpenAI for discovery, not for every search
-**Why**:
-- Discovery runs monthly (~$10-20)
-- Search is instant and free (database queries)
-- Best of both worlds
 
 ## 🛠️ Getting Started
 
-### Step 1: Review Documentation
-```bash
-# Read the implementation plans
-cat SCHOLARSHIP_FINDER_IMPLEMENTATION.md
-cat SCHOLARSHIP_SEARCH_IMPLEMENTATION.md
+### Step 1: Database Setup ✅
+The `scholarship_sources` table already exists from migration 012. You can populate it with resource entries as needed.
+
+### Step 2: Create API Endpoint
+Create a new endpoint (e.g., `GET /api/resources` or `/api/scholarship-resources`) that:
+- Queries the `scholarship_sources` table
+- Returns resources in a format suitable for display
+- Filters by enabled/active status if applicable
+
+### Step 3: Create Frontend Page Component
+Create `web/src/pages/ScholarshipResources.tsx` that:
+- Fetches resources from the API endpoint
+- Displays resources as cards with:
+  - Source name
+  - Source URL (clickable link)
+  - Description
+  - Category/tags
+- Uses appropriate Chakra UI components for styling
+
+### Step 4: Add Route
+Add the route to `web/src/App.tsx`:
+```tsx
+<Route path="/resources" element={<ScholarshipResources />} />
 ```
 
-### Step 2: Database Setup
-```bash
-cd scholarship-hub/api
-npm run migration:create add_scholarships_tables
-# Edit migration file with schema from docs
-npm run migrate:latest
-```
+### Step 5: Add Navigation Menu Item
+Add "Scholarship Resources" to the navigation menu component (likely in `web/src/components/Navigation.tsx`)
 
-### Step 3: Set Up Scholarship Finder
-```bash
-cd scholarship-hub
-mkdir scholarship-finder
+## 📝 Implementation Checklist
 
-# Copy your existing scraper
-cp -r /path/to/scholarship-tracker/scraper/* scholarship-finder/
+### Database ✅
+- [x] `scholarship_sources` table exists (migration 012)
+- [ ] Table populated with resource entries (if needed)
 
-# Install dependencies
-cd scholarship-finder
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-```
+### Backend API ⏳
+- [ ] Create resources endpoint/route
+- [ ] Create resources service/controller
+- [ ] Query `scholarship_sources` table
+- [ ] Return formatted resource data
 
-### Step 4: Configure Environment
-```bash
-# Add to .env in project root
-OPENAI_API_KEY=your_key_here
-GOOGLE_API_KEY=your_key_here
-GOOGLE_CUSTOM_SEARCH_CX=your_cx_here
-```
-
-### Step 5: Test Scholarship Finder
-```bash
-cd scholarship-finder
-python finder_main.py --scraper general
-```
-
-### Step 6: Implement Backend API
-```bash
-cd scholarship-hub/api
-# Create services, routes, and types as documented
-```
-
-### Step 7: Implement Frontend
-```bash
-cd scholarship-hub/web
-# Create search page, detail page, dashboard widgets
-```
-
-## 📝 Checklist
-
-### Scholarship Finder
-- [ ] Database migrations created and run
-- [ ] Python finder moved to project
-- [ ] Database connection updated for PostgreSQL
-- [ ] Deduplication engine implemented
-- [ ] AI discovery tested
-- [ ] Expiration manager implemented
-- [ ] Scheduler configured (cron or Node.js)
-
-### Backend API
-- [ ] Scholarship service created
-- [ ] Search endpoint implemented
-- [ ] Recommendations endpoint implemented
-- [ ] Save/dismiss endpoints implemented
-- [ ] User preferences endpoint implemented
-- [ ] Tests written
-
-### Frontend
-- [ ] Search page created
-- [ ] Detail page created
-- [ ] Dashboard widget added
-- [ ] Preferences form created
-- [ ] Saved scholarships page created
-- [ ] Tests written
+### Frontend ⏳
+- [ ] Create `ScholarshipResources.tsx` page component
+- [ ] Add route to `App.tsx`
+- [ ] Add navigation menu item
+- [ ] Implement resource card display
+- [ ] Style with Chakra UI components
 
 ## 🎓 Best Practices
 
-### Deduplication
-- Always generate checksum before inserting
-- Check URL uniqueness
-- Use fuzzy matching for similar names
-- Merge data when updating existing scholarships
-
-### AI Usage
-- Use GPT-3.5-turbo for queries (cheap)
-- Use GPT-4-turbo for extraction (accurate)
-- Limit API calls with rate limiting
-- Cache results when possible
+### Resource Display
+- Show clear, actionable information (name, URL, description)
+- Group resources by category/tags if applicable
+- Make URLs clickable and open in new tab
+- Ensure resources are current and relevant
 
 ### Performance
-- Index heavily queried fields (category, deadline, status)
-- Use pagination for search results
-- Implement caching for recommendations
-- Optimize database queries
+- Use pagination if the resource list grows large
+- Consider caching resource data (they don't change frequently)
+- Optimize database queries with appropriate indexes
 
 ### User Experience
-- Never show same scholarship twice
-- Explain why scholarships are recommended
-- Make search filters intuitive
-- Provide clear call-to-actions
+- Make it easy to scan and find relevant resources
+- Provide clear descriptions of what each resource offers
+- Ensure the page is accessible and mobile-friendly
 
 ## 🐛 Troubleshooting
 
-### Database Connection Issues
-```bash
-# Check environment variables
-echo $SUPABASE_HOST
-echo $SUPABASE_PASSWORD
+### No Resources Displaying
+- Check that `scholarship_sources` table has entries
+- Verify API endpoint is returning data correctly
+- Check browser console for API errors
+- Verify database connection in API
 
-# Test connection
-psql -h $SUPABASE_HOST -U $SUPABASE_USER -d $SUPABASE_DATABASE
-```
+### API Endpoint Issues
+- Test endpoint directly with curl or Postman
+- Check API route is properly registered
+- Verify service/controller is querying database correctly
+- Check for authentication/authorization requirements
 
-### Python Dependencies
-```bash
-# Reinstall dependencies
-cd scholarship-finder
-pip install -r requirements.txt --force-reinstall
-```
+## 📚 Current Status
 
-### API Key Issues
-```bash
-# Verify OpenAI key
-curl https://api.openai.com/v1/models \
-  -H "Authorization: Bearer $OPENAI_API_KEY"
+✅ **Database Table Ready**
+- `scholarship_sources` table exists and is ready to use
 
-# Verify Google Custom Search
-curl "https://www.googleapis.com/customsearch/v1?key=$GOOGLE_API_KEY&cx=$GOOGLE_CUSTOM_SEARCH_CX&q=test"
-```
-
-## 📚 Next Steps
-
-1. Start with **SCHOLARSHIP_FINDER_IMPLEMENTATION.md**
-   - Set up database
-   - Get Python finder working
-   - Run first discovery job
-
-2. Move to **SCHOLARSHIP_SEARCH_IMPLEMENTATION.md**
-   - Implement backend API
-   - Build frontend UI
-   - Test end-to-end
-
-3. Launch & Monitor
-   - Start with small scale (2-3 categories)
-   - Monitor costs and performance
-   - Scale up gradually
+⏳ **Implementation Needed**
+- Scholarship Resources page component
+- API endpoint to fetch resources
+- Navigation menu integration
 
 ## 🆘 Getting Help
 

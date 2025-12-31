@@ -1,6 +1,8 @@
 # Scholarship Finder - Scaling & Deployment
 
-**Purpose**: This document outlines deployment strategies, scaling approaches, cost optimization, and monitoring for the scholarship finder system.
+⚠️ **Note**: The scholarship finder is not currently being used. This document is kept for reference only.
+
+**Purpose**: This document outlines deployment strategies, scaling approaches, cost optimization, and monitoring for the scholarship finder system. This information is provided for historical reference and potential future use.
 
 ---
 
@@ -15,9 +17,11 @@
 
 ## Job Scheduling
 
-**Goal**: Run the scholarship finder on a schedule without AWS
+⚠️ **Not Currently in Use** - The scholarship finder is not being run on any schedule.
 
-### [✅] Option 1: Simple Cron Job (Free, Recommended for Start) - CHOSEN OPTION
+**Goal**: Run the scholarship finder on a schedule without AWS (if it were to be used)
+
+### Option 1: Simple Cron Job (Free, Recommended for Start)
 
 Create `scholarship-finder/scheduler/run_finder.sh`:
 
@@ -165,7 +169,9 @@ export function scheduleScholarshipFinder() {
 
 ## Cost Optimization
 
-### Free/Low-Cost Options
+⚠️ **Not Currently in Use** - No costs are being incurred as the scholarship finder is not running.
+
+### Free/Low-Cost Options (if it were to be used)
 
 1. **Hosting**: Run on your development machine or a cheap VPS ($5/month)
 2. **Database**: Use Supabase free tier (500MB, sufficient for start)
@@ -178,6 +184,10 @@ export function scheduleScholarshipFinder() {
 ---
 
 ## Scaling Strategy
+
+⚠️ **Not Currently in Use** - The scholarship finder is not running, so no scaling is needed.
+
+### Theoretical Scaling (if it were to be used)
 
 **Start Small** (Months 1-3):
 - Run every 6 hours
@@ -199,20 +209,22 @@ export function scheduleScholarshipFinder() {
 
 ## Monitoring & Maintenance
 
-### Metrics to Track
+⚠️ **Not Currently in Use** - No monitoring or maintenance is needed as the scholarship finder is not running.
+
+### Metrics to Track (if it were to be used)
 - Number of scholarships scraped per run
 - Number of duplicates detected
 - Errors encountered
 - Time per source
 - Database growth rate
 
-### Alerts
+### Alerts (if it were to be used)
 - Scraper failed to run
 - High error rate (>10%)
 - No new scholarships found (potential issue)
 - Database connection failures
 
-### Maintenance Tasks
+### Maintenance Tasks (if it were to be used)
 - Review and update scraper selectors (websites change)
 - Add new sources
 - Clean up old raw results (retention policy)
