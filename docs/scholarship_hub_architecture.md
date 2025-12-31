@@ -332,10 +332,13 @@ Since this application uses JWT bearer tokens (not cookies), JWT-specific securi
   - ✅ Documented trade-off: sessionStorage is more secure but requires re-login on new tabs
   - Implementation: `web/src/config/supabase.ts` - configured with `storage: window.sessionStorage`
 
-- [ ] **Token Expiration and Refresh**
-  - Verify token expiration settings in Supabase (recommended: 1 hour for access tokens)
-  - Implement automatic token refresh error handling
-  - Add 401 response interceptor to trigger refresh or redirect to login
+- [x] **Token Expiration and Refresh** ✅ IMPLEMENTED
+  - ✅ Implemented automatic token refresh error handling
+  - ✅ Added 401 response interceptor that attempts token refresh and retries request
+  - ✅ Prevents multiple simultaneous refresh attempts with promise deduplication
+  - ✅ Automatically redirects to login if refresh fails
+  - Implementation: `web/src/services/api.ts` - `refreshAccessToken()` function and 401 handler
+  - Note: Token expiration settings should be verified in Supabase Dashboard (recommended: 1 hour for access tokens)
 
 - [ ] **XSS Protection** (Critical for JWT security)
   - Install and configure Helmet.js for security headers
