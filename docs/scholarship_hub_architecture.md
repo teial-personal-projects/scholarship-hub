@@ -303,15 +303,22 @@ See `docs/database-schema.md` for detailed schema documentation.
 **Status**: ✅ **NOT REQUIRED FOR THIS APPLICATION**
 
 **Rationale**:
-This application uses **stateless JWT bearer token authentication** and does NOT need CSRF protection because:
-- JWT bearer tokens are stored client-side (managed by Supabase SDK)
-- Tokens are sent via `Authorization: Bearer {token}` headers, not cookies
-- No session cookies or automatically-sent credentials
-- Browsers do not automatically include Authorization headers in cross-origin requests
+This application uses **JWT bearer token authentication** (verified in code) and does NOT need CSRF protection because:
+
+**Evidence from codebase**:
+- **Frontend** (`web/src/services/api.ts`): Tokens are retrieved from Supabase session (`supabase.auth.getSession()`) and sent via `Authorization: Bearer ${token}` header
+- **Backend** (`api/src/middleware/auth.ts`): Backend reads tokens from `req.headers.authorization` (Bearer token format), not cookies
+- Tokens are stored client-side by Supabase SDK (typically localStorage), managed by the Supabase client
+- No session cookies or automatically-sent credentials are used
+
+**Why CSRF protection is unnecessary**:
+- Browsers do **not** automatically include `Authorization` headers in cross-origin requests (unlike cookies)
+- JavaScript from malicious sites cannot access tokens stored by our application due to Same-Origin Policy
+- Classic CSRF attacks require the browser to automatically send credentials (cookies), which doesn't happen with bearer tokens
 
 According to OWASP: *"You only need CSRF protection if the browser automatically sends credentials (cookies, HTTP authentication, client certificates)."*
 
-Since JavaScript from malicious sites cannot access tokens stored by our application (due to Same-Origin Policy), classic CSRF attacks cannot work with our JWT bearer token architecture.
+Since our authentication relies on explicit `Authorization` headers that are not automatically sent by browsers, CSRF attacks are not possible with our architecture.
 
 #### Input Validation and Sanitization
 
