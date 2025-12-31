@@ -44,7 +44,7 @@
         - uses: actions/checkout@v3
         - uses: actions/setup-node@v3
           with:
-            node-version: '18'
+            node-version: '24.12'
         - run: npm install
         - run: npm run build --workspace=shared
         - run: npm run test --workspace=api

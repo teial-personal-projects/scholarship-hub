@@ -7,7 +7,7 @@ import { toCamelCase } from '@scholarship-hub/shared';
  * GET /api/resources
  * Get all enabled scholarship resources
  */
-export const getResources = asyncHandler(async (req: Request, res: Response) => {
+export const getResources = asyncHandler(async (_req: Request, res: Response) => {
   const resources = await resourcesService.getScholarshipResources();
 
   // Convert to camelCase

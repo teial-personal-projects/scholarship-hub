@@ -312,8 +312,14 @@ describe('Dashboard Page', () => {
     }, { timeout: 3000 });
 
     // Click the "View →" link
-    const viewLinks = await screen.findAllByText(/View →/i, { timeout: 3000 });
-    expect(viewLinks.length).toBeGreaterThan(0);
+    const viewLinks = await waitFor(
+      () => {
+        const links = screen.getAllByText(/View →/i);
+        expect(links.length).toBeGreaterThan(0);
+        return links;
+      },
+      { timeout: 3000 }
+    );
     await user.click(viewLinks[0]);
 
     expect(mockNavigate).toHaveBeenCalledWith(`/applications/${mockApps[0].id}`);

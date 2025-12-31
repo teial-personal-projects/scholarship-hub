@@ -11,7 +11,7 @@ ScholarshipHub is a scholarship application tracking system built with React, No
 
 **Tech Stack**:
 - **Frontend**: React 18, Vite, TypeScript, React Router, TanStack Query (for data fetching)
-- **Backend**: Node.js, Express, TypeScript
+- **Backend**: Node.js 24.12+, Express, TypeScript
 - **Database**: Supabase (PostgreSQL)
 - **Auth**: Supabase Auth (email/password)
 - **Testing**: Vitest (both frontend and backend)

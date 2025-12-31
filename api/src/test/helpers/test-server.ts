@@ -108,6 +108,8 @@ export const authenticatedRequest = (
   };
 };
 
+import { expect } from 'vitest';
+
 /**
  * Test helper for expecting common HTTP responses
  */

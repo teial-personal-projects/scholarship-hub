@@ -105,8 +105,7 @@ describe('applications.service', () => {
       const newApp = {
         scholarshipName: 'Test Scholarship',
         organization: 'Test Org',
-        amount: 5000,
-        deadline: '2024-12-31',
+        dueDate: '2024-12-31',
       };
 
       const createdApp = { ...mockApplications.inProgress, ...newApp };

@@ -20,15 +20,15 @@ export class MockQueryBuilder {
     this.mockCount = count;
   }
 
-  select(columns?: string) {
+  select(_columns?: string) {
     return this;
   }
 
-  insert(data: any) {
+  insert(_data: any) {
     return this;
   }
 
-  update(data: any) {
+  update(_data: any) {
     return this;
   }
 
@@ -36,55 +36,55 @@ export class MockQueryBuilder {
     return this;
   }
 
-  eq(column: string, value: any) {
+  eq(_column: string, _value: any) {
     return this;
   }
 
-  neq(column: string, value: any) {
+  neq(_column: string, _value: any) {
     return this;
   }
 
-  gt(column: string, value: any) {
+  gt(_column: string, _value: any) {
     return this;
   }
 
-  gte(column: string, value: any) {
+  gte(_column: string, _value: any) {
     return this;
   }
 
-  lt(column: string, value: any) {
+  lt(_column: string, _value: any) {
     return this;
   }
 
-  lte(column: string, value: any) {
+  lte(_column: string, _value: any) {
     return this;
   }
 
-  like(column: string, pattern: string) {
+  like(_column: string, _pattern: string) {
     return this;
   }
 
-  ilike(column: string, pattern: string) {
+  ilike(_column: string, _pattern: string) {
     return this;
   }
 
-  in(column: string, values: any[]) {
+  in(_column: string, _values: any[]) {
     return this;
   }
 
-  is(column: string, value: any) {
+  is(_column: string, _value: any) {
     return this;
   }
 
-  order(column: string, options?: { ascending?: boolean }) {
+  order(_column: string, _options?: { ascending?: boolean }) {
     return this;
   }
 
-  limit(count: number) {
+  limit(_count: number) {
     return this;
   }
 
-  range(from: number, to: number) {
+  range(_from: number, _to: number) {
     return this;
   }
 
@@ -127,7 +127,7 @@ export const createMockSupabaseClient = (options: {
   count?: number | null;
 } = {}) => {
   return {
-    from: vi.fn((table: string) => ({
+    from: vi.fn((_table: string) => ({
       select: vi.fn(() => new MockQueryBuilder(
         options.selectData || [],
         options.selectError || null,

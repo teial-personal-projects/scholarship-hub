@@ -4,7 +4,6 @@ import {
   Container,
   Heading,
   Text,
-  Stack,
   CardRoot,
   CardBody,
   CardHeader,
@@ -13,8 +12,8 @@ import {
   Flex,
   HStack,
   VStack,
-  Link,
   SimpleGrid,
+  Image,
 } from '@chakra-ui/react';
 import { LuExternalLink, LuTag } from 'react-icons/lu';
 import { apiGet } from '../services/api';
@@ -195,8 +194,7 @@ function ScholarshipResources() {
                       )}
                     </VStack>
                     {resource.logoUrl && (
-                      <Box
-                        as="img"
+                      <Image
                         src={resource.logoUrl}
                         alt={`${resource.displayName || resource.name} logo`}
                         boxSize="48px"
@@ -241,23 +239,24 @@ function ScholarshipResources() {
                     </HStack>
 
                     {/* Link */}
-                    <Link
-                      href={resource.url.startsWith('http') ? resource.url : `https://${resource.url}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      isExternal
-                      mt="2"
-                    >
-                      <HStack
-                        gap="2"
-                        color="brand.500"
-                        fontWeight="medium"
-                        _hover={{ color: 'brand.600', textDecoration: 'underline' }}
+                    <Box mt="2">
+                      <a
+                        href={resource.url.startsWith('http') ? resource.url : `https://${resource.url}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ textDecoration: 'none' }}
                       >
-                        <Text>Visit Website</Text>
-                        <LuExternalLink size={16} />
-                      </HStack>
-                    </Link>
+                        <HStack
+                          gap="2"
+                          color="brand.500"
+                          fontWeight="medium"
+                          _hover={{ color: 'brand.600', textDecoration: 'underline' }}
+                        >
+                          <Text>Visit Website</Text>
+                          <LuExternalLink size={16} />
+                        </HStack>
+                      </a>
+                    </Box>
                   </VStack>
                 </CardBody>
               </CardRoot>

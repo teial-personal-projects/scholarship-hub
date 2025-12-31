@@ -38,7 +38,7 @@ export const createMockUser = (overrides: Partial<MockUser> = {}): MockUser => (
  * Attaches a mock user to req.user
  */
 export const mockAuthMiddleware = (user: MockUser = createMockUser()) => {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: Request, _res: Response, next: NextFunction) => {
     req.user = user;
     next();
   };

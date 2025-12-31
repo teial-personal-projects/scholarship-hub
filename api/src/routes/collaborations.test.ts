@@ -6,8 +6,6 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import request from 'supertest';
 import { createTestApp, authenticatedRequest } from '../test/helpers/test-server.js';
 import { mockCollaborations } from '../test/fixtures/collaborations.fixture.js';
-import { mockCollaborators } from '../test/fixtures/collaborators.fixture.js';
-import { mockApplications } from '../test/fixtures/applications.fixture.js';
 import { mockUsers } from '../test/fixtures/users.fixture.js';
 import { mockSupabaseAuth } from '../test/helpers/auth-mock.js';
 
