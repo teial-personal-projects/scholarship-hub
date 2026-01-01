@@ -557,16 +557,6 @@ Students find scholarships externally and create applications directly. Scholars
 - RLS policies enforce data access rules
 - Frontend uses anon key with user JWT
 
-## Future Enhancements
-
-Planned for later phases (see docs/scholarship_hub_architecture.md):
-- Scholarship discovery and search
-- Saved filter preferences
-- In-app notifications (beyond email)
-- Calendar integration
-- Document management (file uploads)
-- Analytics and reporting
-- Mobile app
 
 ## Helpful Commands Reference
 

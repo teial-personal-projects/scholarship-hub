@@ -1,17 +1,120 @@
-# Email Invitations Testing Guide
+# Scholarship Hub - Testing Guide
 
-This document provides step-by-step instructions for testing the collaboration invitation system.
+This document provides comprehensive testing guidance for the Scholarship Hub application, including end-to-end testing setup, email invitations testing, and troubleshooting.
 
-## Prerequisites
+---
+
+## Table of Contents
+
+1. [Overview](#overview)
+2. [General Testing Setup](#general-testing-setup)
+3. [Email Invitations Testing](#email-invitations-testing)
+4. [Testing Checklist](#testing-checklist)
+5. [Troubleshooting](#troubleshooting)
+6. [Environment Variables](#environment-variables)
+
+---
+
+## Overview
+
+This guide covers:
+- **End-to-End (E2E) Testing**: Setup and configuration for automated E2E tests
+- **Email Invitations Testing**: Detailed scenarios for testing the collaboration invitation system
+- **Reminder Testing**: Testing reminder logic and email notifications
+- **CI/CD Testing**: Continuous integration setup
+
+---
+
+## General Testing Setup
+
+### End-to-End Testing (E2E)
+
+**TODO 7.9: Write End-to-End Tests (Optional but Recommended)**
+
+#### Installation
+
+```bash
+npm install -D @playwright/test
+npx playwright install
+```
+
+#### Setup
+
+- [ ] Create `e2e/` directory at root
+- [ ] Write critical user flows:
+  - `auth.spec.ts` - Registration and login
+  - `application-lifecycle.spec.ts` - Create, edit, submit application
+  - `collaboration.spec.ts` - Add collaborator, request recommendation
+- [ ] Configure GitHub Actions for E2E tests (optional)
+
+### Reminder Testing
+
+**TODO 7.10: Testing Reminders**
+
+- [ ] Test reminder logic with various due date scenarios
+- [ ] Test email sending (use test email addresses)
+- [ ] Verify reminder history is logged correctly
+- [ ] Test that reminders don't spam (check last_reminder_sent_at)
+- [ ] Test reminder preferences (if implemented)
+
+### Scheduled Execution Testing
+
+**TODO 7.11: Setup Scheduled Execution**
+
+- [ ] **Note:** GitHub Actions workflow file creation is covered in section 6.9.1
+- [ ] Test cron job execution (manually trigger via `workflow_dispatch` in GitHub Actions)
+- [ ] Verify reminders are sent correctly
+- [ ] Verify reminder emails are received
+- [ ] Set up monitoring/alerting for failed jobs
+- [ ] Monitor GitHub Actions workflow runs and logs
+- [ ] Set up notifications for workflow failures (GitHub Actions notifications or email alerts)
+
+### Continuous Integration Setup
+
+**TODO 7.12: Set Up Continuous Integration**
+
+- [ ] Create `.github/workflows/test.yml`:
+
+```yaml
+name: Tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '24.12'
+      - run: npm install
+      - run: npm run build --workspace=shared
+      - run: npm run test --workspace=api
+      - run: npm run test --workspace=web
+      - run: npm run test:coverage --workspace=api
+      - run: npm run test:coverage --workspace=web
+```
+
+- [ ] Set coverage thresholds
+- [ ] Add status badges to README
+
+**Milestone**: Comprehensive test coverage for backend and frontend, automated CI pipeline
+
+---
+
+## Email Invitations Testing
+
+### Prerequisites
 
 1. **Resend Account**: Ensure you have an active Resend account with API key configured
 2. **Email Access**: Access to the email accounts used for testing
 3. **Environment Variables**: Verify `.env` has correct Resend configuration
 4. **Database**: Run all migrations including `007_collaborations_invitation.sql`
 
-## Test Scenarios
+### Test Scenarios
 
-### 1. Test Sending Initial Invitation
+#### 1. Test Sending Initial Invitation
 
 **Objective**: Verify that collaboration invitations can be sent successfully.
 
@@ -65,7 +168,7 @@ WHERE id = [collaboration_id];
 
 ---
 
-### 2. Test Webhook Delivery Tracking
+#### 2. Test Webhook Delivery Tracking
 
 **Objective**: Verify that Resend webhooks update invitation delivery status.
 
@@ -103,7 +206,7 @@ WHERE collaboration_id = [collaboration_id];
 
 ---
 
-### 3. Test Resend Functionality
+#### 3. Test Resend Functionality
 
 **Objective**: Verify that invitations can be resent after 3 days or on delivery failure.
 
@@ -161,7 +264,7 @@ WHERE collaboration_id = [collaboration_id];
 
 ---
 
-### 4. Test Expired Token
+#### 4. Test Expired Token
 
 **Objective**: Verify that expired invitation tokens are rejected.
 
@@ -185,7 +288,7 @@ WHERE collaboration_id = [collaboration_id];
 
 ---
 
-### 5. Test Schedule for Later
+#### 5. Test Schedule for Later
 
 **Objective**: Verify that invitations can be scheduled for future delivery.
 
@@ -217,7 +320,7 @@ WHERE collaboration_id = [collaboration_id];
 
 ---
 
-### 6. Test Multiple Collaborations
+#### 6. Test Multiple Collaborations
 
 **Objective**: Verify system handles multiple invitations correctly.
 
@@ -236,7 +339,7 @@ WHERE collaboration_id = [collaboration_id];
 
 ---
 
-### 7. Test Accepting Invitation
+#### 7. Test Accepting Invitation
 
 **Objective**: Verify that collaborators can accept invitations.
 
@@ -252,7 +355,46 @@ WHERE collaboration_id = [collaboration_id];
 
 ---
 
-## Common Issues and Troubleshooting
+## Testing Checklist
+
+### Email Invitations
+- [ ] Send invitation successfully
+- [ ] Receive email with correct content
+- [ ] Email link works and redirects properly
+- [ ] Webhook updates delivery status to 'delivered'
+- [ ] Webhook updates opened_at when email opened
+- [ ] Webhook updates clicked_at when link clicked
+- [ ] Resend button appears after 3 days
+- [ ] Resend button appears for bounced emails
+- [ ] Resend functionality works correctly
+- [ ] Resend generates new token
+- [ ] Expired token shows error message
+- [ ] Expired token cannot be resent (must send new)
+- [ ] Schedule for later creates pending invite
+- [ ] Multiple invitations work independently
+- [ ] Collaboration status updates correctly
+- [ ] History logs invitation actions
+
+### Reminders
+- [ ] Reminder logic works with various due date scenarios
+- [ ] Email sending works correctly
+- [ ] Reminder history is logged correctly
+- [ ] Reminders don't spam (check last_reminder_sent_at)
+- [ ] Reminder preferences work (if implemented)
+
+### E2E Tests
+- [ ] Authentication flow (registration and login)
+- [ ] Application lifecycle (create, edit, submit)
+- [ ] Collaboration flow (add collaborator, request recommendation)
+
+### CI/CD
+- [ ] All tests pass in CI pipeline
+- [ ] Coverage thresholds met
+- [ ] Status badges display correctly
+
+---
+
+## Troubleshooting
 
 ### Email Not Received
 
@@ -313,26 +455,39 @@ LEFT JOIN collaboration_invites ci ON ci.collaboration_id = c.id
 WHERE c.id = [collaboration_id];
 ```
 
----
+### E2E Tests Failing
 
-## Testing Checklist
+**Possible Causes**:
+1. Playwright not installed correctly
+2. Test environment not configured
+3. Application not running
+4. Timeout issues
 
-- [ ] Send invitation successfully
-- [ ] Receive email with correct content
-- [ ] Email link works and redirects properly
-- [ ] Webhook updates delivery status to 'delivered'
-- [ ] Webhook updates opened_at when email opened
-- [ ] Webhook updates clicked_at when link clicked
-- [ ] Resend button appears after 3 days
-- [ ] Resend button appears for bounced emails
-- [ ] Resend functionality works correctly
-- [ ] Resend generates new token
-- [ ] Expired token shows error message
-- [ ] Expired token cannot be resent (must send new)
-- [ ] Schedule for later creates pending invite
-- [ ] Multiple invitations work independently
-- [ ] Collaboration status updates correctly
-- [ ] History logs invitation actions
+**Debug Steps**:
+```bash
+# Verify Playwright installation
+npx playwright --version
+
+# Run tests with debug output
+npx playwright test --debug
+
+# Check test environment
+echo $NODE_ENV
+```
+
+### CI Pipeline Failing
+
+**Possible Causes**:
+1. Node version mismatch
+2. Missing dependencies
+3. Test failures
+4. Coverage thresholds not met
+
+**Debug Steps**:
+1. Check GitHub Actions logs
+2. Verify Node version in workflow file
+3. Run tests locally to reproduce
+4. Check coverage reports
 
 ---
 
@@ -349,6 +504,9 @@ RESEND_WEBHOOK_SECRET=whsec_xxxxxxxxxxxxxxxx
 # Application URLs
 FRONTEND_URL=https://yourdomain.com
 API_URL=https://api.yourdomain.com
+
+# Testing
+NODE_ENV=test
 ```
 
 ---
@@ -360,3 +518,10 @@ After all tests pass:
 2. Document any issues found
 3. Proceed to TODO 6.4 (Frontend Collaborator Management)
 4. Implement TODO 6.7 (Collaborator Portal for accepting invitations)
+5. Set up monitoring for test results
+6. Configure automated test reporting
+
+---
+
+**Last Updated**: 2024
+
