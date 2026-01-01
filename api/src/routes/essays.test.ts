@@ -41,6 +41,8 @@ vi.mock('@scholarship-hub/shared', async () => {
   nameSchema: z.string(),
   phoneSchema: () => z.string(),
   emailSchema: z.string().email(),
+  urlSchema: z.string().url(),
+  htmlNoteSchema: z.string().max(5000).optional(),
   };
 });
 
@@ -151,17 +153,13 @@ describe('Essays Routes', () => {
       const essaysService = await import('../services/essays.service.js');
 
       const newEssay = {
-        title: 'New Essay',
-        prompt: 'Write about your goals',
-        content: 'This is my essay content',
+        theme: 'Write about your goals',
         wordCount: 500,
       };
 
       const createdEssay = {
         ...mockEssays.personalStatement,
-        title: 'New Essay',
-        prompt: 'Write about your goals',
-        content: 'This is my essay content',
+        theme: 'Write about your goals',
         word_count: 500,
         id: 10,
         application_id: 1,
@@ -179,7 +177,6 @@ describe('Essays Routes', () => {
 
       expect(response.status).toBe(201);
       expect(response.body).toHaveProperty('id');
-      expect(response.body).toHaveProperty('title', newEssay.title);
     });
 
     it('should return 400 for invalid input', async () => {
@@ -254,7 +251,7 @@ describe('Essays Routes', () => {
 
       const updatedEssay = {
         ...mockEssays.personalStatement,
-        title: 'Updated Essay Title',
+        theme: 'Updated Essay Theme',
       };
 
       vi.mocked(essaysService.getEssayById).mockResolvedValue(mockEssays.personalStatement);
@@ -263,11 +260,10 @@ describe('Essays Routes', () => {
       const response = await authenticatedRequest(agent, 'valid-token')
         .patch('/api/essays/1')
         .send({
-          title: 'Updated Essay Title',
+          theme: 'Updated Essay Theme',
         });
 
       expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty('title', 'Updated Essay Title');
     });
 
     it('should return 404 for non-existent essay', async () => {
@@ -280,7 +276,7 @@ describe('Essays Routes', () => {
 
       const response = await authenticatedRequest(agent, 'valid-token')
         .patch('/api/essays/999')
-        .send({ title: 'Test' });
+        .send({ theme: 'Test' });
 
       expect(response.status).toBe(404);
     });

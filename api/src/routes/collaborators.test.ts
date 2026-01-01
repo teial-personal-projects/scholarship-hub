@@ -40,6 +40,8 @@ vi.mock('@scholarship-hub/shared', async () => {
   nameSchema: z.string(),
   phoneSchema: () => z.string(),
   emailSchema: z.string().email(),
+  urlSchema: z.string().url(),
+  htmlNoteSchema: z.string().max(5000).optional(),
   };
 });
 
@@ -260,7 +262,8 @@ describe('Collaborators Routes', () => {
 
       const updatedCollaborator = {
         ...mockCollaborators.teacher,
-        name: 'Updated Name',
+        firstName: 'Updated',
+        lastName: 'Name',
       };
 
       vi.mocked(collaboratorsService.getCollaboratorById).mockResolvedValue(
@@ -271,11 +274,12 @@ describe('Collaborators Routes', () => {
       const response = await authenticatedRequest(agent, 'valid-token')
         .patch('/api/collaborators/1')
         .send({
-          name: 'Updated Name',
+          firstName: 'Updated',
+          lastName: 'Name',
         });
 
       expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty('name', 'Updated Name');
+      expect(response.body).toHaveProperty('firstName', 'Updated');
     });
 
     it('should return 404 for non-existent collaborator', async () => {
@@ -288,7 +292,7 @@ describe('Collaborators Routes', () => {
 
       const response = await authenticatedRequest(agent, 'valid-token')
         .patch('/api/collaborators/999')
-        .send({ name: 'Test' });
+        .send({ firstName: 'Test' });
 
       expect(response.status).toBe(404);
     });

@@ -38,6 +38,8 @@ vi.mock('@scholarship-hub/shared', async () => {
   nameSchema: z.string(),
   phoneSchema: () => z.string(),
   emailSchema: z.string().email(),
+  urlSchema: z.string().url(),
+  htmlNoteSchema: z.string().max(5000).optional(),
   };
 });
 

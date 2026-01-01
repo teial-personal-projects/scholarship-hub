@@ -7,6 +7,7 @@ import { errorHandler } from './middleware/error-handler.js';
 import { testSupabaseConnection } from './config/supabase.js';
 import apiRoutes from './routes/index.js';
 import { securityHeadersConfig, additionalSecurityHeaders } from './config/security-headers.js';
+import { generalApiLimiter, publicEndpointLimiter } from './config/rate-limit.js';
 
 const app = express();
 
@@ -30,13 +31,13 @@ app.use(morgan('dev'));
 // Body parsing
 app.use(express.json());
 
-// Health check
-app.get('/health', (_req, res) => {
+// Health check with rate limiting
+app.get('/health', publicEndpointLimiter, (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// API routes
-app.use('/api', apiRoutes);
+// API routes with general rate limiting
+app.use('/api', generalApiLimiter, apiRoutes);
 
 // 404 handler - must be after all routes
 app.use((_req, res) => {

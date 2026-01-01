@@ -1,13 +1,16 @@
 import { Router } from 'express';
 import * as authController from '../controllers/auth.controller.js';
+import { authRateLimiters } from '../config/rate-limit.js';
 
 const router = Router();
 
 // POST /api/auth/register - Register new user
-router.post('/register', authController.register);
+// Rate limit: 3 requests per hour
+router.post('/register', authRateLimiters.register, authController.register);
 
 // POST /api/auth/login - Login user (proxy to Supabase Auth)
-router.post('/login', authController.login);
+// Rate limit: 5 requests per 15 minutes
+router.post('/login', authRateLimiters.login, authController.login);
 
 // POST /api/auth/logout - Logout user
 router.post('/logout', authController.logout);

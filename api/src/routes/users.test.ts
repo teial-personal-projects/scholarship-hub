@@ -39,6 +39,8 @@ vi.mock('@scholarship-hub/shared', async () => {
   nameSchema: z.string(),
   phoneSchema: () => z.string(),
   emailSchema: z.string().email(),
+  urlSchema: z.string().url(),
+  htmlNoteSchema: z.string().max(5000).optional(),
   };
 });
 
@@ -182,11 +184,11 @@ describe('Users Routes', () => {
       const response = await authenticatedRequest(agent, 'valid-token')
         .patch('/api/users/me')
         .send({
-          emailAddress: 'invalid-email', // Controller ignores this field, so it succeeds
+          emailAddress: 'invalid-email', // Not in schema, strict validation will reject it
         });
 
-      // Controller doesn't validate emailAddress, so it returns 200
-      expect(response.status).toBe(200);
+      // Schema validation rejects unrecognized fields (strict mode)
+      expect(response.status).toBe(400);
     });
   });
 

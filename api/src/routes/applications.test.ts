@@ -40,6 +40,8 @@ vi.mock('@scholarship-hub/shared', async () => {
     nameSchema: z.string(),
     phoneSchema: () => z.string(),
     emailSchema: z.string().email(),
+    urlSchema: z.string().url(),
+    htmlNoteSchema: z.string().max(5000).optional(),
   };
 });
 
@@ -160,7 +162,7 @@ describe('Applications Routes', () => {
       const newApplication = {
         scholarshipName: 'New Scholarship',
         organization: 'New Org',
-        amount: 3000,
+        minAward: 3000,
         dueDate: '2024-12-31',
         status: 'In Progress',
       };

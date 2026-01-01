@@ -444,26 +444,40 @@ Prevents XSS attacks and injection vulnerabilities. Critical for JWT security to
 
 Prevents brute-force attacks, abuse, and resource exhaustion:
 
-- [ ] **Install Dependencies**
-  - `express-rate-limit` - Core rate limiting
-  - `rate-limit-redis` and `ioredis` - For distributed deployments (optional)
+- [✅] **Install Dependencies**
+  - ✅ `express-rate-limit` (^7.5.0) - Core rate limiting middleware
 
-- [ ] **Create Rate Limiter Configurations**
-  - `authLimiter` - 5 requests per 15 min (login, register)
-  - `passwordResetLimiter` - 3 requests per hour
-  - `apiLimiter` - 100 requests per 15 min (global baseline)
-  - `writeLimiter` - 20 requests per minute (POST, PUT, PATCH, DELETE)
-  - `readLimiter` - 60 requests per minute (GET)
+- [✅] **Create Rate Limiter Configurations** (`api/src/config/rate-limit.ts`)
+  - ✅ All rate limits defined as named constants (e.g., `RequestLimits.AUTH_LOGIN`, `RateLimitWindows.FIFTEEN_MINUTES`)
+  - ✅ Authentication rate limiters:
+    - `authRateLimiters.login` - 5 requests per 15 minutes (prevents brute-force)
+    - `authRateLimiters.register` - 3 requests per hour (prevents abuse)
+    - `authRateLimiters.passwordReset` - 3 requests per hour
+    - `authRateLimiters.emailVerify` - 5 requests per hour
+  - ✅ Write operation rate limiters:
+    - `writeRateLimiters.createUpdate` - 30 requests per 15 minutes (POST/PATCH)
+    - `writeRateLimiters.delete` - 10 requests per 15 minutes (DELETE)
+  - ✅ Read operation rate limiters:
+    - `readRateLimiters.read` - 100 requests per 15 minutes (GET single resource)
+    - `readRateLimiters.list` - 50 requests per 15 minutes (GET lists/search)
+  - ✅ General limiters:
+    - `generalApiLimiter` - 150 requests per 15 minutes (baseline for all API routes)
+    - `publicEndpointLimiter` - 60 requests per 15 minutes (health checks)
+    - `webhookLimiter` - 100 requests per 15 minutes (external webhooks)
+  - ✅ All limiters skip in test environment automatically
 
-- [ ] **Apply Rate Limiters**
-  - Apply global `apiLimiter` to all `/api` routes
-  - Apply specific limiters to authentication routes
-  - Apply operation-specific limiters to other routes
-
-- [ ] **Redis Integration** (for production)
-  - Set up Redis connection
+- [✅] **Apply Rate Limiters**
+  - ✅ Applied `generalApiLimiter` to all `/api` routes in `api/src/index.ts`
+  - ✅ Applied `publicEndpointLimiter` to `/health` endpoint
+  - ✅ Applied auth-specific limiters to login/register routes in `api/src/routes/auth.routes.ts`
+  - ✅ Applied operation-specific limiters (read/write/delete) to application routes in `api/src/routes/applications.routes.ts`
+  - ✅ Applied `webhookLimiter` to webhook routes in `api/src/routes/webhooks.routes.ts`
+  - ✅ All rate limiters return standardized JSON error responses with retry-after headers
+<!--
+- [ ] **Redis Integration** (for production with multiple servers)
+  - Set up Redis connection (deferred - not implemented in this phase)
   - Configure rate limiters to use Redis store
-  - Enables rate limiting across multiple server instances
+  - Enables rate limiting across multiple server instances -->
 
 - [ ] **Frontend Error Handling**
   - Handle 429 (Too Many Requests) responses
