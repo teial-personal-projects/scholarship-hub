@@ -36,7 +36,7 @@ Resend will provide you with DNS records to add. Go to your **Cloudflare Dashboa
 
 1. Select your domain
 2. Navigate to **DNS** → **Records**
-3. Add the following records (exact values will be provided by Resend):
+3. Add the following records (exact values will be provided by Resend): (If you select "Login into Cloudflare" and authorize Resend to access your account, it'll auto populate those records)
 
 #### SPF Record (TXT)
 ```
