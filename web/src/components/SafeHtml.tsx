@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, BoxProps } from '@chakra-ui/react';
+import { Box } from '@chakra-ui/react';
 import { sanitizeHtml, SanitizeOptions } from '../utils/sanitize-html';
 
 /**
@@ -21,11 +21,14 @@ import { sanitizeHtml, SanitizeOptions } from '../utils/sanitize-html';
  * <SafeHtml content={essay} profile="BASIC" p={4} bg="gray.50" />
  */
 
-interface SafeHtmlProps extends Omit<BoxProps, 'dangerouslySetInnerHTML' | 'children'> {
+interface SafeHtmlProps {
   /**
    * HTML content to sanitize and render
    */
   content: string | null | undefined;
+
+  /** Chakra UI Box props */
+  [key: string]: any;
 
   /**
    * Sanitization options (profile, maxLength, etc.)
@@ -118,20 +121,20 @@ export const SafeHtml: React.FC<SafeHtmlProps> = ({
 /**
  * SafeNote Component - Renders notes with STRICT sanitization
  */
-export const SafeNote: React.FC<Omit<SafeHtmlProps, 'profile'>> = (props) => (
+export const SafeNote: React.FC<SafeHtmlProps> = (props) => (
   <SafeHtml {...props} profile="STRICT" />
 );
 
 /**
  * SafeEssay Component - Renders essays with BASIC sanitization
  */
-export const SafeEssay: React.FC<Omit<SafeHtmlProps, 'profile'>> = (props) => (
+export const SafeEssay: React.FC<SafeHtmlProps> = (props) => (
   <SafeHtml {...props} profile="BASIC" />
 );
 
 /**
  * SafeDocumentation Component - Renders documentation with EXTENDED sanitization
  */
-export const SafeDocumentation: React.FC<Omit<SafeHtmlProps, 'profile'>> = (props) => (
+export const SafeDocumentation: React.FC<SafeHtmlProps> = (props) => (
   <SafeHtml {...props} profile="EXTENDED" />
 );

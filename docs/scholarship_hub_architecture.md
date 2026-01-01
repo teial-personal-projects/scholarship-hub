@@ -479,10 +479,27 @@ Prevents brute-force attacks, abuse, and resource exhaustion:
   - Configure rate limiters to use Redis store
   - Enables rate limiting across multiple server instances -->
 
-- [ ] **Frontend Error Handling**
-  - Handle 429 (Too Many Requests) responses
-  - Display rate limit information from headers
-  - Show clear error messages to users
+- [✅] **Frontend Error Handling**
+  - ✅ Created comprehensive error handling utilities (`web/src/utils/error-handling.ts`):
+    - Typed error system with ApiError interface and ApiException class
+    - Error type enum (BAD_REQUEST, UNAUTHORIZED, RATE_LIMIT_EXCEEDED, etc.)
+    - Parse HTTP responses into structured errors with rate limit info and field errors
+    - Helper functions: isRateLimitError(), isValidationError(), isAuthError()
+    - Automatic error logging in development
+  - ✅ Created reusable error display components (`web/src/components/ErrorDisplay.tsx`):
+    - ErrorDisplay: Main component with support for all error types, colors, and close button
+    - InlineError: Field-level validation errors
+    - RateLimitNotice: Specialized component for 429 errors with retry-after
+  - ✅ Created ErrorBoundary component (`web/src/components/ErrorBoundary.tsx`):
+    - Catches React errors and prevents app crashes
+    - Shows error details in development, user-friendly message in production
+    - Provides reset functionality
+    - Supports custom fallback UI and error logging
+  - ✅ Updated API client (`web/src/services/api.ts`):
+    - Integrated typed error handling with ApiException
+    - Network error handling (offline, timeout, DNS failures)
+    - Automatic error logging with context
+    - Rate limit info extraction from response headers
 
 ### Security Audit and Maintenance
 

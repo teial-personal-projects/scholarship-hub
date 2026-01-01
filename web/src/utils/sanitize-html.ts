@@ -17,7 +17,7 @@ import DOMPurify from 'dompurify';
 /**
  * HTML Sanitization Configuration Profiles
  */
-export const SanitizationProfiles = {
+export const SanitizationProfiles: Record<string, any> = {
   /**
    * STRICT: Minimal formatting only
    * Use for: Notes, descriptions, short text fields
@@ -93,7 +93,7 @@ export const SanitizationProfiles = {
     ALLOWED_ATTR: [],
     KEEP_CONTENT: true,
   },
-} as const;
+};
 
 export type SanitizationProfile = keyof typeof SanitizationProfiles;
 
@@ -109,13 +109,7 @@ export interface SanitizeOptions {
   /**
    * Custom DOMPurify configuration (overrides profile)
    */
-  customConfig?: {
-    ALLOWED_TAGS?: string[];
-    ALLOWED_ATTR?: string[];
-    KEEP_CONTENT?: boolean;
-    ALLOW_DATA_ATTR?: boolean;
-    ALLOWED_URI_REGEXP?: RegExp;
-  };
+  customConfig?: any;
 
   /**
    * Maximum length after sanitization (characters)
@@ -186,13 +180,13 @@ export function sanitizeHtml(
   });
 
   // Sanitize the HTML
-  let sanitized = DOMPurify.sanitize(html, config);
+  let sanitized = DOMPurify.sanitize(html, config) as unknown as string;
 
   // Remove the hook after use to prevent side effects
   DOMPurify.removeAllHooks();
 
   // Trim whitespace
-  sanitized = sanitized.trim();
+  sanitized = sanitized.trim() as string;
 
   // Apply max length if specified
   if (maxLength && sanitized.length > maxLength) {

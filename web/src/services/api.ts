@@ -1,6 +1,15 @@
 /**
  * API client utility for making authenticated requests to the backend
+ *
+ * Features:
+ * - Automatic JWT token management
+ * - Token refresh on 401 errors
+ * - Comprehensive error handling with typed errors
+ * - Rate limit handling
+ * - Network error handling
  */
+
+import { parseResponseError, handleNetworkError, ApiException, logError } from '../utils/error-handling';
 
 const API_BASE_URL = '/api';
 
@@ -81,10 +90,19 @@ async function apiRequest<T>(
     ...options.headers,
   };
 
-  const response = await fetch(url, {
-    ...options,
-    headers,
-  });
+  let response: Response;
+
+  try {
+    response = await fetch(url, {
+      ...options,
+      headers,
+    });
+  } catch (error) {
+    // Handle network errors (offline, DNS failure, etc.)
+    const networkError = handleNetworkError(error);
+    logError(networkError, `${options.method || 'GET'} ${endpoint}`);
+    throw new ApiException(networkError);
+  }
 
   // Handle 401 Unauthorized - attempt token refresh and retry
   if (response.status === 401) {
@@ -113,49 +131,21 @@ async function apiRequest<T>(
         return {} as T;
       }
 
-      // If retry also fails, fall through to error handling below
-      const error = await retryResponse.json().catch(() => ({
-        error: 'Unknown error',
-        message: retryResponse.statusText,
-      }));
-
-      let errorMessage = error.message || `API request failed after token refresh: ${retryResponse.statusText}`;
-      if (error.error && error.error !== 'Error') {
-        errorMessage = `${error.error}: ${errorMessage}`;
-      }
-
-      const apiError = new Error(errorMessage);
-      (apiError as any).errorDetails = error;
-      throw apiError;
+      // If retry also fails, parse and throw typed error
+      const apiError = await parseResponseError(retryResponse);
+      logError(apiError, `${options.method || 'GET'} ${endpoint} (after token refresh)`);
+      throw new ApiException(apiError);
     }
 
     // If refresh failed, user has already been redirected to login
     throw new Error('Authentication failed. Please log in again.');
   }
 
+  // Handle all other non-OK responses
   if (!response.ok) {
-    const error = await response.json().catch(() => ({
-      error: 'Unknown error',
-      message: response.statusText,
-    }));
-
-    // Create a more descriptive error message
-    let errorMessage = error.message || `API request failed: ${response.statusText}`;
-
-    // Include error type if available
-    if (error.error && error.error !== 'Error') {
-      errorMessage = `${error.error}: ${errorMessage}`;
-    }
-
-    // Include original error details in development
-    if (process.env.NODE_ENV === 'development' && error.originalError) {
-      errorMessage += `\n\nOriginal error: ${JSON.stringify(error.originalError, null, 2)}`;
-    }
-
-    const apiError = new Error(errorMessage);
-    // Attach the full error object for debugging
-    (apiError as any).errorDetails = error;
-    throw apiError;
+    const apiError = await parseResponseError(response);
+    logError(apiError, `${options.method || 'GET'} ${endpoint}`);
+    throw new ApiException(apiError);
   }
 
   // Handle empty responses
