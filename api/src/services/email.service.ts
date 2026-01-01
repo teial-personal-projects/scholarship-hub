@@ -183,7 +183,7 @@ export async function sendCollaborationInvite(
 
     // Get "from" email - use Resend's default or configured domain
     // In production, this should be from your verified domain
-    const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+    const fromEmail = `${config.resend.fromName} <${config.resend.fromEmail}>`;
 
     const { data, error } = await resend.emails.send({
       from: fromEmail,
@@ -220,7 +220,7 @@ export async function sendTestEmail(to: string): Promise<string> {
     throw new AppError('Email service is not configured. Please set RESEND_API_KEY.', 500);
   }
 
-  const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+  const fromEmail = `${config.resend.fromName} <${config.resend.fromEmail}>`;
 
   const { data, error } = await resend.emails.send({
     from: fromEmail,
@@ -561,7 +561,7 @@ export async function sendApplicationReminder(
       ? generateApplicationOverdueEmail(params)
       : generateApplicationDueSoonEmail(params);
 
-    const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+    const fromEmail = `${config.resend.fromName} <${config.resend.fromEmail}>`;
 
     const { data, error } = await resend.emails.send({
       from: fromEmail,
@@ -625,7 +625,7 @@ export async function sendCollaborationReminder(
       ? generateCollaboratorOverdueEmail(params)
       : generateCollaboratorDueSoonEmail(params);
 
-    const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+    const fromEmail = `${config.resend.fromName} <${config.resend.fromEmail}>`;
 
     const { data, error } = await resend.emails.send({
       from: fromEmail,

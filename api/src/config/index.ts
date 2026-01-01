@@ -34,6 +34,8 @@ interface Config {
   resend: {
     apiKey: string;
     webhookSecret: string;
+    fromEmail: string;
+    fromName: string;
   };
   app: {
     url: string; // Frontend URL for generating invite links
@@ -50,6 +52,8 @@ export const config: Config = {
   resend: {
     apiKey: process.env.RESEND_API_KEY || '',
     webhookSecret: process.env.RESEND_WEBHOOK_SECRET || '',
+    fromEmail: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
+    fromName: process.env.RESEND_FROM_NAME || 'Scholarship Hub',
   },
   app: {
     url: process.env.APP_URL || 'http://localhost:5173',
