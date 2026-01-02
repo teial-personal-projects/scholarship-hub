@@ -105,15 +105,9 @@ function DashboardReminders() {
   const hasOverdueItems = reminders.stats.totalOverdue > 0;
   const hasUpcomingItems = reminders.stats.totalUpcoming > 0;
 
-  // If no reminders, show positive message
+  // If no reminders, don't show anything
   if (!hasOverdueItems && !hasUpcomingItems) {
-    return (
-      <Alert.Root status="success">
-        <Alert.Indicator />
-        <Alert.Title>All caught up!</Alert.Title>
-        <Alert.Description>No urgent items at this time.</Alert.Description>
-      </Alert.Root>
-    );
+    return null;
   }
 
   return (

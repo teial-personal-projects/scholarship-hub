@@ -141,7 +141,7 @@ function Dashboard() {
     <Box bg="gray.50" minH="100vh" pb="8">
       <Container maxW="7xl" py={{ base: '4', md: '8' }} px={{ base: '4', md: '6' }}>
         <Stack gap={{ base: '6', md: '8' }}>
-          {/* Welcome Section - Minimal Academic Style */}
+          {/* Welcome Section with Quick Actions */}
           <Box
             bg="brand.500"
             borderRadius="xl"
@@ -149,29 +149,38 @@ function Dashboard() {
             color="white"
             boxShadow="md"
           >
-            <VStack align="start" gap="2">
-              <Heading size={{ base: 'lg', md: 'xl' }} fontWeight="bold">
-                Welcome back, {firstName}!
-              </Heading>
-              <Text fontSize={{ base: 'sm', md: 'md' }} opacity={0.9}>
-                Here's an overview of your scholarship applications
-              </Text>
-            </VStack>
+            <Flex
+              direction={{ base: 'column', md: 'row' }}
+              justify="space-between"
+              align={{ base: 'start', md: 'center' }}
+              gap={{ base: '4', md: '6' }}
+            >
+              <VStack align="start" gap="2" flex="1">
+                <Heading size={{ base: 'lg', md: 'xl' }} fontWeight="bold">
+                  Welcome back, {firstName}!
+                </Heading>
+                <Text fontSize={{ base: 'sm', md: 'md' }} opacity={0.9}>
+                  {applications.length === 0
+                    ? 'Get started by creating your first scholarship application'
+                    : `You have ${applications.length} application${applications.length !== 1 ? 's' : ''} • ${inProgressCount} in progress`}
+                </Text>
+              </VStack>
+              <Button
+                colorPalette="blue"
+                size={{ base: 'md', md: 'lg' }}
+                onClick={() => navigate('/applications/new')}
+                bg="white"
+                _hover={{ bg: 'gray.50' }}
+                color="brand.600"
+                fontWeight="semibold"
+                boxShadow="md"
+              >
+                + New Application
+              </Button>
+            </Flex>
           </Box>
 
-          {/* Actions */}
-          <HStack gap="4" flexWrap="wrap">
-            <Button
-              colorPalette="blue"
-              size={{ base: 'md', md: 'lg' }}
-              onClick={() => navigate('/applications/new')}
-              boxShadow="sm"
-            >
-              New Application
-            </Button>
-          </HStack>
-
-          {/* Summary / Reminders (move to top) */}
+          {/* Reminders Section */}
           <DashboardReminders />
 
           {/* Applications Section */}
