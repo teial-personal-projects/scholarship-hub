@@ -21,8 +21,6 @@ import {
 import { apiGet } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import DashboardReminders from '../components/DashboardReminders';
-import DashboardCollaborations from '../components/DashboardCollaborations';
-import DashboardPendingResponses from '../components/DashboardPendingResponses';
 import type { UserProfile, ApplicationResponse } from '@scholarship-hub/shared';
 import { useToastHelpers } from '../utils/toast';
 
@@ -162,7 +160,7 @@ function Dashboard() {
                 <Text fontSize={{ base: 'sm', md: 'md' }} opacity={0.9}>
                   {applications.length === 0
                     ? 'Get started by creating your first scholarship application'
-                    : `You have ${applications.length} application${applications.length !== 1 ? 's' : ''} • ${inProgressCount} in progress`}
+                    : `You have ${applications.length} application${applications.length !== 1 ? 's' : ''} • ${inProgressCount} in progress • ${submittedCount} submitted`}
                 </Text>
               </VStack>
               <Button
@@ -230,11 +228,9 @@ function Dashboard() {
                   </Tabs.Trigger>
                   <Tabs.Trigger value="submitted">
                     Submitted
-                    {submittedCount > 0 && (
-                      <Badge ml="2" colorPalette="accent" borderRadius="full" px="2" py="0.5">
-                        {submittedCount}
-                      </Badge>
-                    )}
+                    <Badge ml="2" colorPalette="accent" borderRadius="full" px="2" py="0.5">
+                      {submittedCount}
+                    </Badge>
                   </Tabs.Trigger>
                 </Tabs.List>
 
@@ -631,12 +627,6 @@ function Dashboard() {
             )}
           </Card.Body>
         </Card.Root>
-
-          {/* Collaborations Section */}
-          <DashboardCollaborations />
-
-          {/* Pending Responses Section */}
-          <DashboardPendingResponses />
       </Stack>
     </Container>
     </Box>

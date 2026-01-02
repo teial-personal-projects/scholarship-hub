@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Box,
@@ -42,6 +42,7 @@ import {
   AccordionItemContent,
   AccordionItemBody,
   AccordionItemIndicator,
+  Tabs,
 } from '@chakra-ui/react';
 import { apiGet, apiDelete, apiPatch } from '../services/api';
 import type { ApplicationResponse, EssayResponse, CollaborationResponse, CollaboratorResponse } from '@scholarship-hub/shared';
@@ -123,6 +124,22 @@ function ApplicationDetail() {
   } = useDisclosure();
   const [selectedCollaborationForEdit, setSelectedCollaborationForEdit] = useState<CollaborationResponse | null>(null);
   const prevIsEditCollabOpenRef = useRef(false);
+
+  // Collaboration tabs
+  const [activeCollabTab, setActiveCollabTab] = useState<'recommendations' | 'essayReviews' | 'guidance'>('recommendations');
+
+  // Count collaborations by type
+  const recommendationsCount = useMemo(() => {
+    return collaborations.filter(c => c.collaborationType === 'recommendation').length;
+  }, [collaborations]);
+
+  const essayReviewsCount = useMemo(() => {
+    return collaborations.filter(c => c.collaborationType === 'essayReview').length;
+  }, [collaborations]);
+
+  const guidanceCount = useMemo(() => {
+    return collaborations.filter(c => c.collaborationType === 'guidance').length;
+  }, [collaborations]);
 
   useEffect(() => {
     async function fetchData() {
@@ -1247,13 +1264,36 @@ function ApplicationDetail() {
             {collaborations.length === 0 ? (
               <Text color="gray.500">No collaborations added yet. Click "Add Collaborator" to get started.</Text>
             ) : (
-              <Stack gap="6">
-                {/* Recommendations Section */}
-                {collaborations.filter((c) => c.collaborationType === 'recommendation').length > 0 && (
-                  <Box>
-                    <Heading size="sm" mb="3">
-                      Recommendations ({collaborations.filter((c) => c.collaborationType === 'recommendation').length})
-                    </Heading>
+              <Tabs.Root value={activeCollabTab} onValueChange={(details) => setActiveCollabTab(details.value as typeof activeCollabTab)}>
+                <Tabs.List>
+                  <Tabs.Trigger value="recommendations">
+                    Recommendations
+                    <Badge ml="2" colorPalette="accent" borderRadius="full" px="2" py="0.5">
+                      {recommendationsCount}
+                    </Badge>
+                  </Tabs.Trigger>
+                  <Tabs.Trigger value="essayReviews">
+                    Essay Reviews
+                    <Badge ml="2" colorPalette="accent" borderRadius="full" px="2" py="0.5">
+                      {essayReviewsCount}
+                    </Badge>
+                  </Tabs.Trigger>
+                  <Tabs.Trigger value="guidance">
+                    Guidance
+                    <Badge ml="2" colorPalette="accent" borderRadius="full" px="2" py="0.5">
+                      {guidanceCount}
+                    </Badge>
+                  </Tabs.Trigger>
+                </Tabs.List>
+
+                {/* Recommendations Tab */}
+                <Tabs.Content value="recommendations" px="0" pt="6">
+                  {recommendationsCount === 0 ? (
+                    <Box textAlign="center" py="12">
+                      <Text color="gray.600">No recommendations yet.</Text>
+                    </Box>
+                  ) : (
+                    <Box>
                     {/* Desktop Table View */}
                     <Box display={{ base: 'none', md: 'block' }} overflowX="auto">
                       <TableRoot size="sm">
@@ -1456,15 +1496,18 @@ function ApplicationDetail() {
                           );
                         })}
                     </Stack>
-                  </Box>
-                )}
+                    </Box>
+                  )}
+                </Tabs.Content>
 
-                {/* Essay Reviews Section */}
-                {collaborations.filter((c) => c.collaborationType === 'essayReview').length > 0 && (
-                  <Box>
-                    <Heading size="sm" mb="3">
-                      Essay Reviews ({collaborations.filter((c) => c.collaborationType === 'essayReview').length})
-                    </Heading>
+                {/* Essay Reviews Tab */}
+                <Tabs.Content value="essayReviews" px="0" pt="6">
+                  {essayReviewsCount === 0 ? (
+                    <Box textAlign="center" py="12">
+                      <Text color="gray.600">No essay reviews yet.</Text>
+                    </Box>
+                  ) : (
+                    <Box>
                     {/* Desktop Table View */}
                     <Box display={{ base: 'none', md: 'block' }} overflowX="auto">
                       <TableRoot size="sm">
@@ -1667,15 +1710,18 @@ function ApplicationDetail() {
                           );
                         })}
                     </Stack>
-                  </Box>
-                )}
+                    </Box>
+                  )}
+                </Tabs.Content>
 
-                {/* Guidance Section */}
-                {collaborations.filter((c) => c.collaborationType === 'guidance').length > 0 && (
-                  <Box>
-                    <Heading size="sm" mb="3">
-                      Guidance & Counseling ({collaborations.filter((c) => c.collaborationType === 'guidance').length})
-                    </Heading>
+                {/* Guidance Tab */}
+                <Tabs.Content value="guidance" px="0" pt="6">
+                  {guidanceCount === 0 ? (
+                    <Box textAlign="center" py="12">
+                      <Text color="gray.600">No guidance sessions yet.</Text>
+                    </Box>
+                  ) : (
+                    <Box>
                     {/* Desktop Table View */}
                     <Box display={{ base: 'none', md: 'block' }} overflowX="auto">
                       <TableRoot size="sm">
@@ -1878,9 +1924,10 @@ function ApplicationDetail() {
                           );
                         })}
                     </Stack>
-                  </Box>
-                )}
-              </Stack>
+                    </Box>
+                  )}
+                </Tabs.Content>
+              </Tabs.Root>
             )}
                   </CardBody>
                 </AccordionItemBody>
