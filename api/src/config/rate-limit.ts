@@ -1,4 +1,4 @@
-import rateLimit, { type Options } from 'express-rate-limit';
+import rateLimit, { type Options, ipKeyGenerator } from 'express-rate-limit';
 import { config } from './index.js';
 
 /**
@@ -259,9 +259,15 @@ export const webhookLimiter = rateLimit({
   message: 'Webhook rate limit exceeded',
   // Use custom key generator for webhooks (by IP or webhook signature)
   keyGenerator: (req) => {
-    // Try to use webhook signature/ID if available, fallback to IP
-    const webhookId = req.headers['x-webhook-id'] || req.ip;
-    return String(webhookId);
+    // Try to use webhook signature/ID if available
+    const webhookId = req.headers['x-webhook-id'];
+    if (webhookId) {
+      return String(webhookId);
+    }
+    // Fallback to IP address using ipKeyGenerator for proper IPv6 handling
+    // /56 subnet for IPv6 addresses (default) to prevent subnet bypass attacks
+    const ip = req.ip || req.socket.remoteAddress || 'unknown';
+    return ipKeyGenerator(ip, 56);
   },
 });
 
