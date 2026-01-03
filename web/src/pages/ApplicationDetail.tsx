@@ -1009,6 +1009,44 @@ function ApplicationDetail() {
                 <Text as="dd">{application.organization || 'Not specified'}</Text>
               </Box>
 
+              {application.orgWebsite && (
+                <Box>
+                  <Text as="dt" fontWeight="bold" color="brand.700" mb="1">
+                    Organization Website
+                  </Text>
+                  <Text as="dd">
+                    <Link
+                      href={application.orgWebsite}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      color="blue.500"
+                      _hover={{ textDecoration: 'underline' }}
+                    >
+                      {application.orgWebsite}
+                      <Box as="span" ml="1">↗</Box>
+                    </Link>
+                  </Text>
+                </Box>
+              )}
+
+              {application.targetType && (
+                <Box>
+                  <Text as="dt" fontWeight="bold" color="brand.700" mb="1">
+                    Target Type
+                  </Text>
+                  <Text as="dd" textTransform="capitalize">{application.targetType}</Text>
+                </Box>
+              )}
+
+              {application.platform && (
+                <Box>
+                  <Text as="dt" fontWeight="bold" color="brand.700" mb="1">
+                    Platform
+                  </Text>
+                  <Text as="dd">{application.platform}</Text>
+                </Box>
+              )}
+
               {application.theme && (
                 <Box>
                   <Text as="dt" fontWeight="bold" color="brand.700" mb="1">
@@ -1018,12 +1056,47 @@ function ApplicationDetail() {
                 </Box>
               )}
 
+              {(application.minAward || application.maxAward) && (
+                <Box>
+                  <Text as="dt" fontWeight="bold" color="brand.700" mb="1">
+                    Award Amount
+                  </Text>
+                  <Text as="dd" fontWeight="semibold" color="green.600">
+                    {application.minAward && application.maxAward
+                      ? `$${application.minAward.toLocaleString()} - $${application.maxAward.toLocaleString()}`
+                      : application.minAward
+                      ? `$${application.minAward.toLocaleString()}`
+                      : application.maxAward
+                      ? `Up to $${application.maxAward.toLocaleString()}`
+                      : 'Not specified'}
+                  </Text>
+                </Box>
+              )}
+
               {application.openDate && (
                 <Box>
                   <Text as="dt" fontWeight="bold" color="brand.700" mb="1">
                     Open Date
                   </Text>
                   <Text as="dd">{formatDateNoTimezone(application.openDate)}</Text>
+                </Box>
+              )}
+
+              {application.submissionDate && (
+                <Box>
+                  <Text as="dt" fontWeight="bold" color="brand.700" mb="1">
+                    Submission Date
+                  </Text>
+                  <Text as="dd">{formatDateNoTimezone(application.submissionDate)}</Text>
+                </Box>
+              )}
+
+              {application.currentAction && (
+                <Box>
+                  <Text as="dt" fontWeight="bold" color="brand.700" mb="1">
+                    Current Action
+                  </Text>
+                  <Text as="dd">{application.currentAction}</Text>
                 </Box>
               )}
             </SimpleGrid>
