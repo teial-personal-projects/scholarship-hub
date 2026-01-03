@@ -9,6 +9,6 @@
     ]
   },
   "deploy": {
-    "startCommand": "node api/dist/api/index.js"
+    "startCommand": "node api/dist/api/src/index.js"
   }
 }
