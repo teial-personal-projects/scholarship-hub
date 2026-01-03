@@ -17,6 +17,8 @@
     "dev:api": "npm run dev --workspace=api",
     "build": "npm run build --workspaces --if-present",
     "build:shared": "npm run build --workspace=shared",
+    "build:web": "npm run build:shared && npm run build --workspace=@scholarship-hub/web",
+    "build:api": "npm run build:shared && npm run build --workspace=@scholarship-hub/api",
     "lint": "npm run lint --workspaces --if-present",
     "type-check": "npm run type-check --workspaces --if-present"
   },
