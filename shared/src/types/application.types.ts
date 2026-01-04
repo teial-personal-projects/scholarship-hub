@@ -1,6 +1,6 @@
 import type { Recommendation } from './recommendation.types.js';
 import type { Essay } from './essay.types.js';
-import type { TApplicationStatus, TTargetType } from './application.constants';
+import type { TApplicationStatus, TTargetType } from './application.constants.js';
 
 export interface Application {
   applicationId?: number;

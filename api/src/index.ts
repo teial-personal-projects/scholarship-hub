@@ -4,7 +4,6 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import { config } from './config/index.js';
 import { errorHandler } from './middleware/error-handler.js';
-import { testSupabaseConnection } from './config/supabase.js';
 import apiRoutes from './routes/index.js';
 import { securityHeadersConfig, additionalSecurityHeaders } from './config/security-headers.js';
 import { generalApiLimiter, publicEndpointLimiter } from './config/rate-limit.js';
@@ -53,11 +52,8 @@ app.use(errorHandler);
 // Start server
 const startServer = async () => {
   try {
-    // TODO: Remove this. Test Supabase connection
-    await testSupabaseConnection();
-
     app.listen(config.port, () => {
-      console.log(`🚀 Server running on http://localhost:${config.port}`);
+      console.log(`🚀 Server Started`);
       console.log(`📝 Environment: ${config.nodeEnv}`);
     });
   } catch (error) {
