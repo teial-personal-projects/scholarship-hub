@@ -4,13 +4,13 @@
  * after snake_case to camelCase conversion
  */
 
-import type { TApplicationStatus, TTargetType } from './application.constants';
+import type { TApplicationStatus, TTargetType } from './application.constants.js';
 import type {
   CollaborationType,
   CollaborationStatus,
   ActionOwner,
   CollaborationActionType
-} from './collaborator.types';
+} from './collaborator.types.js';
 
 /**
  * User Profile (from GET /api/users/me)
